@@ -4027,7 +4027,7 @@ root.render(React.createElement(App));
     if(!rows.length) return;
     const section = document.createElement('section');
     section.className = 'max-w-6xl mx-auto px-4 py-10 border-t border-slate-100';
-    const cards = rows.map(l => `
+    const cards = rows.map((l, i) => `
       <div class="text-left w-[260px] shrink-0 border border-slate-200 rounded-2xl overflow-hidden bg-white">
         <div class="h-1.5" style="background-color:#0052CC;"></div>
         <div class="relative h-36"><img src="${escapeHtml(l.cover_image_url)}" alt="${escapeHtml(l.title)}" class="w-full h-full object-cover"></div>
@@ -4035,6 +4035,7 @@ root.render(React.createElement(App));
           <p class="font-bold text-slate-900">${escapeHtml(l.providers.business_name)}</p>
           <p class="text-xs text-slate-500 mt-1">${escapeHtml(l.title)} · ${escapeHtml(l.municipio)}</p>
           <p class="text-sm font-semibold text-[#0052CC] mt-2">Desde $${escapeHtml(l.base_price)} USD</p>
+          <button data-real-listing-index="${i}" class="real-booking-btn w-full mt-3 bg-[#0052CC] hover:bg-[#003d99] text-white text-xs font-bold py-2 rounded-lg transition-colors">Solicitar reserva</button>
         </div>
       </div>`).join('');
     section.innerHTML = `
@@ -4043,6 +4044,118 @@ root.render(React.createElement(App));
       <div class="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">${cards}</div>`;
     const root = document.getElementById('root');
     root.parentNode.insertBefore(section, root.nextSibling);
+    section.querySelectorAll('.real-booking-btn').forEach(btn => {
+      btn.addEventListener('click', () => openBookingModal(rows[Number(btn.dataset.realListingIndex)]));
+    });
+  }
+
+  function closeBookingModal(){
+    const el = document.getElementById('bookingModal');
+    if(el) el.remove();
+  }
+
+  function openBookingModal(listing){
+    closeBookingModal();
+    const overlay = document.createElement('div');
+    overlay.id = 'bookingModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:28px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+        <h3 style="font-weight:800;font-size:18px;margin:0 0 4px;color:#0f172a">Solicitar reserva</h3>
+        <p style="font-size:13px;color:#64748b;margin:0 0 18px">${escapeHtml(listing.title)} · ${escapeHtml(listing.providers.business_name)}</p>
+        <div id="bookingFormFields">
+          <label style="font-size:12.5px;font-weight:600;color:#344054;display:block;margin-bottom:4px">Tu correo</label>
+          <input id="bkEmail" type="email" placeholder="tu@correo.com" style="width:100%;padding:10px 12px;border:1.5px solid #E4E7EC;border-radius:9px;font-size:14px;margin-bottom:12px;box-sizing:border-box">
+          <label style="font-size:12.5px;font-weight:600;color:#344054;display:block;margin-bottom:4px">Contraseña</label>
+          <input id="bkPassword" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 12px;border:1.5px solid #E4E7EC;border-radius:9px;font-size:14px;margin-bottom:12px;box-sizing:border-box">
+          <label style="font-size:12.5px;font-weight:600;color:#344054;display:block;margin-bottom:4px">Fecha deseada</label>
+          <input id="bkDate" type="date" style="width:100%;padding:10px 12px;border:1.5px solid #E4E7EC;border-radius:9px;font-size:14px;margin-bottom:16px;box-sizing:border-box">
+        </div>
+        <div id="bookingError" style="display:none;color:#C0122D;font-size:12.5px;margin-bottom:12px"></div>
+        <div id="bookingSuccess" style="display:none;color:#12805C;font-size:13px;margin-bottom:12px"></div>
+        <div style="display:flex;gap:10px">
+          <button id="bkCancel" style="flex:1;padding:11px;border-radius:9px;border:1.5px solid #E4E7EC;background:#fff;font-weight:700;font-size:13.5px;cursor:pointer">Cancelar</button>
+          <button id="bkSubmit" style="flex:1;padding:11px;border-radius:9px;border:none;background:#0052CC;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer">Enviar solicitud</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    document.getElementById('bkCancel').addEventListener('click', closeBookingModal);
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) closeBookingModal(); });
+    document.getElementById('bkSubmit').addEventListener('click', () => submitBooking(listing));
+  }
+
+  async function submitBooking(listing){
+    const email = document.getElementById('bkEmail').value.trim();
+    const password = document.getElementById('bkPassword').value;
+    const date = document.getElementById('bkDate').value;
+    const errEl = document.getElementById('bookingError');
+    const okEl = document.getElementById('bookingSuccess');
+    const submitBtn = document.getElementById('bkSubmit');
+    errEl.style.display = 'none';
+    if(!email || !password || !date){
+      errEl.textContent = 'Completa correo, contraseña y fecha.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if(password.length < 6){
+      errEl.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+      errEl.style.display = 'block';
+      return;
+    }
+    submitBtn.textContent = 'Enviando...';
+    submitBtn.disabled = true;
+
+    let { data: signInData, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+    let user = signInData?.user;
+    if(signInErr){
+      const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password });
+      if(signUpErr){
+        errEl.textContent = signUpErr.message;
+        errEl.style.display = 'block';
+        submitBtn.textContent = 'Enviar solicitud';
+        submitBtn.disabled = false;
+        return;
+      }
+      if(!signUpData.session){
+        errEl.textContent = 'Ya existe una cuenta con ese correo pero la contraseña no coincide, o falta confirmar el correo.';
+        errEl.style.display = 'block';
+        submitBtn.textContent = 'Enviar solicitud';
+        submitBtn.disabled = false;
+        return;
+      }
+      user = signUpData.user;
+      const { error: profileErr } = await sb.from('profiles').upsert({ id: user.id, role: 'cliente' });
+      if(profileErr){
+        errEl.textContent = 'Error creando tu perfil: ' + profileErr.message;
+        errEl.style.display = 'block';
+        submitBtn.textContent = 'Enviar solicitud';
+        submitBtn.disabled = false;
+        return;
+      }
+    }
+
+    const ref = 'RSV-' + Date.now().toString(36).toUpperCase();
+    const { error: bookingErr } = await sb.from('bookings').insert({
+      ref,
+      listing_id: listing.id,
+      provider_id: listing.provider_id,
+      customer_id: user.id,
+      booking_date: date,
+      amount: listing.base_price,
+      currency: 'USD',
+      status: 'pending'
+    });
+    submitBtn.textContent = 'Enviar solicitud';
+    submitBtn.disabled = false;
+    if(bookingErr){
+      errEl.textContent = 'Error al enviar la solicitud: ' + bookingErr.message;
+      errEl.style.display = 'block';
+      return;
+    }
+    document.getElementById('bookingFormFields').style.display = 'none';
+    document.getElementById('bkSubmit').style.display = 'none';
+    okEl.textContent = '¡Solicitud enviada! El proveedor la verá en su panel y se pondrá en contacto contigo.';
+    okEl.style.display = 'block';
   }
 
   sb.from('listings').select('*, providers(*)').eq('status', 'published')
