@@ -4239,6 +4239,249 @@ root.render(React.createElement(App));
     okEl.style.display = 'block';
   }
 
+  // ============================================================
+  // ALQUILER DE VEHÍCULOS — sección encapsulada
+  // Los vehículos viven SOLO aquí. Nunca entran en el catálogo de tours,
+  // ni en promociones, ni en destacados: son un flujo de datos aparte.
+  // ============================================================
+  const VEH_CAT_LABEL = { sedan:'Sedán', suv:'SUV', pickup:'Pick-up', camioneta:'Camioneta', van:'Van', moto:'Moto', '4x4':'4x4' };
+  const VEH_TRANS_LABEL = { manual:'Manual', automatica:'Automática' };
+  let VEHICLES = [];
+  let vehAvailabilityCache = {};
+
+  function vehCard(v, i){
+    const specs = [
+      VEH_CAT_LABEL[v.category] || v.category,
+      VEH_TRANS_LABEL[v.transmission] || '',
+      v.seats ? v.seats + ' puestos' : ''
+    ].filter(Boolean).join(' · ');
+    return `
+      <div class="text-left border border-slate-200 rounded-2xl overflow-hidden bg-white hover:shadow-lg transition-shadow">
+        <div class="relative h-40 bg-slate-100">
+          ${v.cover_image_url
+            ? `<img src="${escapeHtml(v.cover_image_url)}" alt="${escapeHtml(v.title)}" class="w-full h-full object-cover">`
+            : '<div class="w-full h-full flex items-center justify-center text-slate-400 text-xs">Sin foto</div>'}
+          <span class="absolute top-2 left-2 bg-white/95 text-[10px] font-bold text-slate-700 px-2 py-1 rounded-full">✓ Verificado</span>
+        </div>
+        <div class="p-4">
+          <p class="font-bold text-slate-900 leading-snug">${escapeHtml(v.title)}</p>
+          <p class="text-xs text-slate-500 mt-1">${escapeHtml(specs)}</p>
+          <p class="text-xs text-slate-500 mt-0.5">📍 ${escapeHtml(v.municipio)}</p>
+          <div class="flex items-end justify-between mt-3">
+            <div>
+              <span class="text-lg font-bold text-[#0052CC]">$${escapeHtml(v.price_per_day)}</span>
+              <span class="text-xs text-slate-500"> / día</span>
+            </div>
+            ${Number(v.deposit) > 0 ? `<span class="text-[10px] text-slate-400">Depósito $${escapeHtml(v.deposit)}</span>` : ''}
+          </div>
+          <button data-veh-index="${i}" class="veh-book-btn w-full mt-3 bg-[#FF6B00] hover:bg-[#EA580C] text-white text-xs font-bold py-2.5 rounded-lg transition-colors">Ver disponibilidad</button>
+        </div>
+      </div>`;
+  }
+
+  function renderVehicleSection(vehicles){
+    VEHICLES = vehicles;
+    const section = document.createElement('section');
+    section.id = 'alquiler-vehiculos';
+    section.className = 'max-w-6xl mx-auto px-4 py-10 border-t border-slate-100';
+
+    const municipios = [...new Set(vehicles.map(v => v.municipio))].sort();
+    const opciones = municipios.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+
+    section.innerHTML = `
+      <div class="flex items-center gap-2 mb-1">
+        <h2 class="text-xl font-bold text-slate-900">Alquiler de vehículos</h2>
+      </div>
+      <p class="text-sm text-slate-500 mb-4">Vehículos de dueños locales, con revisión legal y física aprobada por Táchira GOO!!!</p>
+      ${vehicles.length ? `
+        <div class="flex flex-wrap items-end gap-3 mb-5 p-4 bg-slate-50 rounded-xl">
+          <label class="text-xs font-semibold text-slate-600">Municipio
+            <select id="vehFiltroMunicipio" class="block mt-1 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white min-w-[170px]">
+              <option value="">Todos</option>${opciones}
+            </select>
+          </label>
+          <label class="text-xs font-semibold text-slate-600">Desde
+            <input type="date" id="vehFiltroDesde" class="block mt-1 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white">
+          </label>
+          <label class="text-xs font-semibold text-slate-600">Hasta
+            <input type="date" id="vehFiltroHasta" class="block mt-1 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white">
+          </label>
+          <button id="vehFiltroBtn" class="px-4 py-2 rounded-lg bg-[#0052CC] text-white text-sm font-semibold">Buscar</button>
+          <button id="vehFiltroLimpiar" class="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm">Limpiar</button>
+        </div>
+        <div id="vehGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        <p id="vehVacio" class="text-sm text-slate-500 py-8 text-center" style="display:none"></p>`
+      : `<div class="rounded-xl border border-dashed border-slate-200 p-10 text-center">
+           <p class="text-sm text-slate-500">Todavía no hay vehículos disponibles para alquilar.</p>
+           <p class="text-xs text-slate-400 mt-1">Cada vehículo debe aprobar una revisión legal y una física antes de publicarse.</p>
+         </div>`}`;
+
+    const root = document.getElementById('root');
+    root.parentNode.insertBefore(section, root.nextSibling);
+    if(vehicles.length){
+      pintarVehiculos(vehicles);
+      document.getElementById('vehFiltroBtn').addEventListener('click', aplicarFiltroVehiculos);
+      document.getElementById('vehFiltroLimpiar').addEventListener('click', () => {
+        document.getElementById('vehFiltroMunicipio').value = '';
+        document.getElementById('vehFiltroDesde').value = '';
+        document.getElementById('vehFiltroHasta').value = '';
+        pintarVehiculos(VEHICLES);
+      });
+    }
+  }
+
+  function pintarVehiculos(lista){
+    const grid = document.getElementById('vehGrid');
+    const vacio = document.getElementById('vehVacio');
+    if(!grid) return;
+    if(!lista.length){
+      grid.innerHTML = '';
+      vacio.textContent = 'Ningún vehículo coincide con tu búsqueda.';
+      vacio.style.display = 'block';
+      return;
+    }
+    vacio.style.display = 'none';
+    grid.innerHTML = lista.map((v,i) => vehCard(v, VEHICLES.indexOf(v))).join('');
+    grid.querySelectorAll('.veh-book-btn').forEach(btn => {
+      btn.addEventListener('click', () => abrirReservaVehiculo(VEHICLES[Number(btn.dataset.vehIndex)]));
+    });
+  }
+
+  function rangoDias(desde, hasta){
+    const out = [];
+    const d = new Date(desde + 'T00:00:00'), f = new Date(hasta + 'T00:00:00');
+    while(d <= f){
+      out.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'));
+      d.setDate(d.getDate()+1);
+    }
+    return out;
+  }
+
+  async function aplicarFiltroVehiculos(){
+    const muni = document.getElementById('vehFiltroMunicipio').value;
+    const desde = document.getElementById('vehFiltroDesde').value;
+    const hasta = document.getElementById('vehFiltroHasta').value;
+    let lista = VEHICLES;
+    if(muni) lista = lista.filter(v => v.municipio === muni);
+
+    if(desde && hasta){
+      if(hasta < desde){ alert('La fecha de devolución no puede ser anterior a la de retiro.'); return; }
+      const dias = rangoDias(desde, hasta);
+      const { data } = await sb.from('vehicle_availability')
+        .select('vehicle_id,date').eq('is_open', true).in('date', dias);
+      const libresPorVehiculo = {};
+      (data || []).forEach(r => { (libresPorVehiculo[r.vehicle_id] = libresPorVehiculo[r.vehicle_id] || new Set()).add(r.date); });
+      // Solo pasa si TODOS los días del rango están libres
+      lista = lista.filter(v => {
+        const libres = libresPorVehiculo[v.id];
+        return libres && dias.every(d => libres.has(d));
+      });
+    }
+    pintarVehiculos(lista);
+  }
+
+  async function abrirReservaVehiculo(v){
+    const prev = document.getElementById('vehModal');
+    if(prev) prev.remove();
+    const desde = (document.getElementById('vehFiltroDesde')||{}).value || '';
+    const hasta = (document.getElementById('vehFiltroHasta')||{}).value || '';
+
+    const modal = document.createElement('div');
+    modal.id = 'vehModal';
+    modal.className = 'fixed inset-0 bg-black/50 z-[90] flex items-center justify-center p-4';
+    modal.innerHTML = `
+      <div class="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" id="vehModalBox">
+        <div class="flex items-start justify-between gap-3 mb-1">
+          <h3 class="text-lg font-bold text-slate-900">${escapeHtml(v.title)}</h3>
+          <button id="vehModalClose" class="text-slate-400 text-xl leading-none">&times;</button>
+        </div>
+        <p class="text-sm text-slate-500 mb-1">${escapeHtml(VEH_CAT_LABEL[v.category]||v.category)} · ${escapeHtml(v.municipio)}</p>
+        <p class="text-sm font-semibold text-[#0052CC] mb-4">$${escapeHtml(v.price_per_day)} / día${Number(v.deposit)>0?` · depósito $${escapeHtml(v.deposit)}`:''}</p>
+        ${v.pickup_address ? `<div class="text-xs bg-slate-50 rounded-lg p-3 mb-4"><strong>Entrega:</strong> ${escapeHtml(v.pickup_address)}</div>` : ''}
+        <div class="space-y-3">
+          <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Retiro</span>
+            <input type="date" id="vehDesde" value="${escapeHtml(desde)}" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm"></label>
+          <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Devolución</span>
+            <input type="date" id="vehHasta" value="${escapeHtml(hasta)}" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm"></label>
+          <div id="vehResumen" class="text-sm text-slate-600"></div>
+          <div id="vehErr" class="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2" style="display:none"></div>
+          <div id="vehOk" class="rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3" style="display:none"></div>
+          <button id="vehReservar" class="w-full bg-[#FF6B00] hover:bg-[#EA580C] text-white font-bold py-3 rounded-lg">Solicitar alquiler</button>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-3">El dueño confirma la solicitud. El pago y la entrega se acuerdan con él.</p>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+    document.getElementById('vehModalClose').addEventListener('click', () => modal.remove());
+    document.getElementById('vehReservar').addEventListener('click', () => enviarReservaVehiculo(v));
+    ['vehDesde','vehHasta'].forEach(id => document.getElementById(id).addEventListener('change', () => calcularResumen(v)));
+    calcularResumen(v);
+  }
+
+  function calcularResumen(v){
+    const d = document.getElementById('vehDesde').value, f = document.getElementById('vehHasta').value;
+    const el = document.getElementById('vehResumen');
+    if(!d || !f || f < d){ el.textContent = ''; return; }
+    const dias = rangoDias(d, f).length;
+    el.innerHTML = `<strong>${dias}</strong> ${dias===1?'día':'días'} · total estimado <strong>$${(dias * Number(v.price_per_day)).toFixed(0)}</strong>`;
+  }
+
+  async function enviarReservaVehiculo(v){
+    const err = document.getElementById('vehErr'), ok = document.getElementById('vehOk');
+    const btn = document.getElementById('vehReservar');
+    err.style.display = 'none';
+    const desde = document.getElementById('vehDesde').value, hasta = document.getElementById('vehHasta').value;
+    if(!desde || !hasta){ err.textContent='Elige las fechas de retiro y devolución.'; err.style.display='block'; return; }
+    if(hasta < desde){ err.textContent='La devolución no puede ser antes del retiro.'; err.style.display='block'; return; }
+    const dias = rangoDias(desde, hasta);
+    if(dias.length < (v.min_days||1)){
+      err.textContent = `Este vehículo se alquila por un mínimo de ${v.min_days} días.`;
+      err.style.display='block'; return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Comprobando disponibilidad...';
+    const { data: libres } = await sb.from('vehicle_availability')
+      .select('date').eq('vehicle_id', v.id).eq('is_open', true).in('date', dias);
+    const set = new Set((libres||[]).map(r => r.date));
+    const ocupados = dias.filter(d => !set.has(d));
+    if(ocupados.length){
+      btn.disabled=false; btn.textContent='Solicitar alquiler';
+      err.textContent = 'El dueño no tiene libre ' + (ocupados.length===1 ? 'el día ' + ocupados[0] : ocupados.length + ' de los días del rango') + '.';
+      err.style.display='block'; return;
+    }
+
+    const { data: userData } = await sb.auth.getUser();
+    let user = userData?.user;
+    if(!user){
+      btn.disabled=false; btn.textContent='Solicitar alquiler';
+      err.innerHTML = 'Para reservar necesitas una cuenta. Usa el botón <strong>¿Eres un comercio?</strong> si eres dueño de negocio, o pídenos acceso como viajero.';
+      err.style.display='block'; return;
+    }
+    await sb.from('profiles').upsert({ id: user.id, role: 'cliente' });
+
+    const { error } = await sb.from('vehicle_bookings').insert({
+      vehicle_id: v.id, owner_id: v.owner_id, customer_id: user.id,
+      start_date: desde, end_date: hasta, days: dias.length,
+      amount: dias.length * Number(v.price_per_day),
+      deposit: v.deposit || 0, currency: v.currency || 'USD', status: 'pending'
+    });
+    btn.disabled=false; btn.textContent='Solicitar alquiler';
+    if(error){ err.textContent = 'No se pudo enviar: ' + error.message; err.style.display='block'; return; }
+
+    document.getElementById('vehReservar').style.display='none';
+    ok.innerHTML = '¡Solicitud enviada! El dueño la verá en su panel.' +
+      (v.pickup_address ? '<br><br><strong>Entrega:</strong> ' + escapeHtml(v.pickup_address) : '');
+    ok.style.display='block';
+  }
+
+  // Solo vehículos publicados y con las DOS revisiones aprobadas.
+  // La base de datos ya lo filtra por permisos; lo repetimos por claridad.
+  sb.from('vehicles').select('*').eq('status','published').eq('is_approved', true)
+    .then(({ data, error }) => {
+      if(error){ console.error('Error cargando vehículos:', error); return; }
+      renderVehicleSection(data || []);
+    });
+
   sb.from('listings').select('*, providers(*)').eq('status', 'published')
     .then(({ data, error }) => {
       if(error){ console.error('Error cargando proveedores reales:', error); return; }
