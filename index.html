@@ -1699,7 +1699,8 @@ function FlightQuoteModal({
     // Guardamos primero: si la persona no pulsa enviar en WhatsApp, el contacto no se pierde.
     const sb = window.__tgSupabase;
     if (sb) {
-      const { error } = await sb.from("flight_quotes").insert({
+      const { error } = await sb.from("travel_quotes").insert({
+        tipo: "vuelo",
         nombre: nombre.trim(),
         telefono: telefono.trim(),
         email: email.trim() || null,
@@ -1781,6 +1782,256 @@ function FlightQuoteModal({
   }, estado.enviando ? "Enviando…" : "Enviar solicitud por WhatsApp"), /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] text-slate-400 text-center leading-relaxed"
   }, "Usamos tus datos solo para que la agencia aliada te envíe la cotización.")))));
+}
+
+/* ==========================================================================
+   DESTINOS DE TOURS (nacionales e internacionales)
+   Como los vuelos, no se venden aquí: se cotizan con la agencia aliada.
+   La diferencia es que el destino se elige de una parrilla, no se escribe.
+   ========================================================================== */
+
+/* Iconos de destino. Se agrupan por tipo de viaje, no uno por ciudad:
+   media docena de siluetas reconocibles comunica mejor que 30 dibujos vagos. */
+function IconoDestino({ tipo }) {
+  const trazo = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.6,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  };
+  const formas = {
+    playa: ["M2 19c2 0 2-1.2 4-1.2s2 1.2 4 1.2 2-1.2 4-1.2 2 1.2 4 1.2 2-1.2 4-1.2", "M12 16V8", "M12 8c-3 0-5 1.6-5.6 3.2C8 9.6 10.4 9.6 12 8z", "M12 8c3 0 5 1.6 5.6 3.2C16 9.6 13.6 9.6 12 8z", "M12 8c0-2.4 1.6-4 3.6-4.4C14 4.8 13.2 6.4 12 8z"],
+    montana: ["M2 19h20", "M3 19l6.5-11 4 6.4 2.4-3.6L21 19", "M9.5 8l2 3.2"],
+    salto: ["M4 4v16", "M4 4h9c3.2 0 5 2 5 4.8V20", "M8 8v9", "M12 9v8", "M4 20h16"],
+    ciudad: ["M3 21h18", "M5 21V7l5-3v17", "M14 21V10h5v11", "M7.5 9.5h.01M7.5 13h.01M16 13.5h.01M16 17h.01"],
+    isla: ["M2 20c3 0 3-1.4 6-1.4s3 1.4 6 1.4 3-1.4 6-1.4", "M7 17c0-4 2.2-6.5 5-6.5s5 2.5 5 6.5", "M12 10.5V6", "M12 6c-2 0-3.4 1-4 2.2C9 7.2 10.8 7 12 6z", "M12 6c2 0 3.4 1 4 2.2C15 7.2 13.2 7 12 6z"],
+    mundo: ["M12 21a9 9 0 100-18 9 9 0 000 18z", "M3.2 9h17.6M3.2 15h17.6", "M12 3a14 14 0 000 18M12 3a14 14 0 010 18"],
+    otro: ["M12 21a9 9 0 100-18 9 9 0 000 18z", "M12 8v5", "M12 16.5h.01"]
+  };
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    width: 30,
+    height: 30,
+    "aria-hidden": "true",
+    ...trazo
+  }, (formas[tipo] || formas.otro).map((d, i) => /*#__PURE__*/React.createElement("path", { key: i, d })));
+}
+
+const DESTINOS_NACIONALES = [
+  { n: "Margarita", i: "isla" },
+  { n: "Los Roques", i: "isla" },
+  { n: "Canaima", i: "salto" },
+  { n: "Colonia Tovar", i: "montana" },
+  { n: "Mérida", i: "montana" },
+  { n: "Adícora", i: "playa" },
+  { n: "Chichiriviche", i: "playa" },
+  { n: "Morrocoy", i: "playa" },
+  { n: "Tucacas", i: "playa" },
+  { n: "Choroní", i: "playa" },
+  { n: "Otro destino", i: "otro" }
+];
+
+const DESTINOS_INTERNACIONALES = [
+  { n: "Medellín", i: "ciudad" },
+  { n: "Bogotá", i: "ciudad" },
+  { n: "Cartagena", i: "playa" },
+  { n: "Santa Marta", i: "playa" },
+  { n: "Coveñas", i: "playa" },
+  { n: "San Andrés", i: "isla" },
+  { n: "Río de Janeiro", i: "ciudad" },
+  { n: "Argentina", i: "mundo" },
+  { n: "Cuba", i: "isla" },
+  { n: "Estados Unidos", i: "mundo" },
+  { n: "México", i: "mundo" },
+  { n: "Cancún", i: "playa" },
+  { n: "Europa trip", i: "mundo" },
+  { n: "Italia", i: "mundo" },
+  { n: "Turquía", i: "mundo" },
+  { n: "Dubái", i: "ciudad" },
+  { n: "Japón", i: "mundo" },
+  { n: "China", i: "mundo" },
+  { n: "Otro destino", i: "otro" }
+];
+
+function TourQuotePage({ tipo, onClose }) {
+  const nacional = tipo === "tour_nacional";
+  const destinos = nacional ? DESTINOS_NACIONALES : DESTINOS_INTERNACIONALES;
+
+  const [elegido, setElegido] = useState(null);
+  const [otroTexto, setOtroTexto] = useState("");
+  const [fechaIda, setFechaIda] = useState("");
+  const [fechaVuelta, setFechaVuelta] = useState("");
+  const [pasajeros, setPasajeros] = useState(2);
+  const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [notas, setNotas] = useState("");
+  const [estado, setEstado] = useState({ enviando: false, error: "", listo: false });
+
+  useEffect(() => {
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  const esOtro = elegido === "Otro destino";
+  const destinoFinal = esOtro ? otroTexto.trim() : elegido;
+
+  const mensaje = () => {
+    const etiqueta = nacional ? "tour nacional" : "tour internacional";
+    return `Hola, quiero cotizar un ${etiqueta} desde Táchira GOO!!!\n\n` +
+      `Destino: ${destinoFinal}\n` +
+      `Salida: ${fechaIda}\n` +
+      (fechaVuelta ? `Regreso: ${fechaVuelta}\n` : "") +
+      `Personas: ${pasajeros}\n\n` +
+      `Mi nombre: ${nombre}\n` +
+      `Mi teléfono: ${telefono}` +
+      (notas ? `\n\nNotas: ${notas}` : "");
+  };
+
+  const enviar = async () => {
+    if (esOtro && !otroTexto.trim()) {
+      setEstado({ enviando: false, error: "Escribe a qué destino quieres viajar.", listo: false });
+      return;
+    }
+    if (!fechaIda) {
+      setEstado({ enviando: false, error: "Elige la fecha en que quieres viajar.", listo: false });
+      return;
+    }
+    if (fechaVuelta && fechaVuelta < fechaIda) {
+      setEstado({ enviando: false, error: "La fecha de regreso no puede ser anterior a la de salida.", listo: false });
+      return;
+    }
+    if (!nombre.trim() || !telefono.trim()) {
+      setEstado({ enviando: false, error: "Necesitamos tu nombre y tu teléfono para poder contactarte.", listo: false });
+      return;
+    }
+    setEstado({ enviando: true, error: "", listo: false });
+
+    const sb = window.__tgSupabase;
+    if (sb) {
+      const { error } = await sb.from("travel_quotes").insert({
+        tipo,
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        destino: destinoFinal,
+        fecha_ida: fechaIda,
+        fecha_vuelta: fechaVuelta || null,
+        pasajeros,
+        notas: notas.trim() || null,
+        whatsapp_abierto: true
+      });
+      if (error) console.error("No se pudo registrar la cotización:", error.message);
+    }
+
+    window.open(`https://wa.me/${AGENCIA_WHATSAPP}?text=${encodeURIComponent(mensaje())}`, "_blank", "noopener");
+    setEstado({ enviando: false, error: "", listo: true });
+  };
+
+  const campo = (etiqueta, valor, set, tipoInput, placeholder, requerido) =>
+    /*#__PURE__*/React.createElement("label", { className: "block" },
+      /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" },
+        etiqueta, requerido && /*#__PURE__*/React.createElement("span", { className: "text-[#FF6B00]" }, " *")),
+      /*#__PURE__*/React.createElement("input", {
+        type: tipoInput, value: valor, onChange: e => set(e.target.value),
+        placeholder, disabled: estado.enviando,
+        className: "w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-[#0052CC]"
+      }));
+
+  /* --- Paso 1: parrilla de destinos --- */
+  const parrilla = /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-600 mb-5" },
+      "Elige a dónde quieres ir y te preparamos la cotización."),
+    /*#__PURE__*/React.createElement("div", {
+      className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+    }, destinos.map(d => /*#__PURE__*/React.createElement("button", {
+      key: d.n,
+      onClick: () => { setElegido(d.n); setEstado({ enviando: false, error: "", listo: false }); },
+      className: "group flex flex-col items-center justify-center gap-2.5 py-6 px-3 rounded-xl border border-slate-200 bg-white hover:border-[#0052CC] hover:shadow-md transition-all"
+    },
+      /*#__PURE__*/React.createElement("span", { className: "text-slate-400 group-hover:text-[#0052CC] transition-colors" },
+        /*#__PURE__*/React.createElement(IconoDestino, { tipo: d.i })),
+      /*#__PURE__*/React.createElement("span", { className: "text-[13px] font-semibold text-slate-700 text-center leading-tight" }, d.n)
+    ))));
+
+  /* --- Paso 2: fechas, personas y contacto --- */
+  const formulario = /*#__PURE__*/React.createElement("div", { className: "max-w-lg" },
+    /*#__PURE__*/React.createElement("button", {
+      onClick: () => setElegido(null),
+      className: "text-sm font-semibold text-[#0052CC] mb-4"
+    }, "← Cambiar destino"),
+    /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-3 mb-5 p-4 rounded-xl bg-blue-50"
+    },
+      /*#__PURE__*/React.createElement("span", { className: "text-[#0052CC]" },
+        /*#__PURE__*/React.createElement(IconoDestino, { tipo: (destinos.find(d => d.n === elegido) || {}).i })),
+      /*#__PURE__*/React.createElement("span", { className: "font-bold text-slate-900" }, elegido)),
+    /*#__PURE__*/React.createElement("div", { className: "space-y-3" },
+      esOtro && campo("¿A qué destino quieres viajar?", otroTexto, setOtroTexto, "text", "Escribe tu destino", true),
+      /*#__PURE__*/React.createElement("div", { className: "grid grid-cols-2 gap-3" },
+        campo("Fecha de viaje", fechaIda, setFechaIda, "date", "", true),
+        campo("Regreso (opcional)", fechaVuelta, setFechaVuelta, "date", "", false)),
+      /*#__PURE__*/React.createElement("label", { className: "block" },
+        /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Cantidad de personas"),
+        /*#__PURE__*/React.createElement("select", {
+          value: pasajeros,
+          onChange: e => setPasajeros(Number(e.target.value)),
+          className: "w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm bg-white focus:outline-none focus:border-[#0052CC]"
+        }, [1,2,3,4,5,6,7,8,9,10,12,15,20].map(n => /*#__PURE__*/React.createElement("option", { key: n, value: n },
+          n, " ", n === 1 ? "persona" : "personas")))),
+      campo("Tu nombre", nombre, setNombre, "text", "Nombre y apellido", true),
+      campo("Tu WhatsApp o teléfono", telefono, setTelefono, "tel", "Ej. +58 424 1234567", true),
+      campo("¿Algo más que debamos saber?", notas, setNotas, "text", "Hotel, presupuesto, niños…", false),
+      estado.error && /*#__PURE__*/React.createElement("div", {
+        className: "rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2"
+      }, estado.error),
+      /*#__PURE__*/React.createElement("button", {
+        onClick: enviar,
+        disabled: estado.enviando,
+        className: "w-full bg-[#FF6B00] hover:bg-[#EA580C] disabled:opacity-60 text-white font-bold py-3 rounded-lg transition-colors"
+      }, estado.enviando ? "Enviando…" : "Enviar solicitud por WhatsApp"),
+      /*#__PURE__*/React.createElement("p", { className: "text-[11px] text-slate-400 text-center leading-relaxed" },
+        "Usamos tus datos solo para que la agencia aliada te envíe la cotización.")));
+
+  /* --- Paso 3: confirmación --- */
+  const confirmacion = /*#__PURE__*/React.createElement("div", { className: "max-w-lg" },
+    /*#__PURE__*/React.createElement("div", {
+      className: "rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-4 leading-relaxed"
+    }, "Se abrió WhatsApp con tu solicitud lista para enviar. Si no se abrió, ya quedó registrada y la agencia te contactará al ",
+      /*#__PURE__*/React.createElement("strong", null, telefono), "."),
+    /*#__PURE__*/React.createElement("a", {
+      href: `https://wa.me/${AGENCIA_WHATSAPP}?text=${encodeURIComponent(mensaje())}`,
+      target: "_blank", rel: "noopener",
+      className: "block text-center mt-4 text-sm font-semibold text-[#0052CC]"
+    }, "Abrir WhatsApp de nuevo"),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: onClose,
+      className: "w-full mt-3 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-lg"
+    }, "Volver al inicio"));
+
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-[85] bg-white overflow-y-auto"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sticky top-0 bg-white border-b border-slate-200 z-10"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4"
+  }, /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("p", {
+      className: "text-[11px] font-bold tracking-widest text-[#0052CC] uppercase"
+    }, nacional ? "Tours nacionales" : "Tours internacionales"),
+    /*#__PURE__*/React.createElement("h2", { className: "text-xl font-bold text-slate-900" },
+      estado.listo ? "Solicitud registrada" : elegido ? "Datos de tu viaje" : "¿A dónde quieres ir?")),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: onClose,
+      "aria-label": "Cerrar",
+      className: "text-slate-400 hover:text-slate-700 text-3xl leading-none shrink-0"
+    }, "×"))),
+    /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-4 py-7" },
+      estado.listo ? confirmacion : elegido ? formulario : parrilla));
 }
 
 function SearchVuelosForm({
@@ -1992,6 +2243,7 @@ function SearchTabsBox({
   setCategory,  
   setMunicipioFiltro  
 }) {  
+  const [cotizadorTour, setCotizadorTour] = useState(null);
   const scrollToCatalogo = () => setTimeout(() => document.getElementById("catalogo-completo")?.scrollIntoView({  
     behavior: "smooth"  
   }), 50);  
@@ -2029,7 +2281,12 @@ function SearchTabsBox({
     const active = category === cat.id;  
     return /*#__PURE__*/React.createElement("button", {  
       key: cat.id,  
-      onClick: () => { setCategory(cat.id); if (cat.id === "rentacar" && window.__tgIrARentacar) window.__tgIrARentacar(); },  
+      onClick: () => {
+        setCategory(cat.id);
+        if (cat.id === "rentacar" && window.__tgIrARentacar) window.__tgIrARentacar();
+        if (cat.id === "foraneos") setCotizadorTour("tour_nacional");
+        if (cat.id === "internacionales") setCotizadorTour("tour_internacional");
+      },  
       className: `flex items-center gap-1.5 px-3 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition-colors shrink-0 ${active ? "bg-[#0052CC] text-white" : "text-slate-600 hover:bg-slate-100"}`  
     }, /*#__PURE__*/React.createElement(Icon, {  
       size: 14  
@@ -2046,9 +2303,21 @@ function SearchTabsBox({
     onSubmit: handleVuelos  
   }), category === "rentacar" && /*#__PURE__*/React.createElement(SearchRentacarForm, {  
     onSubmit: handleRentacar  
-  }), (category === "foraneos" || category === "internacionales") && /*#__PURE__*/React.createElement(SearchToursForm, {  
-    onSubmit: handleTours  
-  })));  
+  }), (category === "foraneos" || category === "internacionales") && /*#__PURE__*/React.createElement("div", {
+    className: "w-full flex flex-col sm:flex-row sm:items-center gap-3"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm text-slate-600 flex-1"
+  }, category === "foraneos"
+      ? "Margarita, Los Roques, Canaima, Mérida y más destinos dentro de Venezuela."
+      : "Colombia, el Caribe, Europa, Asia y más. Te cotizamos el viaje completo."),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: () => setCotizadorTour(category === "foraneos" ? "tour_nacional" : "tour_internacional"),
+      className: "bg-[#FF6B00] hover:bg-[#EA580C] text-white text-sm font-semibold px-6 py-2.5 rounded-full shrink-0 transition-colors"
+    }, "Ver destinos")),
+    cotizadorTour && /*#__PURE__*/React.createElement(TourQuotePage, {
+      tipo: cotizadorTour,
+      onClose: () => setCotizadorTour(null)
+    })));  
 }  
 function Hero({  
   category,  
