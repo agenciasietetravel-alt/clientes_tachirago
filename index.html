@@ -98,6 +98,7 @@ html { scroll-behavior: smooth; }
 <body>  
 <div id="root"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script>  
@@ -251,534 +252,24 @@ const CATEGORIES = [{
 }];  
 const FILTERABLE_CATEGORIES = ["experiencias", "vuelos", "rentacar"];
 
-/* Modificación crítica: cada tour lleva ahora "id" único y "providerId"  
-   (null si no pertenece a un Proveedor Élite) para poder filtrar catálogos  
-   por proveedor y enriquecer el voucher con "Operado por: {proveedor}". */  
-const CARDS_BY_CATEGORY = {  
-  experiencias: [{  
-    id: "tour-bramon-cafe",  
-    title: "Bramón: Tour de café de especialidad y cascadas",  
-    duration: "6 horas · Español disponible",  
-    rating: 4.9,  
-    reviews: 128,  
-    priceCOP: 120000,  
-    img: IMAGES.coffee,  
-    municipio: "Junín",  
-    providerId: 2,  
-    isVip: true,  
-    ventas: 500  
-  }, {  
-    id: "tour-sc-historico",  
-    title: "San Cristóbal: recorrido histórico por el centro",  
-    duration: "3 horas · Español disponible",  
-    rating: 4.7,  
-    reviews: 64,  
-    priceCOP: 68000,  
-    img: IMAGES.hike,  
-    municipio: "San Cristóbal",  
-    providerId: 1,  
-    isVip: false,  
-    ventas: 320  
-  }, {  
-    id: "tour-tariba-senderismo",  
-    title: "Táriba: senderismo y avistamiento de aves",  
-    duration: "4,5 horas · Grupo pequeño",  
-    rating: 4.6,  
-    reviews: 41,  
-    priceCOP: 92000,  
-    img: IMAGES.waterfall,  
-    municipio: "Cárdenas",  
-    providerId: 1,  
-    isVip: false,  
-    ventas: 150  
-  }, {  
-    id: "tour-rubio-gastro",  
-    title: "Ruta gastronómica andina en Rubio",  
-    duration: "2,5 horas · Español disponible",  
-    rating: 4.8,  
-    reviews: 87,  
-    priceCOP: 75000,  
-    img: IMAGES.food,  
-    municipio: "Junín",  
-    providerId: 2,  
-    isVip: false,  
-    ventas: 210  
-  }, {  
-    id: "tour-paramo-lagrita",  
-    title: "Caminata al páramo de La Grita",  
-    duration: "5 horas · Nivel moderado",  
-    rating: 4.8,  
-    reviews: 59,  
-    priceCOP: 98000,  
-    img: IMAGES.hike,  
-    municipio: "Jáuregui",  
-    providerId: 3,  
-    isVip: false,  
-    ventas: 95  
-  }, {  
-    id: "tour-parapente-zumbador",  
-    title: "Vuelo en parapente sobre El Zumbador",  
-    duration: "15 min de vuelo · 2h experiencia total",  
-    rating: 5.0,  
-    reviews: 46,  
-    priceCOP: 260000,  
-    img: IMAGES.waterfall,  
-    municipio: "Jáuregui",  
-    providerId: 3,  
-    isVip: false,  
-    ventas: 180  
-  }, {  
-    id: "tour-sanpedro-colonial",  
-    title: "Recorrido colonial y gastronómico en San Pedro del Río",  
-    duration: "3 horas · Incluye degustación",  
-    rating: 4.8,  
-    reviews: 38,  
-    priceCOP: 88000,  
-    img: IMAGES.food,  
-    municipio: "Independencia",  
-    providerId: 5,  
-    isVip: false,  
-    ventas: 130  
-  }, {  
-    id: "tour-hacienda-laplaya",  
-    title: "Visita guiada a la Hacienda La Playa",  
-    duration: "2,5 horas · Historia cafetalera",  
-    rating: 4.6,  
-    reviews: 22,  
-    priceCOP: 72000,  
-    img: IMAGES.coffee,  
-    municipio: "Independencia",  
-    providerId: 5,  
-    isVip: false,  
-    ventas: 60  
-  }],  
-  vuelos: [{  
-    id: "vuelo-bog-sat",  
-    title: "Bogotá → San Antonio del Táchira",  
-    duration: "Vuelo directo · Equipaje de mano",  
-    rating: 4.4,  
-    reviews: 210,  
-    priceCOP: 350000,  
-    img: IMAGES.hero,  
-    municipio: "San Cristóbal",  
-    providerId: null,  
-    isVip: true,  
-    ventas: 400  
-  }, {  
-    id: "vuelo-ccs-sat",  
-    title: "Caracas → San Antonio del Táchira",  
-    duration: "1 escala · Cambios flexibles",  
-    rating: 4.2,  
-    reviews: 98,  
-    priceCOP: 410000,  
-    img: IMAGES.hike,  
-    municipio: "San Cristóbal",  
-    providerId: null,  
-    isVip: false,  
-    ventas: 250  
-  }, {  
-    id: "traslado-cucuta-sc",  
-    title: "Cúcuta → San Cristóbal (traslado terrestre)",  
-    duration: "Servicio puerta a puerta",  
-    rating: 4.6,  
-    reviews: 77,  
-    priceCOP: 95000,  
-    img: IMAGES.coffee,  
-    municipio: "San Cristóbal",  
-    providerId: null,  
-    isVip: false,  
-    ventas: 180  
-  }],  
-  rentacar: [{  
-    id: "rentacar-suv",  
-    title: "SUV 4x4 para ruta de montaña",  
-    duration: "Kilometraje ilimitado · Seguro incluido",  
-    rating: 4.7,  
-    reviews: 44,  
-    priceCOP: 180000,  
-    img: IMAGES.hike,  
-    municipio: "Uribante",  
-    providerId: null,  
-    isVip: true,  
-    ventas: 300  
-  }, {  
-    id: "rentacar-sedan",  
-    title: "Sedán económico — recorrido urbano",  
-    duration: "Entrega en el aeropuerto",  
-    rating: 4.5,  
-    reviews: 63,  
-    priceCOP: 110000,  
-    img: IMAGES.hero,  
-    municipio: "San Cristóbal",  
-    providerId: null,  
-    isVip: false,  
-    ventas: 220  
-  }, {  
-    id: "rentacar-camioneta",  
-    title: "Camioneta doble cabina para grupos",  
-    duration: "Hasta 6 pasajeros",  
-    rating: 4.6,  
-    reviews: 29,  
-    priceCOP: 220000,  
-    img: IMAGES.waterfall,  
-    municipio: "San Cristóbal",  
-    providerId: null,  
-    isVip: false,  
-    ventas: 140  
-  }],  
-  foraneos: [{  
-    id: "foraneo-merida",  
-    title: "Mérida: Teleférico y Los Nevados",  
-    duration: "2 días, 1 noche · Transporte incluido",  
-    rating: 4.8,  
-    reviews: 152,  
-    priceCOP: 480000,  
-    img: IMAGES.hike,  
-    providerId: null,  
-    isVip: true,  
-    ventas: 600  
-  }, {  
-    id: "foraneo-medellin",  
-    title: "Medellín: tour a Guatapé con barco y desayuno",  
-    duration: "10,5 horas · Español disponible",  
-    rating: 4.9,  
-    reviews: 13899,  
-    priceCOP: 136200,  
-    img: IMAGES.hero,  
-    providerId: null,  
-    isVip: false,  
-    ventas: 900  
-  }, {  
-    id: "foraneo-nortesantander",  
-    title: "Norte de Santander: termales y cañón",  
-    duration: "1 día completo",  
-    rating: 4.5,  
-    reviews: 33,  
-    priceCOP: 150000,  
-    img: IMAGES.waterfall,  
-    providerId: null,  
-    isVip: false,  
-    ventas: 120  
-  }],  
-  internacionales: [{  
-    id: "intl-guiza-quad",  
-    title: "Pirámides de Guiza: excursión en quad",  
-    duration: "1-2 horas · Español disponible",  
-    rating: 4.5,  
-    reviews: 1107,  
-    priceCOP: 141500,  
-    img: IMAGES.coffee,  
-    providerId: null,  
-    isVip: true,  
-    ventas: 250  
-  }, {  
-    id: "intl-guiza-luzsonido",  
-    title: "Espectáculo de Luz y Sonido en las Pirámides",  
-    duration: "2 horas · Español disponible",  
-    rating: 3.0,  
-    reviews: 49,  
-    priceCOP: 176800,  
-    img: IMAGES.hero,  
-    providerId: null,  
-    isVip: false,  
-    ventas: 90  
-  }, {  
-    id: "intl-cancun",  
-    title: "Cancún: tour a Chichén Itzá con cenote",  
-    duration: "12 horas · Almuerzo incluido",  
-    rating: 4.7,  
-    reviews: 512,  
-    priceCOP: 265000,  
-    img: IMAGES.hike,  
-    providerId: null,  
-    isVip: false,  
-    ventas: 400  
-  }]  
-};  
-const ALOJAMIENTOS = [{  
-  id: 1,  
-  titulo: "Hermosa Cabaña Alpina en el Páramo El Zumbador",  
-  municipio: "Cárdenas",  
-  tipo: "cabaña",  
-  imgs: [IMAGES.hike, IMAGES.waterfall, IMAGES.coffee],  
-  precioNocheUSD: 45,  
-  rating: 4.9,  
-  reviews: 87,  
-  limpiezaUSD: 8,  
-  providerId: null,  
-  isVip: false,  
-  ventas: 150  
-}, {  
-  id: 2,  
-  titulo: "Glamping bajo las estrellas en La Grita",  
-  municipio: "Jáuregui",  
-  tipo: "glamping",  
-  imgs: [IMAGES.waterfall, IMAGES.hero, IMAGES.hike],  
-  precioNocheUSD: 60,  
-  rating: 4.8,  
-  reviews: 52,  
-  limpiezaUSD: 10,  
-  providerId: null,  
-  isVip: false,  
-  ventas: 110  
-}, {  
-  id: 3,  
-  titulo: "Posada Colonial en San Pedro del Río",  
-  municipio: "Independencia",  
-  tipo: "posada",  
-  imgs: [IMAGES.hero, IMAGES.coffee, IMAGES.food],  
-  precioNocheUSD: 38,  
-  rating: 4.7,  
-  reviews: 64,  
-  limpiezaUSD: 6,  
-  providerId: 4,  
-  isVip: true,  
-  ventas: 180  
-}, {  
-  id: 4,  
-  titulo: "Cabaña familiar cerca del centro de Rubio",  
-  municipio: "Junín",  
-  tipo: "cabaña",  
-  imgs: [IMAGES.coffee, IMAGES.hike, IMAGES.hero],  
-  precioNocheUSD: 42,  
-  rating: 4.6,  
-  reviews: 31,  
-  limpiezaUSD: 7,  
-  providerId: 4,  
-  isVip: false,  
-  ventas: 95  
-}, {  
-  id: 5,  
-  titulo: "Loft moderno en San Cristóbal",  
-  municipio: "San Cristóbal",  
-  tipo: "apartamento",  
-  imgs: [IMAGES.hero, IMAGES.food, IMAGES.waterfall],  
-  precioNocheUSD: 35,  
-  rating: 4.5,  
-  reviews: 98,  
-  limpiezaUSD: 5,  
-  providerId: null,  
-  isVip: false,  
-  ventas: 200  
-}];
+/* Catálogo real. Se llena en cargarCatalogoReal() con lo que publican los
+   proveedores; arranca vacío para que nunca se muestre contenido inventado.
+   Las claves de vuelos, tours nacionales e internacionales existen por
+   compatibilidad: esas categorías se atienden con cotizadores, no con catálogo. */
+const CARDS_BY_CATEGORY = {
+  experiencias: [],
+  vuelos: [],
+  rentacar: [],
+  foraneos: [],
+  internacionales: []
+};
 
-/* Requerimiento nuevo: Proveedores Élite (5), con acento derivado de la paleta base */  
-const ELITE_PROVIDERS = [{  
-  id: 1,  
-  nombre: "Aventuras Andinas",  
-  acento: "#0052CC",  
-  especialidad: "Excursiones y senderismo",  
-  ubicacion: "San Cristóbal",  
-  tagline: "Camina senderos que solo los tachirenses conocen, guiado por expertos locales.",  
-  rating: 4.8,  
-  reviews: 172,  
-  aniosOperando: 8,  
-  clientesAtendidos: 1200,  
-  statsSecondary: [{  
-    label: "Tours realizados",  
-    value: "340"  
-  }, {  
-    label: "Años operando",  
-    value: "8"  
-  }],  
-  precioDesdeUSD: 17,  
-  foto: IMAGES.hike,  
-  logo: IMAGES.hike,  
-  gallery: [IMAGES.hike, IMAGES.waterfall, IMAGES.hero, IMAGES.coffee, IMAGES.food],  
-  featured: {  
-    type: "tour",  
-    id: "tour-sc-historico"  
-  },  
-  bio: "Desde 2018, un equipo de guías certificados en primeros auxilios y rescate en montaña te lleva por los senderos menos conocidos de San Cristóbal y sus alrededores. Grupos reducidos, ritmo humano, cero prisa.",  
-  quickPitch: [{  
-    icon: Compass,  
-    que: "Recorre el centro histórico de San Cristóbal con un guía local.",  
-    duracion: "3 horas",  
-    precioUSD: 17,  
-    targetType: "tour",  
-    targetId: "tour-sc-historico"  
-  }, {  
-    icon: MapIcon,  
-    que: "Observa aves andinas en los senderos de Táriba.",  
-    duracion: "4,5 horas",  
-    precioUSD: 23,  
-    targetType: "tour",  
-    targetId: "tour-tariba-senderismo"  
-  }],  
-  urgencia: null  
-}, {  
-  id: 2,  
-  nombre: "Café Bramón Tours",  
-  acento: "#FF6B00",  
-  especialidad: "Rutas de café de especialidad",  
-  ubicacion: "Junín",  
-  tagline: "Cata café recién tostado en la hacienda donde nace, entre montañas.",  
-  rating: 4.9,  
-  reviews: 215,  
-  aniosOperando: 6,  
-  clientesAtendidos: 980,  
-  statsSecondary: [{  
-    label: "Tours realizados",  
-    value: "410"  
-  }, {  
-    label: "Años operando",  
-    value: "6"  
-  }],  
-  precioDesdeUSD: 19,  
-  foto: IMAGES.coffee,  
-  logo: IMAGES.coffee,  
-  gallery: [IMAGES.coffee, IMAGES.food, IMAGES.hike, IMAGES.hero, IMAGES.waterfall],  
-  featured: {  
-    type: "tour",  
-    id: "tour-bramon-cafe"  
-  },  
-  bio: "Familias caficultoras de Bramón abren sus haciendas para mostrarte, de la mano, todo el proceso: de la semilla a la taza. Cada tour termina con una cata guiada por un catador certificado.",  
-  quickPitch: [{  
-    icon: Compass,  
-    que: "Cata café de especialidad recién tostado en la hacienda de Bramón.",  
-    duracion: "6 horas",  
-    precioUSD: 30,  
-    targetType: "tour",  
-    targetId: "tour-bramon-cafe"  
-  }, {  
-    icon: MapIcon,  
-    que: "Prueba la ruta gastronómica andina de Rubio en una tarde.",  
-    duracion: "2,5 horas",  
-    precioUSD: 19,  
-    targetType: "tour",  
-    targetId: "tour-rubio-gastro"  
-  }],  
-  urgencia: "Precio de temporada de cosecha válido hasta el 15 de agosto."  
-}, {  
-  id: 3,  
-  nombre: "Páramo Adventures",  
-  acento: "#003D99",  
-  especialidad: "Parapente y montaña",  
-  ubicacion: "Jáuregui",  
-  tagline: "Vuela sobre los Andes tachirenses en 15 minutos de parapente guiado.",  
-  rating: 5.0,  
-  reviews: 46,  
-  aniosOperando: 4,  
-  clientesAtendidos: 650,  
-  statsSecondary: [{  
-    label: "Vuelos realizados",  
-    value: "210"  
-  }, {  
-    label: "Años operando",  
-    value: "4"  
-  }],  
-  precioDesdeUSD: 25,  
-  foto: IMAGES.waterfall,  
-  logo: IMAGES.waterfall,  
-  gallery: [IMAGES.waterfall, IMAGES.hike, IMAGES.hero, IMAGES.coffee, IMAGES.food],  
-  featured: {  
-    type: "tour",  
-    id: "tour-parapente-zumbador"  
-  },  
-  bio: "Pilotos certificados por la Federación Venezolana de Vuelo Libre operan desde 2022 en los vientos más estables del páramo de La Grita. Equipo revisado antes de cada vuelo, sin excepciones.",  
-  quickPitch: [{  
-    icon: Compass,  
-    que: "Vuela sobre los Andes tachirenses en 15 minutos de parapente guiado.",  
-    duracion: "15 min de vuelo · 2h experiencia total",  
-    precioUSD: 65,  
-    targetType: "tour",  
-    targetId: "tour-parapente-zumbador"  
-  }, {  
-    icon: MapIcon,  
-    que: "Camina el páramo de La Grita hasta su mirador más alto.",  
-    duracion: "5 horas · Nivel moderado",  
-    precioUSD: 25,  
-    targetType: "tour",  
-    targetId: "tour-paramo-lagrita"  
-  }],  
-  urgencia: "Solo 3 cupos disponibles esta semana para vuelos en parapente."  
-}, {  
-  id: 4,  
-  nombre: "Posadas del Táchira",  
-  acento: "#EA580C",  
-  especialidad: "Alojamientos boutique",  
-  ubicacion: "Varios municipios",  
-  tagline: "Descansa en posadas y cabañas con la calidez andina que buscabas.",  
-  rating: 4.7,  
-  reviews: 193,  
-  aniosOperando: 10,  
-  clientesAtendidos: 1450,  
-  statsSecondary: [{  
-    label: "Noches reservadas",  
-    value: "2.100"  
-  }, {  
-    label: "Años operando",  
-    value: "10"  
-  }],  
-  precioDesdeUSD: 38,  
-  foto: IMAGES.hero,  
-  logo: IMAGES.hero,  
-  gallery: [IMAGES.hero, IMAGES.coffee, IMAGES.hike, IMAGES.food, IMAGES.waterfall],  
-  featured: {  
-    type: "alojamiento",  
-    id: 3  
-  },  
-  bio: "Una curaduría de posadas, cabañas y glampings familiares verificados en persona por nuestro equipo. No publicamos nada que no visitaríamos nosotros mismos.",  
-  quickPitch: [{  
-    icon: Bed,  
-    que: "Duerme en una posada colonial en el corazón de San Pedro del Río.",  
-    duracion: "Check-in flexible",  
-    precioUSD: 38,  
-    targetType: "alojamiento",  
-    targetId: 3  
-  }, {  
-    icon: Bed,  
-    que: "Descansa en una cabaña familiar a minutos del centro de Rubio.",  
-    duracion: "Check-in flexible",  
-    precioUSD: 42,  
-    targetType: "alojamiento",  
-    targetId: 4  
-  }],  
-  urgencia: null  
-}, {  
-  id: 5,  
-  nombre: "Ruta Colonial San Pedro",  
-  acento: "#1E6FDB",  
-  especialidad: "Turismo histórico y gastronómico",  
-  ubicacion: "Independencia",  
-  tagline: "Camina calles empedradas de 400 años entre haciendas y buena mesa.",  
-  rating: 4.7,  
-  reviews: 60,  
-  aniosOperando: 5,  
-  clientesAtendidos: 410,  
-  statsSecondary: [{  
-    label: "Recorridos realizados",  
-    value: "180"  
-  }, {  
-    label: "Años operando",  
-    value: "5"  
-  }],  
-  precioDesdeUSD: 22,  
-  foto: IMAGES.food,  
-  logo: IMAGES.food,  
-  gallery: [IMAGES.food, IMAGES.hero, IMAGES.coffee, IMAGES.hike, IMAGES.waterfall],  
-  featured: {  
-    type: "tour",  
-    id: "tour-sanpedro-colonial"  
-  },  
-  bio: "Historiadores locales narran 400 años de San Pedro del Río mientras caminas sus calles empedradas, con paradas en haciendas y talleres de artesanos que siguen vivos hoy.",  
-  quickPitch: [{  
-    icon: Compass,  
-    que: "Recorre las calles empedradas y haciendas coloniales de San Pedro del Río.",  
-    duracion: "3 horas · Incluye degustación",  
-    precioUSD: 22,  
-    targetType: "tour",  
-    targetId: "tour-sanpedro-colonial"  
-  }, {  
-    icon: MapIcon,  
-    que: "Visita la Hacienda La Playa y su historia cafetalera.",  
-    duracion: "2,5 horas",  
-    precioUSD: 18,  
-    targetType: "tour",  
-    targetId: "tour-hacienda-laplaya"  
-  }],  
-  urgencia: null  
-}];  
+/* Alojamientos reales publicados por proveedores. Vacío hasta que carguen. */
+const ALOJAMIENTOS = [];
+
+/* Proveedores con micrositio público. Solo entran los que el administrador
+   aprobó (verification_status = 'approved'); vacío mientras no haya ninguno. */
+const ELITE_PROVIDERS = [];
 const TESTIMONIALS_BY_PROVIDER = {  
   1: [{  
     nombre: "Jorge L.",  
@@ -2437,16 +1928,21 @@ function TourCard({
     className: "text-sm font-semibold text-slate-900 leading-snug line-clamp-2 min-h-[2.5rem]"  
   }, card.title), /*#__PURE__*/React.createElement("p", {  
     className: "text-xs text-slate-500 mt-1 line-clamp-1"  
-  }, card.duration), /*#__PURE__*/React.createElement("div", {  
-    className: "flex items-center gap-1 mt-1.5"  
-  }, /*#__PURE__*/React.createElement(Star, {  
-    size: 13,  
-    className: "fill-[#FF6B00] text-[#FF6B00]"  
-  }), /*#__PURE__*/React.createElement("span", {  
-    className: "text-xs font-semibold text-slate-900"  
-  }, card.rating), /*#__PURE__*/React.createElement("span", {  
-    className: "text-xs text-slate-400"  
-  }, "(", card.reviews.toLocaleString("es-CO"), ")")), /*#__PURE__*/React.createElement("p", {  
+  }, card.duration), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1 mt-1.5"
+  }, card.rating ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Star, {
+    size: 13,
+    className: "fill-[#FF6B00] text-[#FF6B00]"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-semibold text-slate-900"
+  }, card.rating), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs text-slate-400"
+  }, "(", Number(card.reviews || 0).toLocaleString("es-CO"), ")"))
+  /* Sin reseñas no pintamos estrellas: un "0,0 (0)" parece mala calificación
+     cuando en realidad es un listado nuevo. */
+  : /*#__PURE__*/React.createElement("span", {
+    className: "text-xs text-slate-400"
+  }, "Aún sin reseñas")), /*#__PURE__*/React.createElement("p", {  
     className: "text-xs text-slate-500 mt-1.5"  
   }, "Desde ", /*#__PURE__*/React.createElement("span", {  
     className: "text-sm font-bold text-[#FF6B00]"  
@@ -2635,6 +2131,9 @@ function ProviderCard({
 function EliteProvidersSection({  
   onSelectProvider  
 }) {  
+  /* Un micrositio solo existe cuando el administrador verifica al proveedor.
+     Sin ninguno aprobado, la sección se oculta en vez de quedar vacía. */
+  if (!ELITE_PROVIDERS.length) return null;
   return /*#__PURE__*/React.createElement("section", {  
     className: "max-w-6xl mx-auto px-4 py-10 border-t border-slate-100"  
   }, /*#__PURE__*/React.createElement("div", {  
@@ -2705,10 +2204,17 @@ function FeaturedToursSection({
   onSelectTour,  
   currency  
 }) {  
-  const items = useMemo(() => {  
-    const found = FEATURED_TOUR_IDS.map(id => findTourById(id)).filter(Boolean);  
-    return sortCatalogItems(found);  
-  }, []);  
+  const items = useMemo(() => {
+    const encontrados = FEATURED_TOUR_IDS.map(id => findTourById(id)).filter(Boolean);
+    /* Los destacados se eligen a mano por id. Mientras no haya ninguno elegido,
+       mostramos lo más reciente del catálogo real en vez de dejar el hueco. */
+    const base = encontrados.length ? encontrados : CARDS_BY_CATEGORY.experiencias.slice(0, 8);
+    return sortCatalogItems(base);
+  }, []);
+  /* Con poco catálogo, "Destacados" repetiría las mismas tarjetas que aparecen
+     justo debajo en el catálogo completo. Hasta que haya de dónde elegir,
+     la sección se oculta en vez de duplicar. */
+  if (items.length < 3) return null;
   return /*#__PURE__*/React.createElement("section", {  
     className: "max-w-6xl mx-auto px-4 py-8 border-b border-slate-100"  
   }, /*#__PURE__*/React.createElement(SectionEyebrow, {  
@@ -4536,19 +4042,161 @@ function App() {
   }));  
 }
 
+/* ==========================================================================
+   CARGA DEL CATÁLOGO REAL
+   Traduce lo que publican los proveedores en Supabase al formato que ya usan
+   las tarjetas, para no tener dos maneras distintas de pintar lo mismo.
+   ========================================================================== */
+const SUPABASE_URL = 'https://vkgxvckooykxfulclodj.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_LVIRh3oSFP7gGSkQuCnBdg_eZ2SAB8g';
+window.__tgSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* El proveedor escribe el municipio a mano, así que llegan "cordoba",
+   "ANDRES BELLO" o "San Cristóbal". El filtro del cliente compara contra la
+   lista oficial, y sin normalizar nunca coincidirían. Lo llevamos al nombre
+   canónico al cargar, para que filtro y tarjeta hablen el mismo idioma. */
+function normalizaTexto(s){
+  return String(s || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().trim();
+}
+const MUNICIPIOS_POR_CLAVE = MUNICIPIOS.reduce((acc, m) => {
+  acc[normalizaTexto(m)] = m;
+  return acc;
+}, {});
+function municipioCanonico(valor){
+  return MUNICIPIOS_POR_CLAVE[normalizaTexto(valor)] || valor;
+}
+
+/* Un listado incompleto se ve peor que no verse: sin foto o sin precio la
+   tarjeta queda rota y el viajero desconfía. Se ocultan hasta completarse. */
+function listadoCompleto(l){
+  const p = l.providers;
+  return !!(p && p.business_name && p.municipio &&
+    l.title && l.description && l.municipio &&
+    l.base_price != null && l.cover_image_url);
+}
+
+async function cargarCatalogoReal(){
+  const sb = window.__tgSupabase;
+
+  const { data: listados, error } = await sb
+    .from('listings')
+    .select('*, providers(*)')
+    .eq('status', 'published');
+
+  if (error) {
+    console.error('Error cargando el catálogo:', error.message);
+    return;
+  }
+
+  const validos = (listados || []).filter(listadoCompleto);
+
+  /* Puntuaciones reales. Sin reseñas la tarjeta no inventa estrellas. */
+  const porListado = {};
+  if (validos.length) {
+    const { data: resenas } = await sb
+      .from('reviews')
+      .select('listing_id, rating')
+      .in('listing_id', validos.map(l => l.id));
+    (resenas || []).forEach(r => {
+      const acc = porListado[r.listing_id] || (porListado[r.listing_id] = { suma: 0, n: 0 });
+      acc.suma += r.rating; acc.n += 1;
+    });
+  }
+  const puntuacion = id => {
+    const a = porListado[id];
+    return a && a.n ? { rating: Math.round((a.suma / a.n) * 10) / 10, reviews: a.n }
+                    : { rating: null, reviews: 0 };
+  };
+
+  const experiencias = [];
+  validos.forEach(l => {
+    const { rating, reviews } = puntuacion(l.id);
+    if (l.category === 'alojamiento') {
+      ALOJAMIENTOS.push({
+        id: l.id,
+        titulo: l.title,
+        municipio: municipioCanonico(l.municipio),
+        tipo: 'alojamiento',
+        imgs: [l.cover_image_url],
+        precioNocheUSD: Number(l.base_price),
+        rating, reviews,
+        limpiezaUSD: 0,
+        providerId: l.provider_id,
+        isVip: false,
+        ventas: 0,
+        descripcion: l.description,
+        direccion: l.address || null,
+        lat: l.lat, lng: l.lng,
+        cancelacion: l.cancellation_policy || null
+      });
+    } else {
+      experiencias.push({
+        id: l.id,
+        title: l.title,
+        duration: l.max_capacity ? `Hasta ${l.max_capacity} personas` : 'Consulta disponibilidad',
+        rating, reviews,
+        priceCOP: Number(l.base_price) * TASA_COP,  // las tarjetas trabajan en COP
+        img: l.cover_image_url,
+        municipio: municipioCanonico(l.municipio),
+        providerId: l.provider_id,
+        isVip: false,
+        ventas: 0,
+        descripcion: l.description,
+        direccion: l.address || null,
+        lat: l.lat, lng: l.lng,
+        cancelacion: l.cancellation_policy || null
+      });
+    }
+  });
+  CARDS_BY_CATEGORY.experiencias = experiencias;
+
+  /* Micrositios: solo de proveedores que el administrador ya verificó. */
+  const aprobados = new Map();
+  validos.forEach(l => {
+    const p = l.providers;
+    if (p && p.verification_status === 'approved' && !aprobados.has(p.id)) aprobados.set(p.id, p);
+  });
+  aprobados.forEach(p => {
+    ELITE_PROVIDERS.push({
+      id: p.id,
+      nombre: p.cover_title || p.business_name,
+      acento: '#0052CC',
+      especialidad: p.cover_tagline || 'Proveedor verificado',
+      ubicacion: municipioCanonico(p.municipio),
+      tagline: p.cover_tagline || '',
+      rating: null,
+      reviews: 0,
+      aniosOperando: null,
+      about: p.about || '',
+      whatsapp: p.whatsapp || null
+    });
+  });
+
+  console.info(`Catálogo real: ${experiencias.length} experiencias, ${ALOJAMIENTOS.length} alojamientos, ${ELITE_PROVIDERS.length} micrositios.`);
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
+
+/* El catálogo se llena con lo que publican los proveedores reales. Pedimos esos
+   datos antes del primer render: si llegaran después, las secciones que calculan
+   su contenido una sola vez se quedarían vacías para siempre. */
+(async function arrancar(){
+  try {
+    await cargarCatalogoReal();
+  } catch (e) {
+    console.error('No se pudo cargar el catálogo:', e);
+  }
+  root.render(React.createElement(App));
+})();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
-  const SUPABASE_URL = 'https://vkgxvckooykxfulclodj.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_LVIRh3oSFP7gGSkQuCnBdg_eZ2SAB8g';
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  // El formulario de registro de comercios vive dentro del árbol de React,
-  // que se evalúa antes que este script. Se lo exponemos por aquí.
-  window.__tgSupabase = sb;
+  // Reutiliza el cliente que ya creó el arranque del catálogo: dos clientes
+  // sobre el mismo proyecto duplicarían los escuchas de sesión.
+  const sb = window.__tgSupabase;
 
   function isComplete(l){
     const p = l.providers;
@@ -4559,32 +4207,6 @@ root.render(React.createElement(App));
 
   function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  function renderRealProviders(rows){
-    if(!rows.length) return;
-    const section = document.createElement('section');
-    section.className = 'max-w-6xl mx-auto px-4 py-10 border-t border-slate-100';
-    const cards = rows.map((l, i) => `
-      <div class="text-left w-[260px] shrink-0 border border-slate-200 rounded-2xl overflow-hidden bg-white">
-        <div class="h-1.5" style="background-color:#0052CC;"></div>
-        <div class="relative h-36"><img src="${escapeHtml(l.cover_image_url)}" alt="${escapeHtml(l.title)}" class="w-full h-full object-cover"></div>
-        <div class="p-4">
-          <p class="font-bold text-slate-900">${escapeHtml(l.providers.business_name)}</p>
-          <p class="text-xs text-slate-500 mt-1">${escapeHtml(l.title)} · ${escapeHtml(l.municipio)}</p>
-          <p class="text-sm font-semibold text-[#0052CC] mt-2">Desde $${escapeHtml(l.base_price)} USD</p>
-          <button data-real-listing-index="${i}" class="real-booking-btn w-full mt-3 bg-[#0052CC] hover:bg-[#003d99] text-white text-xs font-bold py-2 rounded-lg transition-colors">Solicitar reserva</button>
-        </div>
-      </div>`).join('');
-    section.innerHTML = `
-      <div class="flex items-center gap-2 mb-1"><h2 class="text-xl font-bold text-slate-900">Proveedores registrados en Táchira GOO!!!</h2></div>
-      <p class="text-sm text-slate-500 mb-4">Sincronizado en vivo desde el Portal de Proveedores.</p>
-      <div class="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">${cards}</div>`;
-    const root = document.getElementById('root');
-    root.parentNode.insertBefore(section, root.nextSibling);
-    section.querySelectorAll('.real-booking-btn').forEach(btn => {
-      btn.addEventListener('click', () => openBookingModal(rows[Number(btn.dataset.realListingIndex)]));
-    });
   }
 
   function closeBookingModal(){
@@ -4972,12 +4594,9 @@ root.render(React.createElement(App));
       renderVehicleSection(data || []);
     });
 
-  sb.from('listings').select('*, providers(*)').eq('status', 'published')
-    .then(({ data, error }) => {
-      if(error){ console.error('Error cargando proveedores reales:', error); return; }
-      const rows = (data || []).filter(isComplete);
-      renderRealProviders(rows);
-    });
+  /* La sección "Proveedores registrados" se retiró: el catálogo principal
+     ya se llena con estos mismos listados, y mantener las dos duplicaba
+     cada tour en la misma página. */
 })();
 </script>  
   
