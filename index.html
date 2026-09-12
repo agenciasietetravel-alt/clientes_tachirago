@@ -3883,6 +3883,135 @@ function CheckoutScreen({
    APP (raíz)  
    ========================================================================== */
 
+/* ==========================================================================
+   AVISOS LEGALES
+   La plataforma intermedia dinero y custodia documentos de identidad, así que
+   estos textos no son decorativos: son la base para cobrar comisión, resolver
+   una disputa y explicar qué se hace con los datos personales.
+   ========================================================================== */
+const LEGAL = {
+  terminos: {
+    titulo: "Términos y condiciones",
+    actualizado: "12 de septiembre de 2026",
+    secciones: [
+      ["Qué es Táchira GOO!!!",
+       "Táchira GOO!!! conecta viajeros con proveedores turísticos del estado Táchira: posadas, operadores de tours, actividades y dueños de vehículos en alquiler. Actuamos como intermediario tecnológico y no prestamos directamente ninguno de los servicios publicados."],
+      ["Quién presta el servicio",
+       "Cada servicio lo presta y ejecuta el proveedor que lo publica, bajo su propia responsabilidad: calidad, seguridad, permisos y cumplimiento de lo ofrecido. Verificamos a los proveedores antes de publicarlos, pero esa verificación no nos convierte en prestadores del servicio."],
+      ["Reservas",
+       "Una solicitud de reserva no es una reserva confirmada. El proveedor debe confirmarla. Hasta ese momento no existe contrato entre viajero y proveedor, y ninguna de las partes queda obligada."],
+      ["Precios y comisión",
+       "Los precios los fija cada proveedor y se muestran tal como él los publica. Táchira GOO!!! cobra una comisión sobre las transacciones completadas, cuyo porcentaje se acuerda con cada proveedor al incorporarse a la plataforma."],
+      ["Cancelaciones y reembolsos",
+       "Cada publicación indica su condición: sin reembolso, reembolsable parcialmente o 100% reembolsable. Esa condición es la que aplica y se muestra al viajero antes de reservar."],
+      ["Alquiler de vehículos",
+       "El alquiler se pacta entre el dueño del vehículo y el arrendatario. Todo vehículo publicado superó una revisión documental y una revisión física, pero esa revisión no sustituye al seguro ni traslada a la plataforma la responsabilidad por daños, multas o accidentes ocurridos durante el alquiler."],
+      ["Cotizaciones de vuelos y tours",
+       "Los vuelos y los tours fuera del Táchira no se venden en la plataforma: se recoge la solicitud y se traslada a una agencia de viajes aliada, que prepara la cotización y contrata directamente con el viajero."],
+      ["Conducta",
+       "No se permite publicar información falsa, suplantar a otra persona o negocio, ni acordar servicios por fuera para evadir la comisión. Podemos suspender cuentas que incumplan."],
+      ["Cambios",
+       "Podemos actualizar estos términos. Los cambios relevantes se anunciarán en la plataforma antes de entrar en vigor."]
+    ]
+  },
+  privacidad: {
+    titulo: "Política de privacidad",
+    actualizado: "12 de septiembre de 2026",
+    secciones: [
+      ["Qué datos recogemos",
+       "De los viajeros: nombre, correo, teléfono y los datos de las reservas o cotizaciones que solicitan. De los proveedores: además nombre del negocio, municipio, RIF o cédula y datos de cobro. De los dueños de vehículos: adicionalmente los documentos del vehículo y su placa."],
+      ["Para qué los usamos",
+       "Para procesar reservas y cotizaciones, verificar proveedores y vehículos, y poner en contacto a las partes de una transacción. No los usamos para nada distinto de operar la plataforma."],
+      ["Con quién los compartimos",
+       "Cuando reservas, el proveedor recibe los datos necesarios para atenderte. Cuando pides una cotización de vuelo o de tour, tus datos se envían a la agencia de viajes aliada que la prepara. Fuera de eso no compartimos información personal con terceros, salvo requerimiento legal."],
+      ["Documentos de identidad y de vehículos",
+       "Los documentos que suben proveedores y dueños de vehículos se guardan en almacenamiento privado y solo son accesibles para su titular y para el equipo de verificación de Táchira GOO!!!. Nunca se muestran a los viajeros ni se publican."],
+      ["Cuánto tiempo los guardamos",
+       "Mientras la cuenta esté activa, y después durante el tiempo necesario para atender obligaciones legales o resolver disputas."],
+      ["Tus derechos",
+       "Puedes pedir acceso, corrección o eliminación de tus datos escribiendo al contacto de esta página. Eliminar la cuenta no borra registros de transacciones ya realizadas cuando exista obligación de conservarlos."],
+      ["Seguridad",
+       "Los datos viajan cifrados y el acceso está restringido por permisos: cada proveedor ve únicamente su propia información."]
+    ]
+  },
+  cancelacion: {
+    titulo: "Política de cancelación",
+    actualizado: "12 de septiembre de 2026",
+    secciones: [
+      ["La condición la fija cada proveedor",
+       "No hay una regla única para toda la plataforma. Cada publicación indica cuál de las tres condiciones aplica, y se muestra antes de reservar."],
+      ["100% reembolsable",
+       "Se devuelve el total si se cancela con al menos 48 horas de antelación al inicio del servicio. Con menos de 48 horas no hay devolución."],
+      ["Reembolsable parcialmente",
+       "Se devuelve el 50% si se cancela con al menos 48 horas de antelación. Con menos de 48 horas no hay devolución."],
+      ["Sin reembolso",
+       "La reserva no admite devolución una vez confirmada."],
+      ["Si cancela el proveedor",
+       "Si es el proveedor quien cancela, el viajero recibe el 100% de lo pagado, sea cual sea la condición de la publicación."],
+      ["Fuerza mayor",
+       "Ante hechos fuera del control de las partes —clima severo, cierre de vías, emergencias— evaluamos caso por caso y buscamos reprogramar antes que cancelar."]
+    ]
+  }
+};
+
+function LegalModal({ doc, onClose }) {
+  useEffect(() => {
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+  const d = LEGAL[doc];
+  if (!d) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-black/50 z-[90] flex items-start justify-center p-4 overflow-y-auto",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-xl max-w-2xl w-full my-8",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sticky top-0 bg-white border-b border-slate-200 rounded-t-xl px-6 py-4 flex items-start justify-between gap-4"
+  }, /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("h2", { className: "text-lg font-bold text-slate-900" }, d.titulo),
+    /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-400 mt-0.5" }, "Actualizado el ", d.actualizado)),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: onClose, "aria-label": "Cerrar",
+      className: "text-slate-400 hover:text-slate-700 text-2xl leading-none shrink-0"
+    }, "×")),
+    /*#__PURE__*/React.createElement("div", { className: "px-6 py-5 space-y-5" },
+      d.secciones.map(function(par, i){
+        return /*#__PURE__*/React.createElement("section", { key: i },
+          /*#__PURE__*/React.createElement("h3", { className: "text-sm font-bold text-slate-900 mb-1.5" }, par[0]),
+          /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-600 leading-relaxed" }, par[1]));
+      }))));
+}
+
+function SiteFooter({ onOpenLegal }) {
+  const enlace = (clave, texto) => /*#__PURE__*/React.createElement("button", {
+    key: clave,
+    onClick: () => onOpenLegal(clave),
+    className: "text-sm text-slate-500 hover:text-[#0052CC] transition-colors"
+  }, texto);
+  return /*#__PURE__*/React.createElement("footer", {
+    className: "border-t border-slate-200 mt-12 bg-slate-50"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row md:items-start justify-between gap-5"
+  }, /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("p", { className: "font-bold text-slate-900" }, "Táchira ",
+      /*#__PURE__*/React.createElement("span", { className: "text-[#FF6B00]" }, "GOO!!!")),
+    /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-1 max-w-sm leading-relaxed" },
+      "Conectamos viajeros con proveedores turísticos verificados del estado Táchira. Los servicios los presta cada proveedor.")),
+    /*#__PURE__*/React.createElement("nav", {
+      className: "flex flex-wrap gap-x-6 gap-y-2",
+      "aria-label": "Avisos legales"
+    }, [enlace("terminos", "Términos y condiciones"),
+        enlace("privacidad", "Política de privacidad"),
+        enlace("cancelacion", "Política de cancelación")])),
+    /*#__PURE__*/React.createElement("div", { className: "border-t border-slate-200" },
+      /*#__PURE__*/React.createElement("p", { className: "max-w-6xl mx-auto px-4 py-4 text-xs text-slate-400" },
+        "© ", new Date().getFullYear(), " Táchira GOO!!!")));
+}
+
 function App() {  
   const [view, setView] = useState("home");  
   const [category, setCategory] = useState("alojamientos");  
@@ -3899,7 +4028,8 @@ function App() {
     whatsapp: ""  
   });  
   const [paymentMethod, setPaymentMethod] = useState(null);  
-  const [showSuccess, setShowSuccess] = useState(false);  
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [legalAbierto, setLegalAbierto] = useState(null);  
   const handleAddToCart = item => {  
     let providerNombre = null;  
     if (item.providerId) {  
@@ -4039,6 +4169,11 @@ function App() {
     onRemove: handleRemoveFromCart,  
     onCheckout: goToCheckout,  
     currency: currency  
+  }), /*#__PURE__*/React.createElement(SiteFooter, {
+    onOpenLegal: setLegalAbierto
+  }), legalAbierto && /*#__PURE__*/React.createElement(LegalModal, {
+    doc: legalAbierto,
+    onClose: () => setLegalAbierto(null)
   }));  
 }
 
