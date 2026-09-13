@@ -2874,7 +2874,9 @@ function DetailScreenTour({
   const total = useMemo(() => adults * PRICE_ADULT + children * PRICE_CHILD, [adults, children]);  
   const handleAdd = () => {  
     onAddToCart({  
-      id: `tour-${Date.now()}`,  
+      id: `tour-${Date.now()}`,
+        listingId: tour.id,
+        providerId2: tour.providerId || null,  
       tipo: "tour",  
       titulo: tour.title,  
       img: tour.img,  
@@ -2919,10 +2921,9 @@ function DetailScreenTour({
     className: "text-slate-300"  
   }, "·"), /*#__PURE__*/React.createElement("span", {  
     className: "text-slate-600"  
-  }, "Proveedor de la actividad: ", /*#__PURE__*/React.createElement("a", {  
-    href: "#",  
-    className: "text-[#0052CC] font-medium hover:underline"  
-  }, "Aventuras Andinas")))), /*#__PURE__*/React.createElement(ImageGrid, {  
+  }, "Proveedor de la actividad: ", /*#__PURE__*/React.createElement("span", {
+    className: "text-[#0052CC] font-medium"
+  }, tour.proveedor || "Proveedor verificado")))), /*#__PURE__*/React.createElement(ImageGrid, {  
     mainImg: tour.img  
   }), /*#__PURE__*/React.createElement("div", {  
     className: "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6"  
@@ -3026,7 +3027,9 @@ function AlojamientoDetailScreen({
   const handleAdd = () => {  
     if (noches <= 0) return;  
     onAddToCart({  
-      id: `aloj-${Date.now()}`,  
+      id: `aloj-${Date.now()}`,
+        listingId: aloj.id,
+        providerId2: aloj.providerId || null,  
       tipo: "alojamiento",  
       titulo: aloj.titulo,  
       img: aloj.imgs[0],  
@@ -4021,7 +4024,8 @@ function CheckoutScreen({
   paymentMethod,  
   setPaymentMethod,  
   showSuccess,  
-  onConfirm,  
+  onConfirm,
+  errorReserva,  
   onCloseSuccess  
 }) {  
   const total = useMemo(() => cart.reduce((s, i) => s + i.total, 0), [cart]);  
@@ -4090,8 +4094,10 @@ function CheckoutScreen({
     className: "text-xs text-slate-500"  
   }, m.sub), paymentMethod === m.id && /*#__PURE__*/React.createElement("p", {  
     className: "text-xs text-slate-600 mt-2 border-t border-slate-200 pt-2"  
-  }, m.detail))))), /*#__PURE__*/React.createElement("button", {  
-    onClick: onConfirm,  
+  }, m.detail))))), errorReserva && /*#__PURE__*/React.createElement("div", {
+    className: "rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 mb-3 leading-relaxed"
+  }, errorReserva), /*#__PURE__*/React.createElement("button", {
+    onClick: onConfirm,
     disabled: !canConfirm,  
     className: "w-full bg-[#FF6B00] hover:bg-[#EA580C] disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-lg transition-colors"  
   }, "Confirmar Pago"), !canConfirm && /*#__PURE__*/React.createElement("p", {  
@@ -4348,7 +4354,40 @@ function App() {
       behavior: "smooth"  
     });  
   };  
-  const handleConfirmPayment = () => setShowSuccess(true);  
+  const [errorReserva, setErrorReserva] = useState("");
+  /* Antes esto solo pintaba la pantalla de éxito: el cliente creía haber
+     reservado y al proveedor no le llegaba nada. Ahora se registra de verdad. */
+  const handleConfirmPayment = async () => {
+    setErrorReserva("");
+    const sb = window.__tgSupabase;
+    if (!sb) { setErrorReserva("No hay conexión con el servidor. Intenta de nuevo."); return; }
+    const { data: userData } = await sb.auth.getUser();
+    const user = userData && userData.user;
+
+    const filas = cart.filter(i => i.listingId && i.providerId2).map(i => ({
+      listing_id: i.listingId,
+      provider_id: i.providerId2,
+      customer_id: user ? user.id : null,
+      guest_nombre: user ? null : form.nombre.trim(),
+      guest_telefono: user ? null : form.whatsapp.trim(),
+      guest_cedula: user ? null : (form.cedula.trim() || null),
+      booking_date: i.fecha || i.checkIn,
+      amount: i.total,
+      currency: "USD",
+      status: "pending"
+    }));
+
+    if (!filas.length) {
+      setErrorReserva("No pudimos identificar los servicios del carrito. Vuelve a agregarlos.");
+      return;
+    }
+    const { error } = await sb.from("bookings").insert(filas);
+    if (error) {
+      setErrorReserva("No se pudo registrar tu solicitud: " + error.message);
+      return;
+    }
+    setShowSuccess(true);
+  };  
   const handleCloseSuccess = () => {  
     setShowSuccess(false);  
     setCart([]);  
@@ -4415,7 +4454,8 @@ function App() {
     paymentMethod: paymentMethod,  
     setPaymentMethod: setPaymentMethod,  
     showSuccess: showSuccess,  
-    onConfirm: handleConfirmPayment,  
+    onConfirm: handleConfirmPayment,
+    errorReserva: errorReserva,  
     onCloseSuccess: handleCloseSuccess  
   }), /*#__PURE__*/React.createElement(CartDrawer, {  
     open: cartOpen,  
@@ -4510,6 +4550,7 @@ async function cargarCatalogoReal(){
         municipio: municipioCanonico(l.municipio),
         tipo: 'alojamiento',
         imgs: [l.cover_image_url],
+        proveedor: (l.providers && l.providers.business_name) || null,
         precioNocheUSD: Number(l.base_price),
         rating, reviews,
         limpiezaUSD: 0,
@@ -4529,6 +4570,7 @@ async function cargarCatalogoReal(){
         rating, reviews,
         priceCOP: Number(l.base_price) * TASA_COP,  // las tarjetas trabajan en COP
         img: l.cover_image_url,
+        proveedor: (l.providers && l.providers.business_name) || null,
         municipio: municipioCanonico(l.municipio),
         providerId: l.provider_id,
         isVip: false,
@@ -4589,137 +4631,8 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 })();
 </script>
 
-<script>
-(function(){
-  // Reutiliza el cliente que ya creó el arranque del catálogo: dos clientes
-  // sobre el mismo proyecto duplicarían los escuchas de sesión.
-  const sb = window.__tgSupabase;
-
-  function isComplete(l){
-    const p = l.providers;
-    return !!(p && p.business_name && p.municipio &&
-      l.title && l.description && l.municipio &&
-      l.base_price != null && l.cover_image_url);
-  }
-
-  function escapeHtml(str){
-    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  function closeBookingModal(){
-    const el = document.getElementById('bookingModal');
-    if(el) el.remove();
-  }
-
-  function openBookingModal(listing){
-    closeBookingModal();
-    const overlay = document.createElement('div');
-    overlay.id = 'bookingModal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px';
-    overlay.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:28px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-        <h3 style="font-weight:800;font-size:18px;margin:0 0 4px;color:#0f172a">Solicitar reserva</h3>
-        <p style="font-size:13px;color:#64748b;margin:0 0 18px">${escapeHtml(listing.title)} · ${escapeHtml(listing.providers.business_name)}</p>
-        <div id="bookingFormFields">
-          <label style="font-size:12.5px;font-weight:600;color:#344054;display:block;margin-bottom:4px">Tu correo</label>
-          <input id="bkEmail" type="email" placeholder="tu@correo.com" style="width:100%;padding:10px 12px;border:1.5px solid #E4E7EC;border-radius:9px;font-size:14px;margin-bottom:12px;box-sizing:border-box">
-          <label style="font-size:12.5px;font-weight:600;color:#344054;display:block;margin-bottom:4px">Contraseña</label>
-          <input id="bkPassword" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 12px;border:1.5px solid #E4E7EC;border-radius:9px;font-size:14px;margin-bottom:12px;box-sizing:border-box">
-          <label style="font-size:12.5px;font-weight:600;color:#344054;display:block;margin-bottom:4px">Fecha deseada</label>
-          <input id="bkDate" type="date" style="width:100%;padding:10px 12px;border:1.5px solid #E4E7EC;border-radius:9px;font-size:14px;margin-bottom:16px;box-sizing:border-box">
-        </div>
-        <div id="bookingError" style="display:none;color:#C0122D;font-size:12.5px;margin-bottom:12px"></div>
-        <div id="bookingSuccess" style="display:none;color:#12805C;font-size:13px;margin-bottom:12px"></div>
-        <div style="display:flex;gap:10px">
-          <button id="bkCancel" style="flex:1;padding:11px;border-radius:9px;border:1.5px solid #E4E7EC;background:#fff;font-weight:700;font-size:13.5px;cursor:pointer">Cancelar</button>
-          <button id="bkSubmit" style="flex:1;padding:11px;border-radius:9px;border:none;background:#0052CC;color:#fff;font-weight:700;font-size:13.5px;cursor:pointer">Enviar solicitud</button>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-    document.getElementById('bkCancel').addEventListener('click', closeBookingModal);
-    overlay.addEventListener('click', (e) => { if(e.target === overlay) closeBookingModal(); });
-    document.getElementById('bkSubmit').addEventListener('click', () => submitBooking(listing));
-  }
-
-  async function submitBooking(listing){
-    const email = document.getElementById('bkEmail').value.trim();
-    const password = document.getElementById('bkPassword').value;
-    const date = document.getElementById('bkDate').value;
-    const errEl = document.getElementById('bookingError');
-    const okEl = document.getElementById('bookingSuccess');
-    const submitBtn = document.getElementById('bkSubmit');
-    errEl.style.display = 'none';
-    if(!email || !password || !date){
-      errEl.textContent = 'Completa correo, contraseña y fecha.';
-      errEl.style.display = 'block';
-      return;
-    }
-    if(password.length < 6){
-      errEl.textContent = 'La contraseña debe tener al menos 6 caracteres.';
-      errEl.style.display = 'block';
-      return;
-    }
-    submitBtn.textContent = 'Enviando...';
-    submitBtn.disabled = true;
-
-    let { data: signInData, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
-    let user = signInData?.user;
-    if(signInErr){
-      const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password });
-      if(signUpErr){
-        errEl.textContent = signUpErr.message;
-        errEl.style.display = 'block';
-        submitBtn.textContent = 'Enviar solicitud';
-        submitBtn.disabled = false;
-        return;
-      }
-      if(!signUpData.session){
-        errEl.textContent = 'Ya existe una cuenta con ese correo pero la contraseña no coincide, o falta confirmar el correo.';
-        errEl.style.display = 'block';
-        submitBtn.textContent = 'Enviar solicitud';
-        submitBtn.disabled = false;
-        return;
-      }
-      user = signUpData.user;
-      const { error: profileErr } = await sb.from('profiles').upsert({ id: user.id, role: 'cliente' });
-      if(profileErr){
-        errEl.textContent = 'Error creando tu perfil: ' + profileErr.message;
-        errEl.style.display = 'block';
-        submitBtn.textContent = 'Enviar solicitud';
-        submitBtn.disabled = false;
-        return;
-      }
-    }
-
-    const ref = 'RSV-' + Date.now().toString(36).toUpperCase();
-    const { error: bookingErr } = await sb.from('bookings').insert({
-      ref,
-      listing_id: listing.id,
-      provider_id: listing.provider_id,
-      customer_id: user.id,
-      booking_date: date,
-      amount: listing.base_price,
-      currency: 'USD',
-      status: 'pending'
-    });
-    submitBtn.textContent = 'Enviar solicitud';
-    submitBtn.disabled = false;
-    if(bookingErr){
-      errEl.textContent = 'Error al enviar la solicitud: ' + bookingErr.message;
-      errEl.style.display = 'block';
-      return;
-    }
-    document.getElementById('bookingFormFields').style.display = 'none';
-    document.getElementById('bkSubmit').style.display = 'none';
-    okEl.textContent = '¡Solicitud enviada! El proveedor la verá en su panel y se pondrá en contacto contigo.';
-    okEl.style.display = 'block';
-  }
-
-  /* La sección "Proveedores registrados" se retiró: el catálogo principal
-     ya se llena con estos mismos listados, y mantener las dos duplicaba
-     cada tour en la misma página. */
-})();
-</script>  
+<!-- El bloque de reserva de la antigua sección de proveedores se retiró:
+     el catálogo principal ya registra las reservas en el checkout. -->  
   
   
 </body></html>
