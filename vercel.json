@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/((?!_next|assets|favicon.ico|robots.txt).*)", "destination": "/index.html" }
+  ]
+}

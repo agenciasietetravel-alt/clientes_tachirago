@@ -4273,6 +4273,26 @@ function SiteFooter({ onOpenLegal }) {
         "© ", new Date().getFullYear(), " Táchira GOO!!!")));
 }
 
+function NoEncontrado({ ruta, onInicio }) {
+  return /*#__PURE__*/React.createElement("main", {
+    className: "max-w-xl mx-auto px-4 py-24 text-center"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] font-bold tracking-widest text-[#0052CC] uppercase mb-2"
+  }, "Página no encontrada"),
+    /*#__PURE__*/React.createElement("h1", {
+      className: "text-2xl font-bold text-slate-900 mb-3"
+    }, "No encontramos ese negocio"),
+    /*#__PURE__*/React.createElement("p", {
+      className: "text-sm text-slate-600 leading-relaxed mb-6"
+    }, "La dirección ", /*#__PURE__*/React.createElement("span", {
+      className: "font-mono text-slate-800"
+    }, "/", ruta), " no corresponde a ningún negocio publicado en Táchira GOO!!!. Puede que el enlace esté mal escrito o que el negocio ya no esté activo."),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: onInicio,
+      className: "bg-[#0052CC] hover:bg-[#003D99] text-white font-bold px-6 py-3 rounded-lg transition-colors"
+    }, "Ir al inicio"));
+}
+
 function App() {  
   const [view, setView] = useState("home");  
   const [category, setCategory] = useState("alojamientos");  
@@ -4304,7 +4324,12 @@ function App() {
     setCartOpen(true);  
   };  
   const handleRemoveFromCart = id => setCart(prev => prev.filter(i => i.id !== id));  
-  const goHome = () => setView("home");  
+  const [vistaNoEncontrada, setVistaNoEncontrada] = useState(null);
+  const goHome = () => {
+    setView("home");
+    setActiveProvider(null);
+    if (window.location.pathname !== "/") window.history.pushState({}, "", "/");
+  };  
   const openTour = (tourCardData, fromProvider = false) => {  
     setActiveItem({  
       type: "tour",  
@@ -4329,14 +4354,43 @@ function App() {
       behavior: "smooth"  
     });  
   };  
-  const handleSelectProvider = p => {  
-    setActiveProvider(p);  
-    setView("provider");  
-    window.scrollTo({  
-      top: 0,  
-      behavior: "smooth"  
-    });  
-  };  
+  const handleSelectProvider = (p, sinHistorial) => {
+    setActiveProvider(p);
+    setView("provider");
+    /* El micrositio necesita dirección propia: es lo que el negocio comparte
+       en sus redes. Sin esto la página existe pero no se puede enlazar. */
+    if (!sinHistorial && p && p.slug) {
+      window.history.pushState({ slug: p.slug }, "", "/" + p.slug);
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  /* Al entrar por la dirección de un negocio se abre su micrositio directamente,
+     y el botón atrás del navegador devuelve al inicio. */
+  useEffect(() => {
+    const abrirDesdeRuta = () => {
+      /* En producción la aplicación vive en la raíz, así que el primer tramo de
+         la ruta es la dirección del negocio. En desarrollo se sirve desde una
+         subcarpeta, donde ese tramo es la carpeta y no un negocio. */
+      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        setActiveProvider(null); setView("home"); return;
+      }
+      const tramos = window.location.pathname.split("/").filter(Boolean);
+      const ruta = tramos.length ? decodeURIComponent(tramos[0]).toLowerCase() : "";
+      if (!ruta) { setActiveProvider(null); setView("home"); return; }
+      /* Si el catálogo no llegó a cargar, no podemos afirmar que el negocio no
+         existe: sería acusar de rota una página que quizá está bien. */
+      if (!ELITE_PROVIDERS.length && !CARDS_BY_CATEGORY.experiencias.length) {
+        setActiveProvider(null); setView("home"); return;
+      }
+      const negocio = ELITE_PROVIDERS.find(x => x.slug === ruta);
+      if (negocio) { setActiveProvider(negocio); setView("provider"); }
+      else { setVistaNoEncontrada(ruta); setView("nofound"); }
+    };
+    abrirDesdeRuta();
+    window.addEventListener("popstate", abrirDesdeRuta);
+    return () => window.removeEventListener("popstate", abrirDesdeRuta);
+  }, []);  
   const handleOpenFeatured = () => {  
     if (!activeProvider) return;  
     const f = getFeaturedItem(activeProvider);  
@@ -4445,7 +4499,10 @@ function App() {
     onBack: handleBackFromDetail,  
     onAddToCart: handleAddToCart,  
     currency: currency  
-  })), view === "checkout" && /*#__PURE__*/React.createElement(CheckoutScreen, {  
+  })), view === "nofound" && /*#__PURE__*/React.createElement(NoEncontrado, {
+    ruta: vistaNoEncontrada,
+    onInicio: goHome
+  }), view === "checkout" && /*#__PURE__*/React.createElement(CheckoutScreen, {  
     cart: cart,  
     currency: currency,  
     onBack: () => setView("home"),  
@@ -4593,6 +4650,10 @@ async function cargarCatalogoReal(){
   aprobados.forEach(p => {
     ELITE_PROVIDERS.push({
       id: p.id,
+      slug: p.slug || null,
+      logo: p.logo_url || null,
+      portada: p.cover_image_url || null,
+      tipoNegocio: p.business_type || 'otro',
       nombre: p.cover_title || p.business_name,
       acento: '#0052CC',
       especialidad: p.cover_tagline || 'Proveedor verificado',
