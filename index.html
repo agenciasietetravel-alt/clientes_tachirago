@@ -1325,6 +1325,8 @@ function VehiculoCard({ v, onReservar }) {
 function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose }) {
   const [desde, setDesde] = useState(desdeInicial || "");
   const [hasta, setHasta] = useState(hastaInicial || "");
+  const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [estado, setEstado] = useState({ enviando:false, error:"", listo:false });
   useEffect(() => {
     const onKey = e => { if (e.key === "Escape") onClose(); };
@@ -1357,16 +1359,20 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
       return;
     }
 
-    const { data: userData } = await sb.auth.getUser();
-    const user = userData && userData.user;
-    if (!user) {
+    /* No hay registro de viajeros: se alquila como invitado dejando nombre y
+       teléfono, que es lo que el dueño necesita para responder. */
+    if (!nombre.trim() || !telefono.trim()) {
       setEstado({ enviando:false, listo:false,
-        error: "Para reservar necesitas una cuenta. Regístrate con el botón «¿Eres un comercio?» si tienes un negocio, o escríbenos para acceso de viajero." });
+        error: "Necesitamos tu nombre y tu teléfono para que el dueño pueda contactarte." });
       return;
     }
-    await sb.from("profiles").upsert({ id: user.id, role: "cliente" });
+    const { data: userData } = await sb.auth.getUser();
+    const user = userData && userData.user;
     const { error } = await sb.from("vehicle_bookings").insert({
-      vehicle_id: vehiculo.id, owner_id: vehiculo.owner_id, customer_id: user.id,
+      vehicle_id: vehiculo.id, owner_id: vehiculo.owner_id,
+      customer_id: user ? user.id : null,
+      guest_nombre: user ? null : nombre.trim(),
+      guest_telefono: user ? null : telefono.trim(),
       start_date: desde, end_date: hasta, days: dias.length,
       amount: total, deposit: vehiculo.deposit || 0,
       currency: vehiculo.currency || "USD", status: "pending"
@@ -1410,6 +1416,16 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
               /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Devolución"),
               /*#__PURE__*/React.createElement("input", { type:"date", value:hasta, onChange:e => setHasta(e.target.value),
                 className:"w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm" }))),
+          /*#__PURE__*/React.createElement("label", { className: "block mt-3" },
+            /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Tu nombre"),
+            /*#__PURE__*/React.createElement("input", { type:"text", value:nombre, onChange:e => setNombre(e.target.value),
+              placeholder:"Nombre y apellido",
+              className:"w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm" })),
+          /*#__PURE__*/React.createElement("label", { className: "block mt-3" },
+            /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Tu WhatsApp o teléfono"),
+            /*#__PURE__*/React.createElement("input", { type:"tel", value:telefono, onChange:e => setTelefono(e.target.value),
+              placeholder:"Ej. +58 424 1234567",
+              className:"w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm" })),
           dias.length > 0 && /*#__PURE__*/React.createElement("div", {
             className: "flex justify-between items-center bg-slate-50 rounded-lg px-4 py-3 mt-3 text-sm"
           }, /*#__PURE__*/React.createElement("span", { className: "text-slate-600" },
