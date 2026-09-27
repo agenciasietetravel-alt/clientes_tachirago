@@ -193,10 +193,11 @@ const Trash2 = createIcon(`<path d="M10 11v6" />
   <path d="M3 6h18" />  
   <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />`);  
 const MessageCircle = createIcon(`<path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" />`);  
-const {  
-  useState,  
-  useMemo,  
-  useEffect  
+const {
+  useState,
+  useMemo,
+  useEffect,
+  useRef
 } = React;
 
 /* ==========================================================================  
@@ -205,8 +206,26 @@ const {
 
 const PRICE_ADULT = 30;  
 const PRICE_CHILD = 18;  
-const TASA_COP = 4000;  
-const TASA_EUR = 0.92; // EUR por 1 USD (aprox.)
+/* Las tasas las mantiene el admin en la tabla exchange_rates. Los valores de
+   aquí son solo el respaldo si la consulta falla: en Venezuela una tasa
+   desactualizada convierte un precio correcto en uno equivocado en días. */
+let TASA_COP = 4000;
+let TASA_VES = 40;
+let TASA_EUR = 0.92; // EUR por 1 USD (aprox.)
+let TASAS_ACTUALIZADAS = null;
+
+async function cargarTasas(){
+  const sb = window.__tgSupabase;
+  if(!sb) return;
+  const { data, error } = await sb.from("exchange_rates").select("moneda, valor, actualizado_en");
+  if(error || !data) return;
+  data.forEach(r => {
+    if(r.moneda === "COP") TASA_COP = Number(r.valor);
+    if(r.moneda === "VES") TASA_VES = Number(r.valor);
+    if(r.moneda === "EUR") TASA_EUR = Number(r.valor);
+    if(!TASAS_ACTUALIZADAS || r.actualizado_en > TASAS_ACTUALIZADAS) TASAS_ACTUALIZADAS = r.actualizado_en;
+  });
+}
 
 const IMAGES = {  
   hero: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1200&q=70",  
@@ -412,10 +431,26 @@ const PAYMENT_METHODS = [{
    HELPERS  
    ========================================================================== */
 
-function money(n, currency) {  
-  if (currency === "COP") return `${Math.round(n * TASA_COP).toLocaleString("es-CO")} COP`;  
-  if (currency === "EUR") return `€${(n * TASA_EUR).toFixed(0)}`;  
-  return `$${n.toFixed(0)} USD`;  
+function money(n, currency) {
+  if (currency === "COP") return `$${Math.round(n * TASA_COP).toLocaleString("es-CO")} COP`;
+  if (currency === "VES") return `Bs. ${Math.round(n * TASA_VES).toLocaleString("es-VE")}`;
+  if (currency === "EUR") return `€${(n * TASA_EUR).toFixed(0)}`;
+  return `$${n.toFixed(2)} USD`;
+}
+
+/* El viajero paga en la moneda que tenga a mano. Mostrar las tres juntas
+   evita la pregunta "¿y eso cuánto es en bolívares?" que hoy llega por
+   WhatsApp en cada reserva. */
+function MontoTresMonedas({ usd, tasaCop, tasaVes, compacto }) {
+  const cop = Math.round(usd * (tasaCop || TASA_COP));
+  const ves = Math.round(usd * (tasaVes || TASA_VES));
+  return React.createElement("div", { className: compacto ? "text-right" : "" },
+    React.createElement("p", { className: compacto ? "font-bold text-slate-900" : "text-2xl font-bold text-slate-900" },
+      `$${usd.toFixed(2)} USD`),
+    React.createElement("p", { className: "text-xs text-slate-500 leading-relaxed" },
+      `$${cop.toLocaleString("es-CO")} COP`,
+      React.createElement("span", { className: "mx-1 text-slate-300" }, "·"),
+      `Bs. ${ves.toLocaleString("es-VE")}`));
 }  
 function Stars({  
   rating,  
@@ -603,15 +638,17 @@ function JoinProviderModal({
     className: "text-[#0052CC] font-semibold"
   }, "Entra al Portal de Proveedores")))));
 }
-function Navbar({  
-  cartCount,  
-  onOpenCart,  
-  currency,  
-  setCurrency,  
-  onLogoClick,  
-  onSelectMunicipio,  
-  onSelectActividad  
-}) {  
+function Navbar({
+  cartCount,
+  onOpenCart,
+  currency,
+  setCurrency,
+  onLogoClick,
+  onSelectMunicipio,
+  onSelectActividad,
+  onMisReservas
+}) {
+
   const [openDropdown, setOpenDropdown] = useState(null);  
   const [currencyOpen, setCurrencyOpen] = useState(false);  
   const [joinOpen, setJoinOpen] = useState(false);  
@@ -701,9 +738,12 @@ function Navbar({
       size: 14,  
       className: "text-[#FF6B00] shrink-0"  
     }), " ", item)))));  
-  }), /*#__PURE__*/React.createElement("button", {  
-    onClick: () => setJoinOpen(true),  
-    className: "ml-1 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-[#FF6B00] text-[#FF6B00] hover:bg-orange-50 transition-colors whitespace-nowrap"  
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: onMisReservas,
+    className: "ml-1 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-[#0052CC] text-[#0052CC] hover:bg-blue-50 transition-colors whitespace-nowrap"
+  }, "Mis reservas"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setJoinOpen(true),
+    className: "ml-1 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-[#FF6B00] text-[#FF6B00] hover:bg-orange-50 transition-colors whitespace-nowrap"
   }, "¿Eres un comercio? Únete a nosotros")), /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-1 ml-auto shrink-0 relative z-30"  
   }, /*#__PURE__*/React.createElement("button", {  
@@ -765,9 +805,12 @@ function Navbar({
       size: 13,  
       className: "text-[#FF6B00] shrink-0"  
     }), " ", item)))));  
-  }), /*#__PURE__*/React.createElement("button", {  
-    onClick: () => setJoinOpen(true),  
-    className: "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#FF6B00] text-[#FF6B00] whitespace-nowrap"  
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: onMisReservas,
+    className: "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#0052CC] text-[#0052CC] whitespace-nowrap"
+  }, "Mis reservas"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setJoinOpen(true),
+    className: "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#FF6B00] text-[#FF6B00] whitespace-nowrap"
   }, "Únete a nosotros")), joinOpen && /*#__PURE__*/React.createElement(JoinProviderModal, {  
     onClose: () => setJoinOpen(false)  
   }));  
@@ -1436,6 +1479,7 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [cedula, setCedula] = useState("");
+  const [email, setEmail] = useState("");
   const [metodo, setMetodo] = useState(PAYMENT_METHODS[0].id);
   const [referencia, setReferencia] = useState("");
   const [archivo, setArchivo] = useState(null);
@@ -1456,6 +1500,10 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
   const enviar = async () => {
     if (!nombre.trim() || !telefono.trim()) {
       setEstado({ enviando:false, error:"Necesitamos tu nombre y tu teléfono para confirmarte la reserva.", reserva:null });
+      return;
+    }
+    if (!cedula.trim() && !email.trim()) {
+      setEstado({ enviando:false, error:"Necesitamos tu cédula o tu correo: es con lo que podrás volver a entrar a tu reserva.", reserva:null });
       return;
     }
     if (!archivo) {
@@ -1488,13 +1536,15 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
       p_cedula: cedula.trim() || null,
       p_comprobante_url: ruta,
       p_comprobante_referencia: referencia.trim() || null,
-      p_comprobante_metodo: metodoSel.label
+      p_comprobante_metodo: metodoSel.label,
+      p_email: email.trim() || null
     });
     if (error) {
       setEstado({ enviando:false, error: error.message, reserva:null });
       return;
     }
     setEstado({ enviando:false, error:"", reserva: data });
+    enviarVoucherPorCorreo(data.codigo);
   };
 
   const campo = (etiqueta, valor, set, tipo, ph, req) =>
@@ -1507,23 +1557,33 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
 
   if (estado.reserva) {
     const r = estado.reserva;
-    return /*#__PURE__*/React.createElement("div", {
-      className: "fixed inset-0 bg-black/50 z-[95] flex items-center justify-center p-4", onClick: onClose
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "bg-white rounded-xl max-w-md w-full p-6", onClick: e => e.stopPropagation()
-    }, /*#__PURE__*/React.createElement("h3", { className:"text-lg font-bold text-slate-900 mb-1" }, "Reserva recibida"),
-      /*#__PURE__*/React.createElement("p", { className:"text-xs text-slate-400 mb-4" }, "Referencia ", r.ref),
-      /*#__PURE__*/React.createElement("div", { className:"rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 leading-relaxed" },
-        "Tu habitación quedó apartada. Estamos verificando tu pago y te confirmamos por WhatsApp al ",
-        /*#__PURE__*/React.createElement("strong", null, telefono), "."),
-      alLlegar > 0 && /*#__PURE__*/React.createElement("div", { className:"rounded-lg bg-slate-50 text-sm px-4 py-3 mt-3 leading-relaxed" },
-        "Al llegar al alojamiento pagas los ", /*#__PURE__*/React.createElement("strong", null, "$", alLlegar), " restantes."),
-      /*#__PURE__*/React.createElement("button", { onClick: onClose,
+    /* No decimos "confirmada": el pago aún no se ha verificado. */
+    return React.createElement("div", {
+      className: "fixed inset-0 bg-black/50 flex items-center justify-center p-4", style: { zIndex: 95 }, onClick: onClose
+    }, React.createElement("div", {
+      className: "bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto", onClick: e => e.stopPropagation()
+    },
+      React.createElement("h3", { className:"text-lg font-bold text-slate-900" },
+        "Transacción recibida, a la espera de confirmación"),
+      React.createElement("p", { className:"text-sm text-slate-500 mt-1.5 leading-relaxed" },
+        "Suele tardar unos minutos. Tu voucher y los detalles de la reserva se enviarán a tu correo en cuanto validemos el pago."),
+
+      React.createElement("div", { className:"mt-4 border border-slate-200 rounded-lg px-4 py-3 text-center" },
+        React.createElement("p", { className:"text-[10px] font-semibold text-slate-400 uppercase tracking-wide" }, "Código de reserva"),
+        React.createElement("p", { className:"font-mono font-bold text-2xl text-slate-900 tracking-wider" }, r.codigo)),
+
+      React.createElement("p", { className:"text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 mt-3 leading-relaxed" },
+        "Guarda tu código. Con él y tu cédula o correo puedes consultar la reserva y hablar con el alojamiento, sin crear ninguna cuenta."),
+
+      alLlegar > 0 ? React.createElement("div", { className:"rounded-lg bg-slate-50 text-sm px-4 py-3 mt-3 leading-relaxed" },
+        "Al llegar al alojamiento pagas los ", React.createElement("strong", null, "$", alLlegar.toFixed(2)), " restantes.") : null,
+
+      React.createElement("button", { onClick: onClose,
         className:"w-full mt-4 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-lg" }, "Cerrar")));
   }
 
   return /*#__PURE__*/React.createElement("div", {
-    className: "fixed inset-0 bg-black/50 z-[95] flex items-start justify-center p-4 overflow-y-auto", onClick: onClose
+    className: "fixed inset-0 bg-black/50 flex items-start justify-center p-4 overflow-y-auto", style: { zIndex: 95 }, onClick: onClose
   }, /*#__PURE__*/React.createElement("div", {
     className: "bg-white rounded-xl max-w-md w-full p-6 my-8", onClick: e => e.stopPropagation()
   },
@@ -1572,7 +1632,8 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
     /*#__PURE__*/React.createElement("div", { className:"space-y-3" },
       campo("Tu nombre", nombre, setNombre, "text", "Nombre y apellido", true),
       campo("Tu WhatsApp", telefono, setTelefono, "tel", "Ej. +58 424 1234567", true),
-      campo("Cédula o pasaporte", cedula, setCedula, "text", "Opcional", false),
+      campo("Cédula o pasaporte", cedula, setCedula, "text", "Ej. V-12345678", false),
+      campo("Correo electrónico", email, setEmail, "email", "Aquí te llega el voucher", false),
       campo("Referencia de la transferencia", referencia, setReferencia, "text", "Número o últimos dígitos", false),
       /*#__PURE__*/React.createElement("label", { className:"block" },
         /*#__PURE__*/React.createElement("span", { className:"block text-xs font-semibold text-slate-600 mb-1" },
@@ -1701,7 +1762,7 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
   };
 
   return /*#__PURE__*/React.createElement("div", {
-    className: "fixed inset-0 bg-black/50 z-[95] flex items-center justify-center p-4",
+    className: "fixed inset-0 bg-black/50 flex items-center justify-center p-4", style: { zIndex: 95 },
     onClick: onClose
   }, /*#__PURE__*/React.createElement("div", {
     className: "bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto",
@@ -4356,129 +4417,620 @@ ${separador}`;
     className: "text-xs text-slate-400 mt-2"  
   }, "Para zonas sin señal")));  
 }  
-function CheckoutScreen({  
-  cart,  
-  currency,  
-  onBack,  
-  form,  
-  setForm,  
-  paymentMethod,  
-  setPaymentMethod,  
-  showSuccess,  
-  onConfirm,
-  errorReserva,  
-  onCloseSuccess  
-}) {  
-  const total = useMemo(() => cart.reduce((s, i) => s + i.total, 0), [cart]);  
-  const canConfirm = form.nombre.trim() && form.cedula.trim() && form.whatsapp.trim() && paymentMethod && cart.length > 0;  
-  return /*#__PURE__*/React.createElement("main", {  
-    className: "max-w-4xl mx-auto px-4 pb-16"  
-  }, /*#__PURE__*/React.createElement("button", {  
-    onClick: onBack,  
-    className: "flex items-center gap-1.5 text-sm text-slate-600 hover:text-[#0052CC] mt-4"  
-  }, /*#__PURE__*/React.createElement(ArrowLeft, {  
-    size: 16  
-  }), " Volver"), /*#__PURE__*/React.createElement("h1", {  
-    className: "text-2xl font-bold text-slate-900 mt-4"  
-  }, "Finalizar reserva"), /*#__PURE__*/React.createElement("div", {  
-    className: "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6"  
-  }, /*#__PURE__*/React.createElement("div", {  
-    className: "lg:col-span-2 space-y-8"  
-  }, /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h2", {  
-    className: "text-lg font-bold text-slate-900 mb-3"  
-  }, "Datos del titular"), /*#__PURE__*/React.createElement("div", {  
-    className: "space-y-3"  
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {  
-    className: "text-xs font-semibold text-slate-500 block mb-1"  
-  }, "Nombre completo"), /*#__PURE__*/React.createElement("input", {  
-    type: "text",  
-    value: form.nombre,  
-    onChange: e => setForm(f => ({  
-      ...f,  
-      nombre: e.target.value  
-    })),  
-    placeholder: "Ej. María Pérez",  
-    className: "w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]"  
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {  
-    className: "text-xs font-semibold text-slate-500 block mb-1"  
-  }, "Cédula / Pasaporte"), /*#__PURE__*/React.createElement("input", {  
-    type: "text",  
-    value: form.cedula,  
-    onChange: e => setForm(f => ({  
-      ...f,  
-      cedula: e.target.value  
-    })),  
-    placeholder: "Ej. V-12345678",  
-    className: "w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]"  
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {  
-    className: "text-xs font-semibold text-slate-500 block mb-1"  
-  }, "WhatsApp"), /*#__PURE__*/React.createElement("input", {  
-    type: "tel",  
-    value: form.whatsapp,  
-    onChange: e => setForm(f => ({  
-      ...f,  
-      whatsapp: e.target.value  
-    })),  
-    placeholder: "Ej. +58 414 123 4567",  
-    className: "w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]"  
-  })))), /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("h2", {  
-    className: "text-lg font-bold text-slate-900 mb-3"  
-  }, "Método de pago"), /*#__PURE__*/React.createElement("div", {  
-    className: "grid grid-cols-1 sm:grid-cols-2 gap-3"  
-  }, PAYMENT_METHODS.map(m => /*#__PURE__*/React.createElement("button", {  
-    key: m.id,  
-    onClick: () => setPaymentMethod(m.id),  
-    className: `text-left border rounded-lg p-4 transition-all ${paymentMethod === m.id ? "border-[#0052CC] ring-2 ring-[#0052CC] bg-blue-50/40" : "border-slate-200 hover:border-slate-300"}`  
-  }, /*#__PURE__*/React.createElement("p", {  
-    className: "text-sm font-semibold text-slate-900"  
-  }, m.label), /*#__PURE__*/React.createElement("p", {  
-    className: "text-xs text-slate-500"  
-  }, m.sub), paymentMethod === m.id && /*#__PURE__*/React.createElement("p", {  
-    className: "text-xs text-slate-600 mt-2 border-t border-slate-200 pt-2"  
-  }, m.detail))))), errorReserva && /*#__PURE__*/React.createElement("div", {
-    className: "rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 mb-3 leading-relaxed"
-  }, errorReserva), /*#__PURE__*/React.createElement("button", {
-    onClick: onConfirm,
-    disabled: !canConfirm,  
-    className: "w-full bg-[#FF6B00] hover:bg-[#EA580C] disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-lg transition-colors"  
-  }, "Confirmar Pago"), !canConfirm && /*#__PURE__*/React.createElement("p", {  
-    className: "text-xs text-slate-400 -mt-4"  
-  }, "Completa tus datos, un método de pago y ten al menos un ítem en el carrito.")), /*#__PURE__*/React.createElement("div", {  
-    className: "lg:col-span-1"  
-  }, /*#__PURE__*/React.createElement("div", {  
-    className: "bg-white border border-slate-200 rounded-xl p-5 lg:sticky lg:top-24"  
-  }, /*#__PURE__*/React.createElement("h3", {  
-    className: "font-bold text-slate-900 mb-3"  
-  }, "Resumen de tu reserva"), cart.length === 0 ? /*#__PURE__*/React.createElement("p", {  
-    className: "text-sm text-slate-400"  
-  }, "Tu carrito está vacío.") : /*#__PURE__*/React.createElement("div", {  
-    className: "space-y-3 max-h-64 overflow-y-auto pr-1"  
-  }, cart.map(item => /*#__PURE__*/React.createElement("div", {  
-    key: item.id,  
-    className: "flex justify-between text-sm"  
-  }, /*#__PURE__*/React.createElement("div", {  
-    className: "min-w-0 pr-2"  
-  }, /*#__PURE__*/React.createElement("p", {  
-    className: "text-slate-800 font-medium line-clamp-1"  
-  }, item.titulo), /*#__PURE__*/React.createElement("p", {  
-    className: "text-xs text-slate-400"  
-  }, item.tipo === "tour" ? `${item.adults + item.children} pax` : `${item.noches} noche(s)`, item.providerNombre ? ` · ${item.providerNombre}` : "")), /*#__PURE__*/React.createElement("span", {  
-    className: "font-semibold text-slate-900 shrink-0"  
-  }, money(item.total, currency))))), /*#__PURE__*/React.createElement("div", {  
-    className: "flex justify-between items-center mt-4 pt-4 border-t border-slate-200"  
-  }, /*#__PURE__*/React.createElement("span", {  
-    className: "font-semibold text-slate-900"  
-  }, "Total"), /*#__PURE__*/React.createElement("span", {  
-    className: "text-xl font-bold text-[#FF6B00]"  
-  }, money(total, currency))), currency === "USD" && /*#__PURE__*/React.createElement("p", {  
-    className: "text-xs text-slate-400 mt-1 text-right"  
-  }, "≈ ", money(total, "COP"))))), showSuccess && /*#__PURE__*/React.createElement(SuccessModal, {  
-    onClose: onCloseSuccess,  
-    total: total,  
-    currency: currency,  
-    form: form,  
-    cart: cart  
-  }));  
+/* --------------------------------------------------------------------------
+   PANTALLA DE CONFIRMACIÓN
+   No decimos "reserva confirmada" porque todavía no lo está: el pago aún no
+   se ha verificado. Prometer algo que no ha pasado es lo que después llega
+   como reclamo en la puerta de la posada.
+   -------------------------------------------------------------------------- */
+function TransaccionRecibida({ reservas, onCerrar, onMisReservas }) {
+  const [voucher, setVoucher] = useState(null);
+  const principal = reservas && reservas[0];
+  return React.createElement("div", {
+    className: "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" },
+    voucher ? React.createElement(VoucherModal, { r: voucher, onClose: () => setVoucher(null) }) : null,
+    React.createElement("div", { className: "bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" },
+      React.createElement("div", { className: "w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto" },
+        React.createElement("span", { className: "text-2xl" }, "⏳")),
+      React.createElement("h2", { className: "text-lg font-bold text-slate-900 mt-3 text-center" },
+        "Transacción recibida, a la espera de confirmación"),
+      React.createElement("p", { className: "text-sm text-slate-500 mt-2 text-center leading-relaxed" },
+        "Suele tardar unos minutos. Tu comprobante y los detalles de la reserva se enviarán a tu correo en cuanto sea validada."),
+
+      React.createElement("div", { className: "mt-5 space-y-2" },
+        (reservas || []).map(r => React.createElement("div", { key: r.codigo,
+          className: "border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between gap-3" },
+          React.createElement("div", { className: "min-w-0" },
+            React.createElement("p", { className: "text-[10px] font-semibold text-slate-400 uppercase tracking-wide" }, "Código de reserva"),
+            React.createElement("p", { className: "font-mono font-bold text-slate-900 tracking-wider" }, r.codigo)),
+          React.createElement("button", {
+            onClick: () => setVoucher({
+              codigo: r.codigo, tipo: "tour", titulo: r.titulo_mostrar || "Reserva",
+              proveedor: "", fecha: r.booking_date, fecha_fin: null,
+              personas: r.personas, total: Number(r.amount),
+              pagado: Number(r.monto_pagado), pendiente: Number(r.monto_pendiente),
+              status: r.status, metodo: r.comprobante_metodo, referencia: r.comprobante_referencia,
+              tasa_cop: r.tasa_cop, tasa_ves: r.tasa_ves,
+              nombre: r.guest_nombre, email: r.guest_email,
+              telefono: r.guest_telefono, cedula: r.guest_cedula, created_at: r.created_at }),
+            className: "text-xs font-bold text-[#0052CC] hover:underline shrink-0" }, "Ver voucher")))),
+
+      React.createElement("p", {
+        className: "text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 mt-4 leading-relaxed" },
+        "Guarda tu código. Con él y tu cédula o correo puedes consultar la reserva, hablar con el proveedor o pedir un cambio, sin crear ninguna cuenta."),
+
+      React.createElement("button", {
+        onClick: () => { onCerrar(); onMisReservas(principal ? principal.codigo : ""); },
+        className: "w-full mt-4 bg-[#0052CC] hover:bg-[#0043A8] text-white font-bold py-3 rounded-lg" },
+        "Ir a mis reservas"),
+      React.createElement("button", {
+        onClick: onCerrar,
+        className: "w-full mt-2 text-sm text-slate-500 hover:text-slate-700 py-2" }, "Volver al inicio")));
+}
+
+function CheckoutScreen({
+  cart, currency, onBack, form, setForm,
+  paymentMethod, setPaymentMethod,
+  comprobante, setComprobante,
+  referenciaPago, setReferenciaPago,
+  showSuccess, enviando, reservasHechas,
+  onConfirm, errorReserva, onCloseSuccess, onMisReservas
+}) {
+  const total = useMemo(() => cart.reduce((s, i) => s + i.total, 0), [cart]);
+  const metodo = PAYMENT_METHODS.find(m => m.id === paymentMethod);
+  const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+  const canConfirm = form.nombre.trim() && form.cedula.trim() && form.whatsapp.trim()
+                     && correoValido && paymentMethod && comprobante && cart.length > 0 && !enviando;
+
+  const campo = (etiqueta, clave, tipo, placeholder, ayuda) =>
+    React.createElement("div", null,
+      React.createElement("label", { className: "text-xs font-semibold text-slate-500 block mb-1" }, etiqueta),
+      React.createElement("input", {
+        type: tipo, value: form[clave],
+        onChange: e => setForm(f => ({ ...f, [clave]: e.target.value })),
+        placeholder,
+        className: "w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]" }),
+      ayuda ? React.createElement("p", { className: "text-[11px] text-slate-400 mt-1" }, ayuda) : null);
+
+  return React.createElement("main", { className: "max-w-4xl mx-auto px-4 pb-16" },
+    React.createElement("button", { onClick: onBack,
+      className: "flex items-center gap-1.5 text-sm text-slate-600 hover:text-[#0052CC] mt-4" },
+      React.createElement(ArrowLeft, { size: 16 }), " Volver"),
+    React.createElement("h1", { className: "text-2xl font-bold text-slate-900 mt-4" }, "Finalizar reserva"),
+
+    React.createElement("div", { className: "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6" },
+      React.createElement("div", { className: "lg:col-span-2 space-y-8" },
+
+        /* 1. Datos del titular */
+        React.createElement("section", null,
+          React.createElement("h2", { className: "text-lg font-bold text-slate-900 mb-1" }, "Datos del titular"),
+          React.createElement("p", { className: "text-xs text-slate-500 mb-3" },
+            "No hace falta crear cuenta. Con tu cédula o tu correo podrás volver a entrar a esta reserva cuando quieras."),
+          React.createElement("div", { className: "space-y-3" },
+            campo("Nombre completo", "nombre", "text", "Ej. María Pérez"),
+            campo("Cédula / Documento de identidad", "cedula", "text", "Ej. V-12345678"),
+            campo("Teléfono / WhatsApp", "whatsapp", "tel", "Ej. +58 414 123 4567"),
+            campo("Correo electrónico", "email", "email", "tu@correo.com",
+                  "Aquí llegará tu voucher."))),
+
+        /* 2. Método de pago */
+        React.createElement("section", null,
+          React.createElement("h2", { className: "text-lg font-bold text-slate-900 mb-3" }, "Método de pago"),
+          React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3" },
+            PAYMENT_METHODS.map(m => React.createElement("button", {
+              key: m.id,
+              onClick: () => setPaymentMethod(m.id),
+              className: `text-left border rounded-lg p-4 transition-all ${paymentMethod === m.id ? "border-[#0052CC] ring-2 ring-[#0052CC] bg-blue-50/40" : "border-slate-200 hover:border-slate-300"}` },
+              React.createElement("p", { className: "text-sm font-semibold text-slate-900" }, m.label),
+              React.createElement("p", { className: "text-xs text-slate-500" }, m.sub),
+              paymentMethod === m.id ? React.createElement("p", {
+                className: "text-xs text-slate-600 mt-2 border-t border-slate-200 pt-2" }, m.detail) : null))),
+
+          metodo ? React.createElement("div", {
+            className: "mt-4 bg-blue-50/60 border border-blue-200 rounded-lg px-4 py-3" },
+            React.createElement("p", { className: "text-sm font-semibold text-[#0052CC]" },
+              `Transfiere ${money(total, "USD")} por ${metodo.label}`),
+            React.createElement("p", { className: "text-xs text-slate-600 mt-1" }, metodo.detail),
+            React.createElement("p", { className: "text-xs text-slate-500 mt-1.5" },
+              metodo.id === "pagomovil" ? `Equivale a ${money(total, "VES")} a la tasa de hoy.`
+              : metodo.id === "nequi" ? `Equivale a ${money(total, "COP")} a la tasa de hoy.`
+              : `Equivale a ${money(total, "COP")} · ${money(total, "VES")}.`)) : null),
+
+        /* 3. Comprobante */
+        React.createElement("section", null,
+          React.createElement("h2", { className: "text-lg font-bold text-slate-900 mb-1" }, "Comprobante de pago"),
+          React.createElement("p", { className: "text-xs text-slate-500 mb-3" },
+            "Es lo que aparta tu cupo. Sin comprobante la reserva no queda registrada."),
+          React.createElement("div", { className: "space-y-3" },
+            React.createElement("div", null,
+              React.createElement("label", { className: "text-xs font-semibold text-slate-500 block mb-1" },
+                "Captura o PDF de la transferencia"),
+              React.createElement("input", {
+                type: "file", accept: "image/*,application/pdf",
+                onChange: e => setComprobante(e.target.files && e.target.files[0] ? e.target.files[0] : null),
+                className: "w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" }),
+              comprobante ? React.createElement("p", { className: "text-[11px] text-green-700 mt-1" },
+                `Adjunto: ${comprobante.name}`) : null),
+            React.createElement("div", null,
+              React.createElement("label", { className: "text-xs font-semibold text-slate-500 block mb-1" },
+                "Número de referencia (opcional)"),
+              React.createElement("input", {
+                type: "text", value: referenciaPago,
+                onChange: e => setReferenciaPago(e.target.value),
+                placeholder: "Ej. 004512789",
+                className: "w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]" })))),
+
+        errorReserva ? React.createElement("div", {
+          className: "rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 leading-relaxed" },
+          errorReserva) : null,
+
+        React.createElement("button", {
+          onClick: onConfirm, disabled: !canConfirm,
+          className: "w-full bg-[#FF6B00] hover:bg-[#EA580C] disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-lg transition-colors" },
+          enviando ? "Registrando tu reserva…" : "Enviar comprobante y reservar"),
+        !canConfirm && !enviando ? React.createElement("p", { className: "text-xs text-slate-400" },
+          "Completa tus datos, un correo válido, el método de pago y adjunta el comprobante.") : null),
+
+      /* Resumen */
+      React.createElement("div", { className: "lg:col-span-1" },
+        React.createElement("div", { className: "bg-white border border-slate-200 rounded-xl p-5", style: { position: "sticky", top: 96 } },
+          React.createElement("h3", { className: "font-bold text-slate-900 mb-3" }, "Resumen de tu reserva"),
+          cart.length === 0
+            ? React.createElement("p", { className: "text-sm text-slate-400" }, "Tu carrito está vacío.")
+            : React.createElement("div", { className: "space-y-3 max-h-64 overflow-y-auto pr-1" },
+                cart.map(item => React.createElement("div", { key: item.id, className: "flex justify-between text-sm" },
+                  React.createElement("div", { className: "min-w-0 pr-2" },
+                    React.createElement("p", { className: "text-slate-800 font-medium line-clamp-1" }, item.titulo),
+                    React.createElement("p", { className: "text-xs text-slate-400" },
+                      item.tipo === "tour" ? `${item.adults + item.children} pax` : `${item.noches} noche(s)`,
+                      item.providerNombre ? ` · ${item.providerNombre}` : "")),
+                  React.createElement("span", { className: "font-semibold text-slate-900 shrink-0" },
+                    money(item.total, "USD"))))),
+
+          React.createElement("div", { className: "mt-4 pt-4 border-t border-slate-200" },
+            React.createElement("p", { className: "text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1" }, "Total a pagar"),
+            React.createElement(MontoTresMonedas, { usd: total }),
+            React.createElement("p", { className: "text-[11px] text-slate-400 mt-2 leading-relaxed" },
+              `Tasa de referencia: 1 USD = ${TASA_COP.toLocaleString("es-CO")} COP · ${TASA_VES.toLocaleString("es-VE")} Bs.`)))),
+
+    showSuccess ? React.createElement(TransaccionRecibida, {
+      reservas: reservasHechas,
+      onCerrar: onCloseSuccess,
+      onMisReservas: onMisReservas }) : null));
+}
+
+
+
+/* ==========================================================================
+   RESERVAS SIN REGISTRO
+   El viajero no crea cuenta. Se identifica con su código de reserva más su
+   cédula o su correo. Ese segundo dato no es burocracia: un código de seis
+   caracteres se puede adivinar a fuerza bruta, y detrás hay cédulas,
+   teléfonos y comprobantes de pago de otras personas.
+   ========================================================================== */
+
+const ESTADOS = {
+  pendiente_aprobacion: { texto: "Pendiente por aprobación", color: "#B45309", fondo: "#FEF3C7" },
+  confirmada:           { texto: "Confirmada",               color: "#15803D", fondo: "#DCFCE7" },
+  completada:           { texto: "Completada",               color: "#1D4ED8", fondo: "#DBEAFE" },
+  rechazada:            { texto: "Rechazada",                color: "#B91C1C", fondo: "#FEE2E2" },
+  cancelada:            { texto: "Cancelada",                color: "#64748B", fondo: "#F1F5F9" },
+  no_show:              { texto: "No se presentó",           color: "#64748B", fondo: "#F1F5F9" },
+  disputa:              { texto: "En disputa",               color: "#B91C1C", fondo: "#FEE2E2" }
+};
+function estadoDe(s){ return ESTADOS[s] || { texto: s || "—", color: "#64748B", fondo: "#F1F5F9" }; }
+
+function fechaLarga(iso){
+  if(!iso) return "—";
+  const d = new Date(iso.length <= 10 ? iso + "T12:00:00" : iso);
+  return d.toLocaleDateString("es-VE", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+/* Pide el envío del voucher por correo. Que falle no invalida la reserva:
+   ya está registrada y el viajero tiene su código en pantalla. */
+async function enviarVoucherPorCorreo(codigo){
+  try {
+    await fetch(SUPABASE_URL + "/functions/v1/enviar-voucher", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codigo })
+    });
+  } catch (e) {
+    console.warn("No se pudo enviar el voucher por correo:", e);
+  }
+}
+
+/* Sube el comprobante al bucket privado. Devuelve la ruta interna: la ve el
+   admin con un enlace firmado, nunca queda pública. */
+async function subirComprobante(archivo, prefijo){
+  const sb = window.__tgSupabase;
+  if(!archivo) throw new Error("Adjunta el comprobante de tu pago.");
+  if(archivo.size > 5 * 1024 * 1024) throw new Error("El comprobante no puede pesar más de 5 MB.");
+  const ext = (archivo.name.split(".").pop() || "jpg").toLowerCase();
+  if(!["jpg","jpeg","png","pdf","webp"].includes(ext)) throw new Error("El comprobante debe ser una imagen o un PDF.");
+  const ruta = `${prefijo}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { error } = await sb.storage.from("comprobantes").upload(ruta, archivo);
+  if(error) throw new Error("No se pudo subir el comprobante: " + error.message);
+  return ruta;
+}
+
+/* --------------------------------------------------------------------------
+   VOUCHER
+   Una sola maqueta para los dos usos: la pantalla que el viajero imprime a
+   PDF y el cuerpo del correo. Un solo diseño que mantener, no dos que se
+   desincronizan.
+   -------------------------------------------------------------------------- */
+function VoucherDoc({ r }) {
+  const est = estadoDe(r.status);
+  const aprobado = r.status === "confirmada" || r.status === "completada";
+  const sello = aprobado ? "APROBADO" : (r.status === "rechazada" ? "RECHAZADO" : "PENDIENTE POR APROBACIÓN");
+  const selloColor = aprobado ? "#15803D" : (r.status === "rechazada" ? "#B91C1C" : "#D97706");
+  const usd = Number(r.total || 0);
+  const cop = Math.round(usd * Number(r.tasa_cop || TASA_COP));
+  const ves = Math.round(usd * Number(r.tasa_ves || TASA_VES));
+
+  const fila = (etiqueta, valor, destacado) => React.createElement("div", {
+    style: { display: "flex", justifyContent: "space-between", gap: 16,
+             padding: "7px 0", borderBottom: "1px solid #F1F5F9" } },
+    React.createElement("span", { style: { fontSize: 12, color: "#64748B" } }, etiqueta),
+    React.createElement("span", { style: { fontSize: 13, fontWeight: destacado ? 700 : 600,
+                                           color: destacado ? "#0F172A" : "#334155", textAlign: "right" } }, valor));
+
+  const titulo = t => React.createElement("p", {
+    style: { fontSize: 10, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase",
+             color: "#94A3B8", margin: "22px 0 6px" } }, t);
+
+  return React.createElement("div", {
+    id: "voucher-imprimible",
+    style: { background: "#fff", maxWidth: 620, margin: "0 auto", position: "relative",
+             border: "1px solid #E2E8F0", borderRadius: 14, overflow: "hidden",
+             fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+             WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" } },
+
+    /* Cabecera de marca */
+    React.createElement("div", {
+      style: { background: "#0052CC", padding: "20px 28px", color: "#fff",
+               display: "flex", justifyContent: "space-between", alignItems: "center" } },
+      React.createElement("div", null,
+        React.createElement("p", { style: { fontSize: 19, fontWeight: 800, letterSpacing: "-0.02em" } },
+          "Táchira ", React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!!!")),
+        React.createElement("p", { style: { fontSize: 11, opacity: 0.85, marginTop: 2 } },
+          "Comprobante de reserva")),
+      React.createElement("div", { style: { textAlign: "right" } },
+        React.createElement("p", { style: { fontSize: 10, opacity: 0.8, letterSpacing: "0.08em" } }, "CÓDIGO"),
+        React.createElement("p", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "0.04em" } }, r.codigo))),
+
+    /* Franja de estado */
+    React.createElement("div", {
+      style: { background: est.fondo, color: est.color, padding: "9px 28px",
+               fontSize: 12, fontWeight: 700, letterSpacing: "0.04em",
+               display: "flex", justifyContent: "space-between", alignItems: "center" } },
+      React.createElement("span", null, est.texto.toUpperCase()),
+      React.createElement("span", { style: { fontWeight: 500, opacity: 0.8 } },
+        "Emitido el " + fechaLarga(r.created_at))),
+
+    React.createElement("div", { style: { padding: "4px 28px 28px", position: "relative" } },
+
+      /* Sello al bies. Es lo primero que se ve de lejos: un voucher
+         pendiente no puede confundirse con uno pagado en la puerta de una
+         posada. */
+      React.createElement("div", {
+        style: { position: "absolute", top: "42%", left: "50%",
+                 transform: "translate(-50%, -50%) rotate(-19deg)",
+                 border: `4px solid ${selloColor}`, color: selloColor,
+                 opacity: 0.16, padding: "10px 26px", borderRadius: 10,
+                 fontSize: sello.length > 12 ? 26 : 44, fontWeight: 900,
+                 letterSpacing: "0.02em", whiteSpace: "nowrap",
+                 pointerEvents: "none", textAlign: "center", lineHeight: 1.1 } }, sello),
+
+      titulo("Reserva"),
+      fila("Servicio", r.titulo, true),
+      r.proveedor ? fila("Proveedor", r.proveedor) : null,
+      fila(r.fecha_fin ? "Entrada" : "Fecha", fechaLarga(r.fecha)),
+      r.fecha_fin ? fila("Salida", fechaLarga(r.fecha_fin)) : null,
+      fila(r.tipo === "hotel" ? "Huéspedes" : "Personas", String(r.personas || 1)),
+
+      titulo("Titular"),
+      fila("Nombre", r.nombre || "—"),
+      r.cedula ? fila("Documento", r.cedula) : null,
+      r.telefono ? fila("Teléfono", r.telefono) : null,
+      r.email ? fila("Correo", r.email) : null,
+
+      titulo("Montos"),
+      React.createElement("div", {
+        style: { background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: "14px 16px" } },
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } },
+          React.createElement("span", { style: { fontSize: 12, color: "#64748B" } }, "Total"),
+          React.createElement("span", { style: { fontSize: 24, fontWeight: 800, color: "#0F172A" } },
+            `$${usd.toFixed(2)} USD`)),
+        React.createElement("div", { style: { display: "flex", gap: 18, marginTop: 4, fontSize: 12, color: "#475569" } },
+          React.createElement("span", null, `$${cop.toLocaleString("es-CO")} COP`),
+          React.createElement("span", null, `Bs. ${ves.toLocaleString("es-VE")}`)),
+        React.createElement("p", { style: { fontSize: 10, color: "#94A3B8", marginTop: 6 } },
+          `Tasa de referencia usada: 1 USD = ${Number(r.tasa_cop || TASA_COP).toLocaleString("es-CO")} COP · ${Number(r.tasa_ves || TASA_VES).toLocaleString("es-VE")} Bs.`)),
+
+      React.createElement("div", { style: { marginTop: 10 } },
+        fila("Pagado", `$${Number(r.pagado || 0).toFixed(2)} USD`, true),
+        Number(r.pendiente || 0) > 0
+          ? fila("Pendiente al llegar", `$${Number(r.pendiente).toFixed(2)} USD`)
+          : null,
+        r.metodo ? fila("Método de pago", r.metodo) : null,
+        r.referencia ? fila("Referencia", r.referencia) : null),
+
+      r.motivo_rechazo ? React.createElement("div", {
+        style: { marginTop: 16, background: "#FEE2E2", border: "1px solid #FECACA",
+                 borderRadius: 10, padding: "12px 14px" } },
+        React.createElement("p", { style: { fontSize: 11, fontWeight: 700, color: "#B91C1C" } }, "Motivo del rechazo"),
+        React.createElement("p", { style: { fontSize: 12, color: "#7F1D1D", marginTop: 3 } }, r.motivo_rechazo)) : null,
+
+      !aprobado && r.status === "pendiente_aprobacion" ? React.createElement("p", {
+        style: { marginTop: 18, fontSize: 11, color: "#92400E", background: "#FFFBEB",
+                 border: "1px solid #FDE68A", borderRadius: 8, padding: "10px 12px", lineHeight: 1.5 } },
+        "Este comprobante todavía no confirma la reserva. Estamos verificando tu pago; al validarlo recibirás el voucher definitivo.") : null,
+
+      React.createElement("p", {
+        style: { marginTop: 22, paddingTop: 14, borderTop: "1px solid #E2E8F0",
+                 fontSize: 10, color: "#94A3B8", lineHeight: 1.6 } },
+        "tachiragoo.com · Consulta o gestiona esta reserva con tu código ",
+        React.createElement("strong", { style: { color: "#475569" } }, r.codigo),
+        " y tu cédula o correo.")));
+}
+
+function VoucherModal({ r, onClose }) {
+  return React.createElement("div", {
+    className: "fixed inset-0 overflow-y-auto print:p-0",
+    style: { background: "rgba(0,0,0,0.6)", zIndex: 200, padding: 16 },
+    onClick: e => { if(e.target === e.currentTarget) onClose(); } },
+    React.createElement("style", null,
+      "@media print { body * { visibility: hidden !important; } " +
+      "#voucher-imprimible, #voucher-imprimible * { visibility: visible !important; } " +
+      "#voucher-imprimible { position: absolute !important; left: 0; top: 0; width: 100%; border: none !important; } " +
+      ".no-imprimir { display: none !important; } }"),
+    React.createElement("div", {
+      style: { maxWidth: 620, margin: "0 auto", paddingTop: 56, paddingBottom: 40 } },
+      React.createElement("div", { className: "flex justify-between items-center mb-3 no-imprimir" },
+        React.createElement("button", {
+          onClick: onClose,
+          className: "text-white/90 hover:text-white text-sm font-medium" }, "← Volver"),
+        React.createElement("button", {
+          onClick: () => window.print(),
+          className: "bg-[#FF6B00] hover:bg-[#EA580C] text-white text-sm font-bold px-4 py-2 rounded-lg" },
+          "Descargar / Imprimir PDF")),
+      React.createElement(VoucherDoc, { r })));
+}
+
+/* --------------------------------------------------------------------------
+   CHAT CLIENTE <-> PROVEEDOR
+   -------------------------------------------------------------------------- */
+function ChatPanel({ codigo, verificacion }) {
+  const [mensajes, setMensajes] = useState([]);
+  const [texto, setTexto] = useState("");
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const finRef = useRef(null);
+
+  const cargar = async () => {
+    const sb = window.__tgSupabase;
+    const { data, error } = await sb.rpc("abrir_conversacion", {
+      p_codigo: codigo, p_verificacion: verificacion });
+    setCargando(false);
+    if(error){ setError(error.message); return; }
+    setMensajes((data && data.mensajes) || []);
+  };
+
+  useEffect(() => { cargar(); }, [codigo]);
+  useEffect(() => { if(finRef.current) finRef.current.scrollIntoView({ block: "nearest" }); }, [mensajes]);
+
+  const enviar = async () => {
+    const cuerpo = texto.trim();
+    if(!cuerpo || enviando) return;
+    setEnviando(true); setError("");
+    const sb = window.__tgSupabase;
+    const { data, error } = await sb.rpc("enviar_mensaje_cliente", {
+      p_codigo: codigo, p_verificacion: verificacion, p_cuerpo: cuerpo });
+    setEnviando(false);
+    if(error){ setError(error.message); return; }
+    setTexto("");
+    setMensajes((data && data.mensajes) || []);
+  };
+
+  return React.createElement("div", { className: "border border-slate-200 rounded-xl overflow-hidden bg-white" },
+    React.createElement("div", { className: "bg-slate-50 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between" },
+      React.createElement("p", { className: "text-sm font-bold text-slate-800" }, "Chat con el proveedor"),
+      React.createElement("button", { onClick: cargar, className: "text-xs text-[#0052CC] font-semibold hover:underline" }, "Actualizar")),
+    React.createElement("div", { className: "h-64 overflow-y-auto p-4 space-y-2.5 bg-slate-50/40" },
+      cargando ? React.createElement("p", { className: "text-sm text-slate-400" }, "Cargando…")
+      : mensajes.length === 0 ? React.createElement("p", { className: "text-sm text-slate-400 text-center mt-16" },
+          "Todavía no hay mensajes. Escribe tu pregunta y el proveedor la verá en su panel.")
+      : mensajes.map((m, i) => React.createElement("div", {
+          key: i,
+          className: `flex ${m.autor === "cliente" ? "justify-end" : "justify-start"}` },
+          React.createElement("div", {
+            style: { maxWidth: "78%" },
+            className: `rounded-2xl px-3.5 py-2 text-sm ${
+              m.autor === "cliente" ? "bg-[#0052CC] text-white"
+              : m.autor === "admin" ? "bg-amber-100 text-amber-900"
+              : "bg-white border border-slate-200 text-slate-700"}` },
+            m.autor !== "cliente" ? React.createElement("p", {
+              className: "text-[10px] font-bold opacity-70 mb-0.5" },
+              m.autor === "admin" ? "Táchira GOO!!!" : (m.autor_nombre || "Proveedor")) : null,
+            React.createElement("p", { className: "whitespace-pre-wrap leading-relaxed" }, m.cuerpo),
+            React.createElement("p", { className: `text-[10px] mt-1 ${m.autor === "cliente" ? "text-white/70" : "text-slate-400"}` },
+              new Date(m.created_at).toLocaleString("es-VE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }))))),
+      React.createElement("div", { ref: finRef })),
+    error ? React.createElement("p", { className: "text-xs text-red-600 px-4 pb-1" }, error) : null,
+    React.createElement("div", { className: "flex gap-2 p-3 border-t border-slate-200" },
+      React.createElement("input", {
+        type: "text", value: texto,
+        onChange: e => setTexto(e.target.value),
+        onKeyDown: e => { if(e.key === "Enter") enviar(); },
+        placeholder: "Escribe tu mensaje…",
+        className: "flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]" }),
+      React.createElement("button", {
+        onClick: enviar, disabled: enviando || !texto.trim(),
+        className: "bg-[#0052CC] hover:bg-[#0043A8] disabled:bg-slate-200 text-white text-sm font-bold px-4 rounded-lg" },
+        enviando ? "…" : "Enviar")));
+}
+
+/* --------------------------------------------------------------------------
+   SOLICITUDES SOBRE UNA RESERVA
+   -------------------------------------------------------------------------- */
+const TIPOS_SOLICITUD = [
+  { id: "reembolso",        label: "Solicitar reembolso",       ayuda: "Cuéntanos por qué pides el reembolso." },
+  { id: "cambio_fecha",     label: "Cambiar la fecha",          ayuda: "¿Para qué fecha quieres moverla?" },
+  { id: "correccion_datos", label: "Corregir nombre o contacto", ayuda: "Indica el dato correcto." }
+];
+
+function SolicitudModal({ codigo, verificacion, tipo, onClose }) {
+  const info = TIPOS_SOLICITUD.find(t => t.id === tipo);
+  const [detalle, setDetalle] = useState("");
+  const [estado, setEstado] = useState({ enviando: false, error: "", ok: false });
+
+  const enviar = async () => {
+    setEstado({ enviando: true, error: "", ok: false });
+    const sb = window.__tgSupabase;
+    const { error } = await sb.rpc("crear_solicitud", {
+      p_codigo: codigo, p_verificacion: verificacion, p_tipo: tipo, p_detalle: detalle.trim() });
+    if(error){ setEstado({ enviando: false, error: error.message, ok: false }); return; }
+    setEstado({ enviando: false, error: "", ok: true });
+  };
+
+  return React.createElement("div", {
+    className: "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4",
+    onClick: e => { if(e.target === e.currentTarget) onClose(); } },
+    React.createElement("div", { className: "bg-white rounded-xl max-w-md w-full p-6" },
+      estado.ok
+        ? React.createElement("div", { className: "text-center" },
+            React.createElement("p", { className: "text-lg font-bold text-slate-900" }, "Solicitud enviada"),
+            React.createElement("p", { className: "text-sm text-slate-500 mt-2 leading-relaxed" },
+              "La revisaremos y te responderemos por el chat de tu reserva."),
+            React.createElement("button", { onClick: onClose,
+              className: "w-full mt-5 bg-[#0052CC] text-white font-bold py-2.5 rounded-lg" }, "Entendido"))
+        : React.createElement(React.Fragment, null,
+            React.createElement("h3", { className: "text-lg font-bold text-slate-900" }, info.label),
+            React.createElement("p", { className: "text-sm text-slate-500 mt-1" }, info.ayuda),
+            React.createElement("textarea", {
+              value: detalle, onChange: e => setDetalle(e.target.value), rows: 4,
+              className: "w-full mt-3 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]" }),
+            estado.error ? React.createElement("p", { className: "text-xs text-red-600 mt-2" }, estado.error) : null,
+            React.createElement("div", { className: "flex gap-2 mt-4" },
+              React.createElement("button", { onClick: onClose,
+                className: "flex-1 border border-slate-300 text-slate-700 font-semibold py-2.5 rounded-lg" }, "Cancelar"),
+              React.createElement("button", {
+                onClick: enviar, disabled: estado.enviando || detalle.trim().length < 5,
+                className: "flex-1 bg-[#0052CC] disabled:bg-slate-200 text-white font-bold py-2.5 rounded-lg" },
+                estado.enviando ? "Enviando…" : "Enviar")))));
+}
+
+/* --------------------------------------------------------------------------
+   PANEL "MIS RESERVAS"
+   -------------------------------------------------------------------------- */
+function MisReservasPage({ onBack, codigoInicial }) {
+  const [codigo, setCodigo] = useState(codigoInicial || "");
+  const [verificacion, setVerificacion] = useState("");
+  const [reservas, setReservas] = useState(null);
+  const [estado, setEstado] = useState({ cargando: false, error: "" });
+  const [abierta, setAbierta] = useState(null);
+  const [voucher, setVoucher] = useState(null);
+  const [solicitud, setSolicitud] = useState(null);
+
+  const consultar = async (e) => {
+    if(e) e.preventDefault();
+    setEstado({ cargando: true, error: "" });
+    const sb = window.__tgSupabase;
+    const { data, error } = await sb.rpc("consultar_reservas", {
+      p_codigo: codigo.trim(), p_verificacion: verificacion.trim() });
+    if(error){ setEstado({ cargando: false, error: error.message }); setReservas(null); return; }
+    setEstado({ cargando: false, error: "" });
+    setReservas(data || []);
+    if(data && data.length === 1) setAbierta(data[0].codigo);
+  };
+
+  if(reservas === null){
+    return React.createElement("main", { className: "max-w-md mx-auto px-4 py-12" },
+      React.createElement("button", { onClick: onBack,
+        className: "text-sm text-slate-600 hover:text-[#0052CC] mb-6" }, "← Volver al inicio"),
+      React.createElement("h1", { className: "text-2xl font-bold text-slate-900" }, "Consultar mis reservas"),
+      React.createElement("p", { className: "text-sm text-slate-500 mt-2 leading-relaxed" },
+        "No hace falta crear una cuenta. Entra con el código que te dimos al reservar y el correo o la cédula con que la hiciste."),
+      React.createElement("form", { onSubmit: consultar, className: "mt-6 space-y-3" },
+        React.createElement("div", null,
+          React.createElement("label", { className: "text-xs font-semibold text-slate-500 block mb-1" }, "Código de reserva"),
+          React.createElement("input", {
+            type: "text", value: codigo,
+            onChange: e => setCodigo(e.target.value.toUpperCase()),
+            placeholder: "RES-8F9A2B", autoFocus: true,
+            className: "w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm tracking-wider font-mono focus:outline-none focus:ring-2 focus:ring-[#0052CC]" })),
+        React.createElement("div", null,
+          React.createElement("label", { className: "text-xs font-semibold text-slate-500 block mb-1" }, "Tu cédula o tu correo"),
+          React.createElement("input", {
+            type: "text", value: verificacion,
+            onChange: e => setVerificacion(e.target.value),
+            placeholder: "V-12345678 o tucorreo@ejemplo.com",
+            className: "w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]" })),
+        estado.error ? React.createElement("p", {
+          className: "text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5" }, estado.error) : null,
+        React.createElement("button", {
+          type: "submit", disabled: estado.cargando || !codigo.trim() || !verificacion.trim(),
+          className: "w-full bg-[#0052CC] hover:bg-[#0043A8] disabled:bg-slate-200 text-white font-bold py-3 rounded-lg" },
+          estado.cargando ? "Buscando…" : "Ver mis reservas")));
+  }
+
+  return React.createElement("main", { className: "max-w-3xl mx-auto px-4 py-8" },
+    voucher ? React.createElement(VoucherModal, { r: voucher, onClose: () => setVoucher(null) }) : null,
+    solicitud ? React.createElement(SolicitudModal, {
+      codigo: solicitud.codigo, verificacion, tipo: solicitud.tipo,
+      onClose: () => setSolicitud(null) }) : null,
+
+    React.createElement("button", { onClick: onBack,
+      className: "text-sm text-slate-600 hover:text-[#0052CC]" }, "← Volver al inicio"),
+    React.createElement("h1", { className: "text-2xl font-bold text-slate-900 mt-4" }, "Mis reservas"),
+    React.createElement("p", { className: "text-sm text-slate-500 mt-1" },
+      reservas.length === 1 ? "1 reserva a tu nombre" : `${reservas.length} reservas a tu nombre`),
+
+    React.createElement("div", { className: "mt-6 space-y-3" },
+      reservas.map(r => {
+        const est = estadoDe(r.status);
+        const abierto = abierta === r.codigo;
+        return React.createElement("div", { key: r.codigo,
+          className: "border border-slate-200 rounded-xl bg-white overflow-hidden" },
+          React.createElement("button", {
+            onClick: () => setAbierta(abierto ? null : r.codigo),
+            className: "w-full text-left px-5 py-4 flex items-center justify-between gap-4 hover:bg-slate-50" },
+            React.createElement("div", { className: "min-w-0" },
+              React.createElement("div", { className: "flex items-center gap-2" },
+                React.createElement("span", {
+                  className: "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                  style: { background: est.fondo, color: est.color } }, est.texto),
+                React.createElement("span", { className: "text-xs font-mono text-slate-400" }, r.codigo)),
+              React.createElement("p", { className: "font-semibold text-slate-900 mt-1 truncate" }, r.titulo),
+              React.createElement("p", { className: "text-xs text-slate-500" },
+                fechaLarga(r.fecha) + (r.fecha_fin ? " → " + fechaLarga(r.fecha_fin) : ""))),
+            React.createElement(MontoTresMonedas, {
+              usd: Number(r.total || 0), tasaCop: r.tasa_cop, tasaVes: r.tasa_ves, compacto: true })),
+
+          abierto ? React.createElement("div", { className: "px-5 pb-5 border-t border-slate-100 pt-4 space-y-4" },
+            Number(r.pendiente || 0) > 0 ? React.createElement("p", {
+              className: "text-sm bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-3 py-2.5" },
+              `Pagaste $${Number(r.pagado).toFixed(2)} USD. Quedan $${Number(r.pendiente).toFixed(2)} USD por pagar al llegar.`) : null,
+            r.motivo_rechazo ? React.createElement("p", {
+              className: "text-sm bg-red-50 border border-red-200 text-red-800 rounded-lg px-3 py-2.5" },
+              "Motivo del rechazo: " + r.motivo_rechazo) : null,
+
+            React.createElement("div", { className: "flex flex-wrap gap-2" },
+              React.createElement("button", {
+                onClick: () => setVoucher(r),
+                className: "text-sm font-semibold border border-slate-300 hover:border-[#0052CC] hover:text-[#0052CC] text-slate-700 px-3.5 py-2 rounded-lg" },
+                "Ver voucher"),
+              TIPOS_SOLICITUD.map(t => React.createElement("button", {
+                key: t.id,
+                onClick: () => setSolicitud({ codigo: r.codigo, tipo: t.id }),
+                className: "text-sm font-semibold border border-slate-300 hover:border-[#0052CC] hover:text-[#0052CC] text-slate-700 px-3.5 py-2 rounded-lg" },
+                t.label))),
+
+            React.createElement(ChatPanel, { codigo: r.codigo, verificacion })) : null);
+      })));
 }
 
 /* ==========================================================================  
@@ -4644,11 +5196,17 @@ function App() {
   const [activeItem, setActiveItem] = useState(null);  
   const [activeProvider, setActiveProvider] = useState(null);  
   const [cameFromProvider, setCameFromProvider] = useState(false);  
-  const [form, setForm] = useState({  
-    nombre: "",  
-    cedula: "",  
-    whatsapp: ""  
-  });  
+  const [form, setForm] = useState({
+    nombre: "",
+    cedula: "",
+    whatsapp: "",
+    email: ""
+  });
+  const [comprobante, setComprobante] = useState(null);
+  const [referenciaPago, setReferenciaPago] = useState("");
+  const [reservasHechas, setReservasHechas] = useState([]);
+  const [codigoConsulta, setCodigoConsulta] = useState("");
+
   const [paymentMethod, setPaymentMethod] = useState(null);  
   const [showSuccess, setShowSuccess] = useState(false);
   const [legalAbierto, setLegalAbierto] = useState(null);  
@@ -4750,50 +5308,83 @@ function App() {
     });  
   };  
   const [errorReserva, setErrorReserva] = useState("");
-  /* Antes esto solo pintaba la pantalla de éxito: el cliente creía haber
-     reservado y al proveedor no le llegaba nada. Ahora se registra de verdad. */
+  const [enviandoReserva, setEnviandoReserva] = useState(false);
+
+  /* Sin comprobante no hay reserva: es el comprobante lo que aparta el cupo y
+     lo que el admin revisa después. Todo pasa por la RPC, que valida el pago
+     y bloquea la disponibilidad en la misma transacción. */
   const handleConfirmPayment = async () => {
     setErrorReserva("");
     const sb = window.__tgSupabase;
     if (!sb) { setErrorReserva("No hay conexión con el servidor. Intenta de nuevo."); return; }
-    const { data: userData } = await sb.auth.getUser();
-    const user = userData && userData.user;
 
-    const filas = cart.filter(i => i.listingId && i.providerId2).map(i => ({
-      listing_id: i.listingId,
-      provider_id: i.providerId2,
-      customer_id: user ? user.id : null,
-      guest_nombre: user ? null : form.nombre.trim(),
-      guest_telefono: user ? null : form.whatsapp.trim(),
-      guest_cedula: user ? null : (form.cedula.trim() || null),
-      booking_date: i.fecha || i.checkIn,
-      amount: i.total,
-      currency: "USD",
-      status: "pending"
-    }));
-
-    if (!filas.length) {
+    const metodo = PAYMENT_METHODS.find(m => m.id === paymentMethod);
+    const items = cart.filter(i => i.listingId);
+    if (!items.length) {
       setErrorReserva("No pudimos identificar los servicios del carrito. Vuelve a agregarlos.");
       return;
     }
-    const { error } = await sb.from("bookings").insert(filas);
-    if (error) {
-      setErrorReserva("No se pudo registrar tu solicitud: " + error.message);
+
+    setEnviandoReserva(true);
+    let ruta;
+    try {
+      ruta = await subirComprobante(comprobante, "tours");
+    } catch (e) {
+      setEnviandoReserva(false);
+      setErrorReserva(e.message);
       return;
     }
+
+    const hechas = [];
+    for (const i of items) {
+      const { data, error } = await sb.rpc("reservar_tour", {
+        p_listing_id: i.listingId,
+        p_fecha: i.fecha || i.checkIn,
+        p_personas: (i.adults || 0) + (i.children || 0) || 1,
+        p_modalidad: "total",
+        p_nombre: form.nombre.trim(),
+        p_telefono: form.whatsapp.trim(),
+        p_cedula: form.cedula.trim() || null,
+        p_email: form.email.trim() || null,
+        p_comprobante_url: ruta,
+        p_comprobante_referencia: referenciaPago.trim() || null,
+        p_comprobante_metodo: metodo ? metodo.label : null
+      });
+      if (error) {
+        setEnviandoReserva(false);
+        /* Si algo falla a mitad, no callamos: el viajero tiene que saber qué
+           quedó reservado y qué no. */
+        setErrorReserva(hechas.length
+          ? `Se registró ${hechas.length} de ${items.length}. La siguiente falló: ${error.message}`
+          : "No se pudo registrar tu solicitud: " + error.message);
+        if (hechas.length) { setReservasHechas(hechas); setShowSuccess(true); }
+        return;
+      }
+      hechas.push(data);
+      enviarVoucherPorCorreo(data.codigo);
+    }
+
+    setEnviandoReserva(false);
+    setReservasHechas(hechas);
     setShowSuccess(true);
-  };  
-  const handleCloseSuccess = () => {  
-    setShowSuccess(false);  
-    setCart([]);  
-    setPaymentMethod(null);  
-    setForm({  
-      nombre: "",  
-      cedula: "",  
-      whatsapp: ""  
-    });  
-    setView("home");  
-  };  
+  };
+  const handleCloseSuccess = () => {
+    setShowSuccess(false);
+    setCart([]);
+    setPaymentMethod(null);
+    setComprobante(null);
+    setReferenciaPago("");
+    setReservasHechas([]);
+    setForm({ nombre: "", cedula: "", whatsapp: "", email: "" });
+    setView("home");
+  };
+
+  const abrirMisReservas = (codigo) => {
+    setCodigoConsulta(codigo || "");
+    setView("misreservas");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return /*#__PURE__*/React.createElement("div", {  
     className: "min-h-screen bg-white font-sans text-slate-900"  
   }, /*#__PURE__*/React.createElement(Navbar, {  
@@ -4806,14 +5397,15 @@ function App() {
       setMunicipioFiltro(m);  
       setView("home");  
     },  
-    onSelectActividad: () => {  
-      setCategory("experiencias");  
-      setMunicipioFiltro(null);  
-      setView("home");  
-      setTimeout(() => document.getElementById("catalogo-completo")?.scrollIntoView({  
-        behavior: "smooth"  
-      }), 60);  
-    }  
+    onSelectActividad: () => {
+      setCategory("experiencias");
+      setMunicipioFiltro(null);
+      setView("home");
+      setTimeout(() => document.getElementById("catalogo-completo")?.scrollIntoView({
+        behavior: "smooth"
+      }), 60);
+    },
+    onMisReservas: () => abrirMisReservas()
   }), view === "home" && /*#__PURE__*/React.createElement(HomeScreen, {  
     municipioFiltro: municipioFiltro,  
     setMunicipioFiltro: setMunicipioFiltro,  
@@ -4843,18 +5435,28 @@ function App() {
   })), view === "nofound" && /*#__PURE__*/React.createElement(NoEncontrado, {
     ruta: vistaNoEncontrada,
     onInicio: goHome
-  }), view === "checkout" && /*#__PURE__*/React.createElement(CheckoutScreen, {  
-    cart: cart,  
-    currency: currency,  
-    onBack: () => setView("home"),  
-    form: form,  
-    setForm: setForm,  
-    paymentMethod: paymentMethod,  
-    setPaymentMethod: setPaymentMethod,  
-    showSuccess: showSuccess,  
+  }), view === "misreservas" && /*#__PURE__*/React.createElement(MisReservasPage, {
+    onBack: goHome,
+    codigoInicial: codigoConsulta
+  }), view === "checkout" && /*#__PURE__*/React.createElement(CheckoutScreen, {
+    cart: cart,
+    currency: currency,
+    onBack: () => setView("home"),
+    form: form,
+    setForm: setForm,
+    paymentMethod: paymentMethod,
+    setPaymentMethod: setPaymentMethod,
+    comprobante: comprobante,
+    setComprobante: setComprobante,
+    referenciaPago: referenciaPago,
+    setReferenciaPago: setReferenciaPago,
+    showSuccess: showSuccess,
+    enviando: enviandoReserva,
+    reservasHechas: reservasHechas,
     onConfirm: handleConfirmPayment,
-    errorReserva: errorReserva,  
-    onCloseSuccess: handleCloseSuccess  
+    errorReserva: errorReserva,
+    onCloseSuccess: handleCloseSuccess,
+    onMisReservas: abrirMisReservas
   }), /*#__PURE__*/React.createElement(CartDrawer, {  
     open: cartOpen,  
     onClose: () => setCartOpen(false),  
@@ -5048,6 +5650,9 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
    datos antes del primer render: si llegaran después, las secciones que calculan
    su contenido una sola vez se quedarían vacías para siempre. */
 (async function arrancar(){
+  /* Las tasas primero: el catálogo convierte precios al construirse, así que
+     si llegaran después las tarjetas mostrarían la conversión anterior. */
+  try { await cargarTasas(); } catch (e) { console.error('No se pudieron cargar las tasas:', e); }
   try {
     await cargarCatalogoReal();
   } catch (e) {
