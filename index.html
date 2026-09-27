@@ -1383,7 +1383,7 @@ function HotelBookingPage({ hotel, onClose }) {
      anterior: el viajero veía tres noches y el total de una. */
   useEffect(() => { setDisponibilidad(null); if (noches) buscar(); }, [checkIn, checkOut]);
 
-  return /*#__PURE__*/React.createElement("div", { className: "fixed inset-0 z-[85] bg-white overflow-y-auto" },
+  return /*#__PURE__*/React.createElement("div", { className: "fixed inset-0 bg-white overflow-y-auto", style: { zIndex: 85 } },
     /*#__PURE__*/React.createElement("div", { className: "sticky top-0 bg-white border-b border-slate-200 z-10" },
       /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4" },
         /*#__PURE__*/React.createElement("div", { className: "flex items-center gap-3 min-w-0" },
@@ -1861,7 +1861,7 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, onClose })
 
   const limpiar = () => { setMunicipio(""); setDesde(""); setHasta(""); setDisponibles(null); };
 
-  return /*#__PURE__*/React.createElement("div", { className: "fixed inset-0 z-[85] bg-white overflow-y-auto" },
+  return /*#__PURE__*/React.createElement("div", { className: "fixed inset-0 bg-white overflow-y-auto", style: { zIndex: 85 } },
     /*#__PURE__*/React.createElement("div", { className: "sticky top-0 bg-white border-b border-slate-200 z-10" },
       /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4" },
         /*#__PURE__*/React.createElement("div", null,
@@ -2149,7 +2149,8 @@ function TourQuotePage({ tipo, onClose }) {
     }, "Volver al inicio"));
 
   return /*#__PURE__*/React.createElement("div", {
-    className: "fixed inset-0 z-[85] bg-white overflow-y-auto"
+    className: "fixed inset-0 bg-white overflow-y-auto",
+    style: { zIndex: 85 }
   }, /*#__PURE__*/React.createElement("div", {
     className: "sticky top-0 bg-white border-b border-slate-200 z-10"
   }, /*#__PURE__*/React.createElement("div", {
@@ -2777,7 +2778,7 @@ function ProviderCard({
     className: "fill-[#FF6B00] text-[#FF6B00]"  
   }), /*#__PURE__*/React.createElement("span", {  
     className: "font-semibold text-slate-900"  
-  }, provider.rating), /*#__PURE__*/React.createElement("span", null, "· ", provider.aniosOperando, " años operando")), /*#__PURE__*/React.createElement("p", {  
+  }, provider.rating || "Nuevo"), /*#__PURE__*/React.createElement("span", null, "· ", provider.ubicacion)), /*#__PURE__*/React.createElement("p", {  
     className: "text-xs text-slate-500 mt-1"  
   }, provider.especialidad), /*#__PURE__*/React.createElement("p", {  
     className: "text-sm font-semibold text-[#0052CC] mt-3 flex items-center gap-1 group-hover:gap-2 transition-all"  
@@ -3648,25 +3649,36 @@ function ProviderCoverBanner({
     className: "inline-flex items-center gap-1.5 bg-white text-[#0052CC] text-[11px] font-bold px-2.5 py-1 rounded-full shadow"  
   }, /*#__PURE__*/React.createElement(ShieldCheck, {  
     size: 12  
-  }), " Verificado por Táchira GOO!!!"), /*#__PURE__*/React.createElement("div", {  
-    className: "inline-flex items-center gap-1.5 bg-amber-400 text-amber-950 text-[11px] font-bold px-2.5 py-1 rounded-full shadow"  
-  }, /*#__PURE__*/React.createElement(Star, {  
-    size: 12,  
-    className: "fill-amber-950 text-amber-950"  
-  }), " Excelencia verificada")), /*#__PURE__*/React.createElement("h1", {  
-    className: "text-2xl md:text-4xl font-extrabold text-white leading-tight drop-shadow-sm"  
-  }, provider.nombre), /*#__PURE__*/React.createElement("div", {  
-    className: "flex flex-wrap items-center gap-2 mt-1.5 text-sm text-white/90"  
-  }, /*#__PURE__*/React.createElement(Star, {  
-    size: 14,  
-    className: "fill-[#FF6B00] text-[#FF6B00]"  
-  }), /*#__PURE__*/React.createElement("span", {  
-    className: "font-semibold"  
-  }, provider.rating), /*#__PURE__*/React.createElement("span", {  
-    className: "text-white/70"  
-  }, "(", provider.reviews, " reseñas)"), /*#__PURE__*/React.createElement("span", {  
-    className: "text-white/50"  
-  }, "·"), /*#__PURE__*/React.createElement("span", null, provider.aniosOperando, " años operando en Táchira"))))));  
+  }), " Verificado por Táchira GOO!!!"),
+  /* "Excelencia" es una afirmación sobre el servicio. Solo se muestra si hay
+     reseñas reales que la sostengan; puesta a todo el mundo no significa nada
+     y le quita valor a quien sí se la ganó. */
+  (provider.rating >= 4.5 && provider.reviews >= 5) ? /*#__PURE__*/React.createElement("div", {
+    className: "inline-flex items-center gap-1.5 bg-amber-400 text-amber-950 text-[11px] font-bold px-2.5 py-1 rounded-full shadow"
+  }, /*#__PURE__*/React.createElement(Star, {
+    size: 12,
+    className: "fill-amber-950 text-amber-950"
+  }), " Excelencia verificada") : null), /*#__PURE__*/React.createElement("h1", {
+    className: "text-2xl md:text-4xl font-extrabold text-white leading-tight drop-shadow-sm"
+  }, provider.nombre), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-2 mt-1.5 text-sm text-white/90"
+  },
+    /* Un negocio recién aprobado no tiene reseñas todavía. Rellenar el hueco
+       con una estrella vacía o "años operando" en blanco es peor que no
+       decir nada. */
+    provider.rating ? /*#__PURE__*/React.createElement(Star, {
+      key: "s", size: 14, className: "fill-[#FF6B00] text-[#FF6B00]"
+    }) : null,
+    provider.rating ? /*#__PURE__*/React.createElement("span", {
+      key: "r", className: "font-semibold"
+    }, provider.rating) : null,
+    /*#__PURE__*/React.createElement("span", {
+      key: "n", className: "text-white/70"
+    }, provider.reviews
+         ? `(${provider.reviews} ${provider.reviews === 1 ? "reseña" : "reseñas"})`
+         : "Negocio nuevo en la plataforma"),
+    /*#__PURE__*/React.createElement("span", { key: "d", className: "text-white/50" }, "·"),
+    /*#__PURE__*/React.createElement("span", { key: "u" }, provider.ubicacion, ", Táchira"))))));
 }  
 function ProviderSubNav() {  
   const links = [{  
@@ -3717,9 +3729,11 @@ function ProviderMasthead({
     className: "bg-[#FF6B00] hover:bg-[#EA580C] text-white font-bold px-7 py-3 rounded-lg transition-colors"  
   }, "Reservar ahora"), /*#__PURE__*/React.createElement("p", {  
     className: "text-sm text-slate-600"  
-  }, "Desde ", /*#__PURE__*/React.createElement("span", {  
-    className: "font-bold text-[#FF6B00] text-base"  
-  }, "$", provider.precioDesdeUSD, " USD"))), /*#__PURE__*/React.createElement("div", {  
+  }, provider.precioDesdeUSD != null
+       ? ["Desde ", /*#__PURE__*/React.createElement("span", {
+           key: "p", className: "font-bold text-[#FF6B00] text-base"
+         }, "$", provider.precioDesdeUSD, " USD")]
+       : null)), /*#__PURE__*/React.createElement("div", {  
     className: "flex flex-wrap items-center gap-2 mt-3"  
   }, /*#__PURE__*/React.createElement("span", {  
     className: "text-xs text-slate-400"  
@@ -3767,11 +3781,12 @@ function ProviderAbout({
 }
 
 /* Bloque 2 — Galería (motor de deseo) */  
-function ProviderGallery({  
-  photos,  
-  onOpenLightbox,  
-  acento  
-}) {  
+function ProviderGallery({
+  photos,
+  onOpenLightbox,
+  acento
+}) {
+  if (!photos || !photos.length) return null;
   return /*#__PURE__*/React.createElement("section", {  
     className: "max-w-6xl mx-auto px-4 py-8"  
   }, /*#__PURE__*/React.createElement(SectionEyebrow, {  
@@ -3865,26 +3880,21 @@ function ProviderSocialProof({
     className: "grid grid-cols-1 md:grid-cols-3 gap-8 items-start"  
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {  
     className: "text-5xl font-extrabold text-slate-900"  
-  }, provider.rating), /*#__PURE__*/React.createElement(Stars, {  
-    rating: provider.rating,  
-    size: 18  
-  }), /*#__PURE__*/React.createElement("p", {  
-    className: "text-sm text-slate-500 mt-1"  
-  }, provider.reviews, " reseñas verificadas")), /*#__PURE__*/React.createElement("div", {  
-    className: "md:col-span-2 grid grid-cols-3 gap-3"  
-  }, /*#__PURE__*/React.createElement(StatPill, {  
-    value: `+${provider.clientesAtendidos.toLocaleString("es-CO")}`,  
-    label: "Viajeros atendidos",  
-    acento: provider.acento  
-  }), /*#__PURE__*/React.createElement(StatPill, {  
-    value: provider.statsSecondary[0].value,  
-    label: provider.statsSecondary[0].label,  
-    acento: provider.acento  
-  }), /*#__PURE__*/React.createElement(StatPill, {  
-    value: provider.statsSecondary[1].value,  
-    label: provider.statsSecondary[1].label,  
-    acento: provider.acento  
-  }))), testimonios.length > 0 && /*#__PURE__*/React.createElement("div", {  
+  }, provider.rating || "—"), provider.rating ? /*#__PURE__*/React.createElement(Stars, {
+    rating: provider.rating,
+    size: 18
+  }) : null, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm text-slate-500 mt-1"
+  }, provider.reviews
+       ? `${provider.reviews} ${provider.reviews === 1 ? "reseña verificada" : "reseñas verificadas"}`
+       : "Todavía sin reseñas")), /*#__PURE__*/React.createElement("div", {
+    className: "md:col-span-2 grid grid-cols-3 gap-3"
+  }, (provider.stats || []).map((st, i) => /*#__PURE__*/React.createElement(StatPill, {
+    key: i,
+    value: st.value,
+    label: st.label,
+    acento: provider.acento
+  })))), testimonios.length > 0 && /*#__PURE__*/React.createElement("div", {  
     className: "grid grid-cols-1 md:grid-cols-2 gap-4 mt-8"  
   }, testimonios.map((t, i) => /*#__PURE__*/React.createElement("div", {  
     key: i,  
@@ -3899,10 +3909,11 @@ function ProviderSocialProof({
 }
 
 /* Bloque 4 — "Qué vas a vivir" (copy orientado a acción) */  
-function ProviderExperiences({  
-  provider,  
-  onSelectItem  
-}) {  
+function ProviderExperiences({
+  provider,
+  onSelectItem
+}) {
+  if (!provider.quickPitch || !provider.quickPitch.length) return null;
   return /*#__PURE__*/React.createElement("section", {  
     className: "max-w-6xl mx-auto px-4 py-10 border-t border-slate-100"  
   }, /*#__PURE__*/React.createElement(SectionEyebrow, {  
@@ -3912,7 +3923,8 @@ function ProviderExperiences({
     className: "text-xl font-bold text-slate-900 mb-5"  
   }, "Qué vas a vivir con ", provider.nombre), /*#__PURE__*/React.createElement("div", {  
     className: "grid grid-cols-1 md:grid-cols-2 gap-4"  
-  }, provider.quickPitch.map((q, i) => {  
+  }, provider.quickPitch.map((q, i) => {
+
     const Icon = q.icon;  
     return /*#__PURE__*/React.createElement("div", {  
       key: i,  
@@ -3938,15 +3950,22 @@ function ProviderExperiences({
 }
 
 /* Bloque 5 — Catálogo completo (reusa TourCard / AirbnbCard) */  
-function ProviderCatalog({  
-  provider,  
-  onSelectTour,  
-  onSelectAloj,  
-  currency  
-}) {  
-  const allTours = useMemo(() => Object.values(CARDS_BY_CATEGORY).flat(), []);  
-  const tours = allTours.filter(t => t.providerId === provider.id);  
-  const alojamientos = ALOJAMIENTOS.filter(a => a.providerId === provider.id);  
+function ProviderCatalog({
+  provider,
+  onSelectTour,
+  onSelectAloj,
+  onAbrirHotel,
+  onAbrirVehiculos,
+  currency
+}) {
+
+  const allTours = useMemo(() => Object.values(CARDS_BY_CATEGORY).flat(), []);
+  const tours = allTours.filter(t => t.providerId === provider.id);
+  const alojamientos = ALOJAMIENTOS.filter(a => a.providerId === provider.id);
+  const hotel = HOTELES.find(h => h.id === provider.id);
+  const habitaciones = hotel ? hotel.habitaciones : [];
+  const vehiculos = VEHICULOS.filter(v => v.provider_id === provider.id);
+
   return /*#__PURE__*/React.createElement("section", {  
     id: "catalogo-proveedor",  
     className: "max-w-6xl mx-auto px-4 py-10 border-t border-slate-100"  
@@ -3968,12 +3987,74 @@ function ProviderCatalog({
     className: "text-sm font-semibold text-slate-500 mb-3"  
   }, "Alojamientos"), /*#__PURE__*/React.createElement("div", {  
     className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"  
-  }, alojamientos.map(a => /*#__PURE__*/React.createElement(AirbnbCard, {  
-    key: a.id,  
-    aloj: a,  
-    onSelect: onSelectAloj,  
-    currency: currency  
-  })))));  
+  }, alojamientos.map(a => /*#__PURE__*/React.createElement(AirbnbCard, {
+    key: a.id,
+    aloj: a,
+    onSelect: onSelectAloj,
+    currency: currency
+  })))),
+
+  /* Habitaciones: un hotel vende noches, no listados sueltos. */
+  habitaciones.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null,
+    /*#__PURE__*/React.createElement("p", {
+      className: "text-sm font-semibold text-slate-500 mb-3 mt-6"
+    }, "Habitaciones"),
+    /*#__PURE__*/React.createElement("div", {
+      className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+    }, habitaciones.map(h => /*#__PURE__*/React.createElement("div", {
+      key: h.id,
+      className: "border border-slate-200 rounded-xl overflow-hidden bg-white flex flex-col"
+    },
+      h.cover_image_url ? /*#__PURE__*/React.createElement("img", {
+        src: h.cover_image_url, alt: h.nombre,
+        className: "w-full h-40 object-cover"
+      }) : null,
+      /*#__PURE__*/React.createElement("div", { className: "p-4 flex-1 flex flex-col" },
+        /*#__PURE__*/React.createElement("p", { className: "font-semibold text-slate-900" }, h.nombre),
+        /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-0.5" },
+          "Hasta ", h.capacidad, " ", h.capacidad === 1 ? "huésped" : "huéspedes"),
+        h.descripcion ? /*#__PURE__*/React.createElement("p", {
+          className: "text-xs text-slate-600 mt-2 line-clamp-3 flex-1"
+        }, h.descripcion) : null,
+        /*#__PURE__*/React.createElement("div", { className: "flex items-end justify-between mt-3" },
+          /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("p", { className: "text-lg font-bold text-slate-900" },
+              "$", Number(h.precio_base).toFixed(0)),
+            /*#__PURE__*/React.createElement("p", { className: "text-[11px] text-slate-400" }, "por noche")),
+          /*#__PURE__*/React.createElement("button", {
+            onClick: () => onAbrirHotel && onAbrirHotel(hotel),
+            className: "bg-[#FF6B00] hover:bg-[#EA580C] text-white text-sm font-semibold px-4 py-2 rounded-lg"
+          }, "Ver fechas")))))))
+  ,
+  /* Vehículos del mismo negocio. */
+  vehiculos.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null,
+    /*#__PURE__*/React.createElement("p", {
+      className: "text-sm font-semibold text-slate-500 mb-3 mt-6"
+    }, "Vehículos en alquiler"),
+    /*#__PURE__*/React.createElement("div", {
+      className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+    }, vehiculos.map(v => /*#__PURE__*/React.createElement("div", {
+      key: v.id,
+      className: "border border-slate-200 rounded-xl overflow-hidden bg-white"
+    },
+      v.cover_image_url ? /*#__PURE__*/React.createElement("img", {
+        src: v.cover_image_url, alt: v.title,
+        className: "w-full h-40 object-cover"
+      }) : null,
+      /*#__PURE__*/React.createElement("div", { className: "p-4" },
+        /*#__PURE__*/React.createElement("p", { className: "font-semibold text-slate-900" },
+          [v.brand, v.model].filter(Boolean).join(" ") || v.title),
+        /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-0.5" },
+          v.year, " · ", v.transmission === "automatica" ? "Automática" : "Manual", " · ", v.seats, " puestos"),
+        /*#__PURE__*/React.createElement("div", { className: "flex items-end justify-between mt-3" },
+          /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("p", { className: "text-lg font-bold text-slate-900" },
+              "$", Number(v.price_per_day).toFixed(0)),
+            /*#__PURE__*/React.createElement("p", { className: "text-[11px] text-slate-400" }, "por día")),
+          /*#__PURE__*/React.createElement("button", {
+            onClick: () => onAbrirVehiculos && onAbrirVehiculos(),
+            className: "border border-slate-300 hover:border-[#0052CC] hover:text-[#0052CC] text-slate-700 text-sm font-semibold px-4 py-2 rounded-lg"
+          }, "Ver disponibilidad"))))))));
 }
 
 /* Bloque 6 — Reducción de fricción (barra de confianza) */  
@@ -4104,16 +4185,19 @@ function ChatModal({
 }
 
 /* Ensamblaje del micrositio completo */  
-function ProviderMicrosite({  
-  provider,  
-  onBack,  
-  onSelectTour,  
-  onSelectAloj,  
-  onOpenFeatured,  
-  currency  
-}) {  
-  const [lightboxIndex, setLightboxIndex] = useState(null);  
-  const [chatOpen, setChatOpen] = useState(false);  
+function ProviderMicrosite({
+  provider,
+  onBack,
+  onSelectTour,
+  onSelectAloj,
+  onOpenFeatured,
+  onIrARentacar,
+  currency
+}) {
+  const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [hotelAbierto, setHotelAbierto] = useState(null);
+
   useEffect(() => {  
     const onKey = e => {  
       if (e.key === "Escape") {  
@@ -4160,22 +4244,27 @@ function ProviderMicrosite({
   }, /*#__PURE__*/React.createElement(ProviderExperiences, {  
     provider: provider,  
     onSelectItem: handleQuickPitchSelect  
-  })), /*#__PURE__*/React.createElement(ProviderCatalog, {  
-    provider: provider,  
-    onSelectTour: onSelectTour,  
-    onSelectAloj: onSelectAloj,  
-    currency: currency  
+  })), /*#__PURE__*/React.createElement(ProviderCatalog, {
+    provider: provider,
+    onSelectTour: onSelectTour,
+    onSelectAloj: onSelectAloj,
+    onAbrirHotel: setHotelAbierto,
+    onAbrirVehiculos: onIrARentacar,
+    currency: currency
+  }), hotelAbierto && /*#__PURE__*/React.createElement(HotelBookingPage, {
+    hotel: hotelAbierto,
+    onClose: () => setHotelAbierto(null)
   }), /*#__PURE__*/React.createElement(ProviderTrustBar, null), /*#__PURE__*/React.createElement(ProviderUrgencyBanner, {  
     text: provider.urgencia  
   }), /*#__PURE__*/React.createElement(ProviderClosingCTA, {  
     provider: provider,  
     onReservar: scrollToCatalogo  
   }), /*#__PURE__*/React.createElement(GalleryLightbox, {  
-    photos: provider.gallery,  
-    index: lightboxIndex,  
-    onClose: () => setLightboxIndex(null),  
-    onPrev: () => setLightboxIndex(i => (i - 1 + provider.gallery.length) % provider.gallery.length),  
-    onNext: () => setLightboxIndex(i => (i + 1) % provider.gallery.length)  
+    photos: provider.gallery || [],
+    index: lightboxIndex,
+    onClose: () => setLightboxIndex(null),
+    onPrev: () => setLightboxIndex(i => (i - 1 + provider.gallery.length) % provider.gallery.length),
+    onNext: () => setLightboxIndex(i => (i + 1) % provider.gallery.length)
   }), /*#__PURE__*/React.createElement(FloatingChatButton, {  
     onOpen: () => setChatOpen(true)  
   }), chatOpen && /*#__PURE__*/React.createElement(ChatModal, {  
@@ -5118,7 +5207,8 @@ function LegalModal({ doc, onClose }) {
   const d = LEGAL[doc];
   if (!d) return null;
   return /*#__PURE__*/React.createElement("div", {
-    className: "fixed inset-0 bg-black/50 z-[90] flex items-start justify-center p-4 overflow-y-auto",
+    className: "fixed inset-0 bg-black/50 flex items-start justify-center p-4 overflow-y-auto",
+    style: { zIndex: 90 },
     onClick: onClose
   }, /*#__PURE__*/React.createElement("div", {
     className: "bg-white rounded-xl max-w-2xl w-full my-8",
@@ -5271,7 +5361,14 @@ function App() {
       /* En producción la aplicación vive en la raíz, así que el primer tramo de
          la ruta es la dirección del negocio. En desarrollo se sirve desde una
          subcarpeta, donde ese tramo es la carpeta y no un negocio. */
-      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      /* En desarrollo se sirve desde una subcarpeta, así que el primer tramo
+         de la ruta es la carpeta y no un negocio. Para poder abrir un
+         micrositio ahí, se admite ?negocio=slug. */
+      const esLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      if (esLocal) {
+        const pedido = new URLSearchParams(window.location.search).get("negocio");
+        const local = pedido && ELITE_PROVIDERS.find(x => x.slug === pedido);
+        if (local) { setActiveProvider(local); setView("provider"); return; }
         setActiveProvider(null); setView("home"); return;
       }
       const tramos = window.location.pathname.split("/").filter(Boolean);
@@ -5420,8 +5517,9 @@ function App() {
     onBack: goHome,  
     onSelectTour: t => openTour(t, true),  
     onSelectAloj: a => openAloj(a, true),  
-    onOpenFeatured: handleOpenFeatured,  
-    currency: currency  
+    onOpenFeatured: handleOpenFeatured,
+    onIrARentacar: () => { setCategory("rentacar"); setMunicipioFiltro(null); goHome(); },
+    currency: currency
   }), view === "detail" && activeItem && (activeItem.type === "tour" ? /*#__PURE__*/React.createElement(DetailScreenTour, {  
     tour: activeItem.data,  
     onBack: handleBackFromDetail,  
@@ -5590,6 +5688,11 @@ async function cargarCatalogoReal(){
     const p = l.providers;
     if (p && p.verification_status === 'approved' && !aprobados.has(p.id)) aprobados.set(p.id, p);
   });
+  /* Un hotel vende habitaciones, no listados. Sin esto se quedaba sin
+     micrositio por no tener ningún listing publicado. */
+  const { data: aprobadosHotel } = await sb.from('providers').select('*')
+    .eq('verification_status', 'approved').eq('business_type', 'hotel');
+  (aprobadosHotel || []).forEach(p => { if (!aprobados.has(p.id)) aprobados.set(p.id, p); });
   aprobados.forEach(p => {
     ELITE_PROVIDERS.push({
       id: p.id,
@@ -5597,11 +5700,13 @@ async function cargarCatalogoReal(){
       logo: p.logo_url || null,
       portada: p.cover_image_url || null,
       tipoNegocio: p.business_type || 'otro',
-      nombre: p.cover_title || p.business_name,
+      /* El nombre es el del negocio; el título de portada es su lema y va
+         en el encabezado grande, no sustituyendo a la marca. */
+      nombre: p.business_name,
       acento: '#0052CC',
       especialidad: p.cover_tagline || 'Proveedor verificado',
       ubicacion: municipioCanonico(p.municipio),
-      tagline: p.cover_tagline || '',
+      tagline: p.cover_title || p.cover_tagline || '',
       rating: null,
       reviews: 0,
       aniosOperando: null,
@@ -5623,7 +5728,7 @@ async function cargarCatalogoReal(){
     if (!habitaciones.length) return;
     HOTELES.push({
       id: hp.id,
-      nombre: hp.cover_title || hp.business_name,
+      nombre: hp.business_name,
       slug: hp.slug,
       municipio: municipioCanonico(hp.municipio),
       logo: hp.logo_url,
@@ -5640,6 +5745,72 @@ async function cargarCatalogoReal(){
     .from('vehicles').select('*').eq('status','published').eq('is_approved', true);
   if (errVeh) console.error('Error cargando vehículos:', errVeh.message);
   (vehiculos || []).forEach(v => VEHICULOS.push(Object.assign({}, v, { municipio: municipioCanonico(v.municipio) })));
+
+  /* ------------------------------------------------------------------
+     El micrositio se arma con lo que el negocio publicó de verdad: sus
+     fotos, sus precios, sus productos. Antes esperaba campos del catálogo
+     de ejemplo (cifras de viajeros atendidos, galería fija) que ningún
+     proveedor real tiene, y la página se quedaba en blanco.
+     ------------------------------------------------------------------ */
+  ELITE_PROVIDERS.forEach(prov => {
+    const susTours  = experiencias.filter(t => t.providerId === prov.id);
+    const susAloj   = ALOJAMIENTOS.filter(a => a.providerId === prov.id);
+    const suHotel   = HOTELES.find(h => h.id === prov.id);
+    const susAutos  = VEHICULOS.filter(v => v.provider_id === prov.id);
+    const habitaciones = suHotel ? suHotel.habitaciones : [];
+
+    prov.foto = prov.portada;
+    prov.bio  = prov.about;
+
+    /* Galería: las portadas de todo lo que vende, sin repetir. */
+    prov.gallery = Array.from(new Set([].concat(
+      prov.portada ? [prov.portada] : [],
+      habitaciones.map(h => h.cover_image_url),
+      susTours.map(t => t.img),
+      susAloj.map(a => a.imgs && a.imgs[0]),
+      susAutos.map(v => v.cover_image_url)
+    ).filter(Boolean)));
+
+    const precios = [].concat(
+      habitaciones.map(h => Number(h.precio_base)),
+      susTours.map(t => t.priceCOP / TASA_COP),
+      susAloj.map(a => Number(a.precioNocheUSD)),
+      susAutos.map(v => Number(v.price_per_day))
+    ).filter(n => Number.isFinite(n) && n > 0);
+    prov.precioDesdeUSD = precios.length ? Math.round(Math.min.apply(null, precios)) : null;
+
+    /* Producto destacado: el más barato, que es el que mejor engancha. */
+    if (susTours.length) {
+      const barato = susTours.reduce((a, b) => a.priceCOP <= b.priceCOP ? a : b);
+      prov.featured = { type: 'tour', id: barato.id };
+    } else if (susAloj.length) {
+      prov.featured = { type: 'alojamiento', id: susAloj[0].id };
+    } else {
+      prov.featured = null;
+    }
+
+    prov.quickPitch = susTours.slice(0, 4).map(t => ({
+      targetType: 'tour', targetId: t.id, icon: Compass,
+      que: t.title, duracion: t.duration,
+      precioUSD: Math.round(t.priceCOP / TASA_COP)
+    }));
+
+    /* Cifras reales. Si un dato no existe, no se inventa: se omite. */
+    prov.stats = [
+      habitaciones.length
+        ? { value: String(habitaciones.reduce((n, h) => n + Number(h.cantidad_total || 0), 0)),
+            label: habitaciones.length === 1 ? 'Habitación disponible' : 'Habitaciones disponibles' }
+        : null,
+      (susTours.length + susAloj.length)
+        ? { value: String(susTours.length + susAloj.length), label: 'Experiencias publicadas' }
+        : null,
+      susAutos.length
+        ? { value: String(susAutos.length),
+            label: susAutos.length === 1 ? 'Vehículo en alquiler' : 'Vehículos en alquiler' }
+        : null,
+      { value: prov.ubicacion, label: 'Municipio' }
+    ].filter(Boolean).slice(0, 3);
+  });
 
   console.info(`Catálogo real: ${experiencias.length} experiencias, ${ALOJAMIENTOS.length} alojamientos, ${ELITE_PROVIDERS.length} micrositios.`);
 }
