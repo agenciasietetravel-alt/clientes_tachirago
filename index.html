@@ -1276,11 +1276,330 @@ function FlightQuoteModal({
 }
 
 /* ==========================================================================
+   RESERVA DE HOTEL
+   Se toman de Booking tres cosas que de verdad mueven la aguja: buscar primero
+   por fechas, mostrar la escasez real, y decir con claridad qué se paga ahora y
+   qué se paga al llegar.
+   ========================================================================== */
+function HotelBookingPage({ hotel, onClose }) {
+  const hoy = new Date();
+  const manana = new Date(hoy.getTime() + 86400000);
+  const [checkIn, setCheckIn] = useState(fechaISO(hoy));
+  const [checkOut, setCheckOut] = useState(fechaISO(manana));
+  const [huespedes, setHuespedes] = useState(2);
+  const [disponibilidad, setDisponibilidad] = useState(null);
+  const [buscando, setBuscando] = useState(false);
+  const [reservando, setReservando] = useState(null);
+
+  useEffect(() => {
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  const noches = (checkIn && checkOut && checkOut > checkIn)
+    ? Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000) : 0;
+
+  const buscar = async () => {
+    if (!noches) return;
+    setBuscando(true);
+    const ids = hotel.habitaciones.map(t => t.id);
+    const { data } = await window.__tgSupabase.from("room_inventory")
+      .select("room_type_id, fecha, disponibles, precio, bloqueado")
+      .in("room_type_id", ids).gte("fecha", checkIn).lt("fecha", checkOut);
+
+    const porTipo = {};
+    (data || []).forEach(r => {
+      (porTipo[r.room_type_id] = porTipo[r.room_type_id] || []).push(r);
+    });
+
+    const res = {};
+    hotel.habitaciones.forEach(t => {
+      const filas = porTipo[t.id] || [];
+      /* Las noches sin fila aún no se han tocado: valen el total del hotel. */
+      let minimo = t.cantidad_total;
+      let total = 0;
+      let cerrado = false;
+      for (let i = 0; i < noches; i++) {
+        const f = fechaISO(new Date(new Date(checkIn).getTime() + i * 86400000));
+        const fila = filas.find(x => x.fecha === f);
+        if (fila && fila.bloqueado) { cerrado = true; break; }
+        const disp = fila ? fila.disponibles : t.cantidad_total;
+        const precio = fila && fila.precio != null ? Number(fila.precio) : Number(t.precio_base);
+        minimo = Math.min(minimo, disp);
+        total += precio;
+      }
+      res[t.id] = cerrado ? { libres: 0, total: 0, cerrado: true } : { libres: minimo, total, cerrado: false };
+    });
+    setDisponibilidad(res);
+    setBuscando(false);
+  };
+
+  /* Sin esto, cambiar las fechas dejaba en pantalla el precio del rango
+     anterior: el viajero veía tres noches y el total de una. */
+  useEffect(() => { setDisponibilidad(null); if (noches) buscar(); }, [checkIn, checkOut]);
+
+  return /*#__PURE__*/React.createElement("div", { className: "fixed inset-0 z-[85] bg-white overflow-y-auto" },
+    /*#__PURE__*/React.createElement("div", { className: "sticky top-0 bg-white border-b border-slate-200 z-10" },
+      /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4" },
+        /*#__PURE__*/React.createElement("div", { className: "flex items-center gap-3 min-w-0" },
+          hotel.logo && /*#__PURE__*/React.createElement("img", { src: hotel.logo, alt: "",
+            className: "w-10 h-10 rounded-lg object-contain bg-slate-50 shrink-0" }),
+          /*#__PURE__*/React.createElement("div", { className: "min-w-0" },
+            /*#__PURE__*/React.createElement("p", { className: "text-[11px] font-bold tracking-widest text-[#0052CC] uppercase" }, "Alojamiento"),
+            /*#__PURE__*/React.createElement("h2", { className: "text-xl font-bold text-slate-900 truncate" }, hotel.nombre))),
+        /*#__PURE__*/React.createElement("button", { onClick: onClose, "aria-label":"Cerrar",
+          className: "text-slate-400 hover:text-slate-700 text-3xl leading-none shrink-0" }, "×"))),
+
+    /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-4 py-6" },
+      hotel.about && /*#__PURE__*/React.createElement("p", {
+        className: "text-sm text-slate-600 leading-relaxed mb-5 max-w-2xl" }, hotel.about),
+
+      /* Buscar por fechas primero: es el patrón que usa todo el sector. */
+      /*#__PURE__*/React.createElement("div", { className: "flex flex-wrap items-end gap-3 p-4 bg-slate-50 rounded-xl mb-6" },
+        /*#__PURE__*/React.createElement("label", { className: "block" },
+          /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Entrada"),
+          /*#__PURE__*/React.createElement("input", { type:"date", value:checkIn, min: fechaISO(hoy),
+            onChange:e => setCheckIn(e.target.value),
+            className:"px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white" })),
+        /*#__PURE__*/React.createElement("label", { className: "block" },
+          /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Salida"),
+          /*#__PURE__*/React.createElement("input", { type:"date", value:checkOut, min: checkIn,
+            onChange:e => setCheckOut(e.target.value),
+            className:"px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white" })),
+        /*#__PURE__*/React.createElement("label", { className: "block" },
+          /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Huéspedes"),
+          /*#__PURE__*/React.createElement("select", { value:huespedes, onChange:e => setHuespedes(Number(e.target.value)),
+            className:"px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white" },
+            [1,2,3,4,5,6,7,8].map(n => /*#__PURE__*/React.createElement("option", { key:n, value:n }, n)))),
+        /*#__PURE__*/React.createElement("button", { onClick: buscar, disabled: buscando || !noches,
+          className: "px-5 py-2 rounded-lg bg-[#0052CC] hover:bg-[#003D99] disabled:opacity-60 text-white text-sm font-semibold" },
+          buscando ? "Buscando…" : "Ver disponibilidad"),
+        noches > 0 && /*#__PURE__*/React.createElement("span", { className: "text-xs text-slate-500" },
+          noches, " ", noches === 1 ? "noche" : "noches")),
+
+      !noches
+        ? /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-500 py-10 text-center" },
+            "Elige tus fechas para ver qué hay disponible.")
+        : /*#__PURE__*/React.createElement("div", { className: "space-y-4" },
+            hotel.habitaciones.map(t => {
+              const d = disponibilidad ? disponibilidad[t.id] : null;
+              const libres = d ? d.libres : null;
+              const total = d ? d.total : Number(t.precio_base) * noches;
+              const cabe = t.capacidad >= huespedes;
+              const agotado = d && (d.cerrado || libres < 1);
+              return /*#__PURE__*/React.createElement("div", {
+                key: t.id,
+                className: `border rounded-xl overflow-hidden flex flex-col sm:flex-row ${agotado || !cabe ? "border-slate-200 opacity-60" : "border-slate-200 hover:shadow-md transition-shadow"}`
+              },
+                /*#__PURE__*/React.createElement("div", { className: "sm:w-56 h-40 sm:h-auto bg-slate-100 shrink-0" },
+                  t.cover_image_url
+                    ? /*#__PURE__*/React.createElement("img", { src: t.cover_image_url, alt: t.nombre, className: "w-full h-full object-cover" })
+                    : /*#__PURE__*/React.createElement("div", { className: "w-full h-full flex items-center justify-center text-slate-400 text-xs" }, "Sin foto")),
+                /*#__PURE__*/React.createElement("div", { className: "p-4 flex-1 flex flex-col sm:flex-row sm:items-center gap-4" },
+                  /*#__PURE__*/React.createElement("div", { className: "flex-1 min-w-0" },
+                    /*#__PURE__*/React.createElement("h3", { className: "font-bold text-slate-900" }, t.nombre),
+                    t.descripcion && /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-1" }, t.descripcion),
+                    /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-1" }, "Hasta ", t.capacidad, " huéspedes"),
+                    /* La escasez real es la que convierte: solo se dice cuando es cierta. */
+                    d && !agotado && libres <= 3 && /*#__PURE__*/React.createElement("p", {
+                      className: "text-xs font-bold text-[#C0122D] mt-1.5"
+                    }, "¡Solo ", libres, " ", libres === 1 ? "habitación" : "habitaciones", " a este precio!"),
+                    !cabe && /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-1.5" },
+                      "Esta habitación admite hasta ", t.capacidad, " huéspedes"),
+                    /*#__PURE__*/React.createElement("p", { className: "text-xs text-[#12805C] font-semibold mt-1.5" },
+                      "✓ Cancelación gratis hasta 48h antes")),
+                  /*#__PURE__*/React.createElement("div", { className: "text-right shrink-0" },
+                    /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-400" }, noches, " ", noches===1?"noche":"noches"),
+                    /*#__PURE__*/React.createElement("p", { className: "text-xl font-bold text-slate-900" }, "$", total),
+                    /*#__PURE__*/React.createElement("p", { className: "text-[11px] text-slate-400 mb-2" }, "impuestos incluidos"),
+                    agotado
+                      ? /*#__PURE__*/React.createElement("span", { className: "inline-block text-xs font-bold text-slate-400 border border-slate-200 rounded-lg px-4 py-2" }, "No disponible")
+                      : /*#__PURE__*/React.createElement("button", {
+                          onClick: () => setReservando({ tipo: t, total, libres }),
+                          disabled: !cabe || !disponibilidad || buscando,
+                          className: "bg-[#FF6B00] hover:bg-[#EA580C] disabled:opacity-50 text-white text-sm font-bold px-5 py-2.5 rounded-lg transition-colors"
+                        }, "Reservar"))));
+            })),
+
+      reservando && /*#__PURE__*/React.createElement(ReservaHotelModal, {
+        hotel, dato: reservando, checkIn, checkOut, noches, huespedes,
+        onClose: () => setReservando(null)
+      })));
+}
+
+function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, onClose }) {
+  const t = dato.tipo;
+  const [habitaciones, setHabitaciones] = useState(1);
+  const [modalidad, setModalidad] = useState("deposito");
+  const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [cedula, setCedula] = useState("");
+  const [metodo, setMetodo] = useState(PAYMENT_METHODS[0].id);
+  const [referencia, setReferencia] = useState("");
+  const [archivo, setArchivo] = useState(null);
+  const [estado, setEstado] = useState({ enviando:false, error:"", reserva:null });
+
+  useEffect(() => {
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const total = dato.total * habitaciones;
+  const deposito = Math.round(total * 0.10 * 100) / 100;
+  const ahora = modalidad === "total" ? total : deposito;
+  const alLlegar = total - ahora;
+  const metodoSel = PAYMENT_METHODS.find(m => m.id === metodo) || PAYMENT_METHODS[0];
+
+  const enviar = async () => {
+    if (!nombre.trim() || !telefono.trim()) {
+      setEstado({ enviando:false, error:"Necesitamos tu nombre y tu teléfono para confirmarte la reserva.", reserva:null });
+      return;
+    }
+    if (!archivo) {
+      setEstado({ enviando:false, error:"Adjunta el comprobante de tu transferencia: sin él la habitación no queda apartada.", reserva:null });
+      return;
+    }
+    setEstado({ enviando:true, error:"", reserva:null });
+    const sb = window.__tgSupabase;
+
+    const limpio = archivo.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const ruta = `${hotel.id}/${Date.now()}-${limpio}`;
+    const { error: errSubida } = await sb.storage.from("comprobantes").upload(ruta, archivo);
+    if (errSubida) {
+      setEstado({ enviando:false, error:"No se pudo subir el comprobante: " + errSubida.message, reserva:null });
+      return;
+    }
+
+    /* La reserva se resuelve dentro de la base de datos: comprobar el cupo aquí
+       no serviría, porque otro viajero puede reservar entre la comprobación y
+       el guardado. */
+    const { data, error } = await sb.rpc("reservar_habitacion", {
+      p_room_type_id: t.id,
+      p_check_in: checkIn,
+      p_check_out: checkOut,
+      p_habitaciones: habitaciones,
+      p_huespedes: huespedes,
+      p_modalidad: modalidad,
+      p_nombre: nombre.trim(),
+      p_telefono: telefono.trim(),
+      p_cedula: cedula.trim() || null,
+      p_comprobante_url: ruta,
+      p_comprobante_referencia: referencia.trim() || null,
+      p_comprobante_metodo: metodoSel.label
+    });
+    if (error) {
+      setEstado({ enviando:false, error: error.message, reserva:null });
+      return;
+    }
+    setEstado({ enviando:false, error:"", reserva: data });
+  };
+
+  const campo = (etiqueta, valor, set, tipo, ph, req) =>
+    /*#__PURE__*/React.createElement("label", { className: "block" },
+      /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" },
+        etiqueta, req && /*#__PURE__*/React.createElement("span", { className:"text-[#FF6B00]" }, " *")),
+      /*#__PURE__*/React.createElement("input", { type:tipo, value:valor, onChange:e => set(e.target.value),
+        placeholder:ph, disabled: estado.enviando,
+        className:"w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-[#0052CC]" }));
+
+  if (estado.reserva) {
+    const r = estado.reserva;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "fixed inset-0 bg-black/50 z-[95] flex items-center justify-center p-4", onClick: onClose
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "bg-white rounded-xl max-w-md w-full p-6", onClick: e => e.stopPropagation()
+    }, /*#__PURE__*/React.createElement("h3", { className:"text-lg font-bold text-slate-900 mb-1" }, "Reserva recibida"),
+      /*#__PURE__*/React.createElement("p", { className:"text-xs text-slate-400 mb-4" }, "Referencia ", r.ref),
+      /*#__PURE__*/React.createElement("div", { className:"rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 leading-relaxed" },
+        "Tu habitación quedó apartada. Estamos verificando tu pago y te confirmamos por WhatsApp al ",
+        /*#__PURE__*/React.createElement("strong", null, telefono), "."),
+      alLlegar > 0 && /*#__PURE__*/React.createElement("div", { className:"rounded-lg bg-slate-50 text-sm px-4 py-3 mt-3 leading-relaxed" },
+        "Al llegar al alojamiento pagas los ", /*#__PURE__*/React.createElement("strong", null, "$", alLlegar), " restantes."),
+      /*#__PURE__*/React.createElement("button", { onClick: onClose,
+        className:"w-full mt-4 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-lg" }, "Cerrar")));
+  }
+
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-black/50 z-[95] flex items-start justify-center p-4 overflow-y-auto", onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-xl max-w-md w-full p-6 my-8", onClick: e => e.stopPropagation()
+  },
+    /*#__PURE__*/React.createElement("div", { className:"flex items-start justify-between gap-3 mb-1" },
+      /*#__PURE__*/React.createElement("h3", { className:"text-lg font-bold text-slate-900" }, t.nombre),
+      /*#__PURE__*/React.createElement("button", { onClick:onClose, "aria-label":"Cerrar",
+        className:"text-slate-400 text-2xl leading-none" }, "×")),
+    /*#__PURE__*/React.createElement("p", { className:"text-sm text-slate-500 mb-4" },
+      checkIn, " → ", checkOut, " · ", noches, " ", noches===1?"noche":"noches"),
+
+    dato.libres > 1 && /*#__PURE__*/React.createElement("label", { className:"block mb-3" },
+      /*#__PURE__*/React.createElement("span", { className:"block text-xs font-semibold text-slate-600 mb-1" }, "¿Cuántas habitaciones?"),
+      /*#__PURE__*/React.createElement("select", { value:habitaciones, onChange:e => setHabitaciones(Number(e.target.value)),
+        className:"w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm bg-white" },
+        Array.from({length: Math.min(dato.libres, 5)}, (_,i) => i+1).map(n =>
+          /*#__PURE__*/React.createElement("option", { key:n, value:n }, n)))),
+
+    /* Decir con claridad qué se paga ahora y qué al llegar evita la mitad de
+       las incidencias en recepción. */
+    /*#__PURE__*/React.createElement("div", { className:"space-y-2 mb-4" },
+      [["deposito", "Pagar el 10% ahora", "Reservas con $" + deposito + " y pagas el resto al llegar"],
+       ["total", "Pagar el 100% ahora", "Llegas sin nada pendiente"]].map(([id, titulo, sub]) =>
+        /*#__PURE__*/React.createElement("button", { key:id, onClick:() => setModalidad(id),
+          className: `w-full text-left border rounded-lg p-3 transition-colors ${modalidad===id ? "border-[#0052CC] bg-blue-50" : "border-slate-200 hover:border-slate-300"}`
+        }, /*#__PURE__*/React.createElement("p", { className:"text-sm font-bold text-slate-900" }, titulo),
+           /*#__PURE__*/React.createElement("p", { className:"text-xs text-slate-500" }, sub)))),
+
+    /*#__PURE__*/React.createElement("div", { className:"bg-slate-50 rounded-lg p-4 mb-4 text-sm" },
+      /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1" },
+        /*#__PURE__*/React.createElement("span", { className:"text-slate-600" }, noches, " ", noches===1?"noche":"noches", " × ", habitaciones, " ", habitaciones===1?"habitación":"habitaciones"),
+        /*#__PURE__*/React.createElement("span", null, "$", total)),
+      /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1 border-t border-slate-200 mt-1 pt-2" },
+        /*#__PURE__*/React.createElement("span", { className:"font-bold text-slate-900" }, "Pagas ahora"),
+        /*#__PURE__*/React.createElement("span", { className:"font-bold text-[#0052CC] text-lg" }, "$", ahora)),
+      alLlegar > 0 && /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1 text-xs text-slate-500" },
+        /*#__PURE__*/React.createElement("span", null, "Al llegar al alojamiento"),
+        /*#__PURE__*/React.createElement("span", null, "$", alLlegar))),
+
+    /*#__PURE__*/React.createElement("div", { className:"rounded-lg border border-[#FF6B00] bg-orange-50 p-3 mb-4" },
+      /*#__PURE__*/React.createElement("p", { className:"text-xs font-bold text-slate-900 mb-1" }, "Transfiere $", ahora, " a:"),
+      /*#__PURE__*/React.createElement("select", { value:metodo, onChange:e => setMetodo(e.target.value),
+        className:"w-full px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white mb-2" },
+        PAYMENT_METHODS.map(m => /*#__PURE__*/React.createElement("option", { key:m.id, value:m.id }, m.label, " · ", m.sub))),
+      /*#__PURE__*/React.createElement("p", { className:"text-xs text-slate-700 font-mono leading-relaxed" }, metodoSel.detail)),
+
+    /*#__PURE__*/React.createElement("div", { className:"space-y-3" },
+      campo("Tu nombre", nombre, setNombre, "text", "Nombre y apellido", true),
+      campo("Tu WhatsApp", telefono, setTelefono, "tel", "Ej. +58 424 1234567", true),
+      campo("Cédula o pasaporte", cedula, setCedula, "text", "Opcional", false),
+      campo("Referencia de la transferencia", referencia, setReferencia, "text", "Número o últimos dígitos", false),
+      /*#__PURE__*/React.createElement("label", { className:"block" },
+        /*#__PURE__*/React.createElement("span", { className:"block text-xs font-semibold text-slate-600 mb-1" },
+          "Comprobante de pago", /*#__PURE__*/React.createElement("span", { className:"text-[#FF6B00]" }, " *")),
+        /*#__PURE__*/React.createElement("input", { type:"file", accept:"image/*,application/pdf",
+          onChange:e => setArchivo((e.target.files || [])[0] || null), disabled: estado.enviando,
+          className:"w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-700 file:text-xs file:font-semibold" })),
+      estado.error && /*#__PURE__*/React.createElement("div", {
+        className:"rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 leading-relaxed" }, estado.error),
+      /*#__PURE__*/React.createElement("button", { onClick:enviar, disabled: estado.enviando,
+        className:"w-full bg-[#FF6B00] hover:bg-[#EA580C] disabled:opacity-60 text-white font-bold py-3 rounded-lg transition-colors" },
+        estado.enviando ? "Apartando tu habitación…" : "Enviar comprobante y reservar"),
+      /*#__PURE__*/React.createElement("p", { className:"text-[11px] text-slate-400 text-center leading-relaxed" },
+        "Cancelación gratuita hasta 48 horas antes de la entrada."))));
+}
+
+function fechaISO(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+/* ==========================================================================
    ALQUILER DE VEHÍCULOS
    Vertical propia y encapsulada: los vehículos no entran nunca en el catálogo
    de experiencias ni en las promociones. Se alquilan por rango de fechas, y
    solo aparecen los que aprobaron la revisión legal y la física.
    ========================================================================== */
+const HOTELES = [];
 const VEHICULOS = [];
 
 const VEH_CAT_LABEL = { sedan:"Sedán", suv:"SUV", pickup:"Pick-up", camioneta:"Camioneta", van:"Van", moto:"Moto", "4x4":"4x4" };
@@ -2000,6 +2319,7 @@ function SearchTabsBox({
 }) {  
   const [cotizadorTour, setCotizadorTour] = useState(null);
   const [rentacarAbierto, setRentacarAbierto] = useState(null);
+  const [hotelAbierto, setHotelAbierto] = useState(null);
   const scrollToCatalogo = () => setTimeout(() => document.getElementById("catalogo-completo")?.scrollIntoView({  
     behavior: "smooth"  
   }), 50);  
@@ -2040,6 +2360,7 @@ function SearchTabsBox({
       onClick: () => {
         setCategory(cat.id);
         if (cat.id === "rentacar") setRentacarAbierto({});
+        if (cat.id === "alojamientos" && HOTELES.length === 1) setHotelAbierto(HOTELES[0]);
         if (cat.id === "foraneos") setCotizadorTour("tour_nacional");
         if (cat.id === "internacionales") setCotizadorTour("tour_internacional");
       },  
@@ -2079,6 +2400,10 @@ function SearchTabsBox({
       desdeInicial: rentacarAbierto.desde,
       hastaInicial: rentacarAbierto.hasta,
       onClose: () => setRentacarAbierto(null)
+    }),
+    hotelAbierto && /*#__PURE__*/React.createElement(HotelBookingPage, {
+      hotel: hotelAbierto,
+      onClose: () => setHotelAbierto(null)
     })));  
 }  
 function Hero({  
@@ -4680,6 +5005,30 @@ async function cargarCatalogoReal(){
       aniosOperando: null,
       about: p.about || '',
       whatsapp: p.whatsapp || null
+    });
+  });
+
+  /* Hoteles: se cargan con sus tipos de habitación publicados. Un hotel sin
+     habitaciones no tiene nada que vender, así que no se muestra. */
+  const { data: hoteles, error: errHot } = await sb
+    .from('providers')
+    .select('*, room_types(*)')
+    .eq('business_type', 'hotel')
+    .eq('verification_status', 'approved');
+  if (errHot) console.error('Error cargando hoteles:', errHot.message);
+  (hoteles || []).forEach(hp => {
+    const habitaciones = (hp.room_types || []).filter(t => t.status === 'published');
+    if (!habitaciones.length) return;
+    HOTELES.push({
+      id: hp.id,
+      nombre: hp.cover_title || hp.business_name,
+      slug: hp.slug,
+      municipio: municipioCanonico(hp.municipio),
+      logo: hp.logo_url,
+      portada: hp.cover_image_url,
+      about: hp.about || '',
+      habitaciones,
+      desde: Math.min.apply(null, habitaciones.map(t => Number(t.precio_base)))
     });
   });
 
