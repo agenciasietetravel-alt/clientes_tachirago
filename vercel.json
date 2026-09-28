@@ -1,5 +1,9 @@
 {
   "rewrites": [
-    { "source": "/((?!_next|assets|favicon.ico|robots.txt).*)", "destination": "/index.html" }
+    { "source": "/admin", "destination": "https://panel-admin-tachiragoo.vercel.app/" },
+    { "source": "/admin/:path*", "destination": "https://panel-admin-tachiragoo.vercel.app/:path*" },
+    { "source": "/proveedores", "destination": "https://portal-proveedores-tachiragoo.vercel.app/" },
+    { "source": "/proveedores/:path*", "destination": "https://portal-proveedores-tachiragoo.vercel.app/:path*" },
+    { "source": "/((?!admin|proveedores|_next|assets|favicon.ico|robots.txt).*)", "destination": "/index.html" }
   ]
 }

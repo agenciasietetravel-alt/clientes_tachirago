@@ -535,7 +535,7 @@ function JoinProviderModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
   const set = k => e => setForm(f => Object.assign({}, f, { [k]: e.target.value }));
-  const providerUrl = window.location.hostname === "localhost" ? "/proveedores_tachiragoo/" : "https://portal-proveedores-tachiragoo.vercel.app/";
+  const providerUrl = window.location.hostname === "localhost" ? "/proveedores_tachiragoo/" : "/proveedores";
   const submit = async () => {
     const sb = window.__tgSupabase;
     if (!sb) {
@@ -747,11 +747,6 @@ function Navbar({
   }, "¿Eres un comercio? Únete a nosotros")), /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-1 ml-auto shrink-0 relative z-30"  
   }, /*#__PURE__*/React.createElement("button", {  
-    className: "hidden sm:flex p-2 rounded-full hover:bg-slate-100 text-slate-700",  
-    "aria-label": "Favoritos"  
-  }, /*#__PURE__*/React.createElement(Heart, {  
-    size: 20  
-  })), /*#__PURE__*/React.createElement("button", {  
     onClick: onOpenCart,  
     className: "relative p-2 rounded-full hover:bg-slate-100 text-slate-700",  
     "aria-label": "Carrito"  
@@ -3082,9 +3077,13 @@ function HomeScreen({
    BLOQUES DE DETALLE DE TOUR (estilo GetYourGuide, reutilizables)  
    ========================================================================== */
 
-function ImageGrid({  
-  mainImg  
-}) {  
+function ImageGrid({
+  mainImg
+}) {
+  /* El botón "Ver todo" no hacía nada. Ahora abre el visor que ya existe
+     para las galerías de los micrositios. */
+  const fotos = [mainImg || IMAGES.hero, IMAGES.coffee, IMAGES.hike, IMAGES.waterfall, IMAGES.food].filter(Boolean);
+  const [visor, setVisor] = useState(null);
   return /*#__PURE__*/React.createElement("div", {  
     className: "relative grid grid-cols-4 grid-rows-2 gap-2 rounded-xl overflow-hidden h-[260px] md:h-[420px] mt-4"  
   }, /*#__PURE__*/React.createElement("img", {  
@@ -3107,10 +3106,19 @@ function ImageGrid({
     src: IMAGES.food,  
     alt: "",  
     className: "hidden md:block col-span-1 row-span-1 w-full h-full object-cover"  
-  }), /*#__PURE__*/React.createElement("button", {  
-    className: "absolute bottom-3 right-3 bg-white/90 hover:bg-white text-sm font-semibold px-3 py-1.5 rounded-lg shadow"  
-  }, "Ver todo"));  
-}  
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setVisor(0),
+    className: "absolute bottom-3 right-3 bg-white/90 hover:bg-white text-sm font-semibold px-3 py-1.5 rounded-lg shadow"
+  }, "Ver todo ", fotos.length > 1 ? `(${fotos.length})` : ""),
+  /*#__PURE__*/React.createElement(GalleryLightbox, {
+    photos: fotos,
+    index: visor,
+    onClose: () => setVisor(null),
+    onPrev: () => setVisor(i => (i - 1 + fotos.length) % fotos.length),
+    onNext: () => setVisor(i => (i + 1) % fotos.length)
+  }));
+}
+
 function FeatureIcons() {  
   const items = [{  
     icon: CheckCircle2,  
