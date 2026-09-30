@@ -1,9 +1,29 @@
 {
+  "functions": {
+    "api/pagina.js": { "includeFiles": "index.html" }
+  },
   "rewrites": [
     { "source": "/admin", "destination": "https://panel-admin-tachiragoo.vercel.app/" },
     { "source": "/admin/:path*", "destination": "https://panel-admin-tachiragoo.vercel.app/:path*" },
     { "source": "/proveedores", "destination": "https://portal-proveedores-tachiragoo.vercel.app/" },
     { "source": "/proveedores/:path*", "destination": "https://portal-proveedores-tachiragoo.vercel.app/:path*" },
-    { "source": "/((?!admin|proveedores|_next|assets|favicon.ico|robots.txt).*)", "destination": "/index.html" }
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/llms.txt", "destination": "/api/llms" },
+    { "source": "/((?!admin|proveedores|api|assets|favicon.ico|robots.txt|manifest.webmanifest|sitemap.xml|llms.txt).*)", "destination": "/api/pagina" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Permissions-Policy", "value": "geolocation=(self), microphone=(), camera=()" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [ { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" } ]
+    }
   ]
 }
