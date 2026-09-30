@@ -20,12 +20,12 @@ let PLANTILLA = null;
 function plantilla() {
   if (PLANTILLA) return PLANTILLA;
   for (const ruta of [
-    path.join(process.cwd(), 'index.html'),
-    path.join(__dirname, '..', 'index.html')
+    path.join(process.cwd(), 'aplicacion.html'),
+    path.join(__dirname, '..', 'aplicacion.html')
   ]) {
     try { PLANTILLA = fs.readFileSync(ruta, 'utf8'); return PLANTILLA; } catch (e) { /* siguiente */ }
   }
-  throw new Error('No se encontró index.html');
+  throw new Error('No se encontró aplicacion.html');
 }
 
 /* Sustituye las etiquetas que ya trae la plantilla, en vez de añadir
