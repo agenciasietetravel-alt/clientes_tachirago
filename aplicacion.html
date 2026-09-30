@@ -447,27 +447,23 @@ const RATING_BREAKDOWN = [{
   label: "Organización",  
   value: 96  
 }];  
-const PAYMENT_METHODS = [{  
-  id: "pagomovil",  
-  label: "Pago Móvil",  
-  sub: "Bolívares (Bs.)",  
-  detail: "Banco: BDV · Tel: 0414-123-4567 · CI: V-12345678"  
-}, {  
-  id: "zelle",  
-  label: "Zelle",  
-  sub: "Dólares (USD)",  
-  detail: "correo: pagos@tachiragoo.com"  
-}, {  
-  id: "binance",  
-  label: "Binance / USDT",  
-  sub: "Cripto",  
-  detail: "Wallet USDT (TRC20): TXk3...9fQ2"  
-}, {  
-  id: "nequi",  
-  label: "Nequi",  
-  sub: "Pesos colombianos (COP)",  
-  detail: "Número Nequi: 300 123 4567"  
-}];
+/* Los métodos de pago los configura el administrador en su panel. Aquí solo
+   queda la lista vacía: mostrar datos de cobro de ejemplo sería mandar a la
+   gente a transferir a una cuenta que no existe. */
+let PAYMENT_METHODS = [];
+
+async function cargarMetodosPago(){
+  const sb = window.__tgSupabase;
+  if(!sb) return;
+  const { data, error } = await sb.from("payment_methods")
+    .select("clave, etiqueta, moneda, tipo, instrucciones, enlace")
+    .eq("activo", true).order("orden");
+  if(error || !data) return;
+  PAYMENT_METHODS = data.map(m => ({
+    id: m.clave, label: m.etiqueta, sub: m.moneda || "",
+    detail: m.instrucciones || "", tipo: m.tipo, enlace: m.enlace
+  }));
+}
 
 /* ==========================================================================  
    HELPERS  
@@ -1517,7 +1513,7 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
   const [telefono, setTelefono] = useState("");
   const [cedula, setCedula] = useState("");
   const [email, setEmail] = useState("");
-  const [metodo, setMetodo] = useState(PAYMENT_METHODS[0].id);
+  const [metodo, setMetodo] = useState((PAYMENT_METHODS[0] || {}).id || "");
   const [referencia, setReferencia] = useState("");
   const [archivo, setArchivo] = useState(null);
   const [estado, setEstado] = useState({ enviando:false, error:"", reserva:null });
@@ -1532,7 +1528,7 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
   const deposito = Math.round(total * 0.10 * 100) / 100;
   const ahora = modalidad === "total" ? total : deposito;
   const alLlegar = total - ahora;
-  const metodoSel = PAYMENT_METHODS.find(m => m.id === metodo) || PAYMENT_METHODS[0];
+  const metodoSel = PAYMENT_METHODS.find(m => m.id === metodo) || PAYMENT_METHODS[0] || null;
 
   const enviar = async () => {
     if (!nombre.trim() || !telefono.trim()) {
@@ -1573,7 +1569,7 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
       p_cedula: cedula.trim() || null,
       p_comprobante_url: ruta,
       p_comprobante_referencia: referencia.trim() || null,
-      p_comprobante_metodo: metodoSel.label,
+      p_comprobante_metodo: metodoSel ? metodoSel.label : null,
       p_email: email.trim() || null
     });
     if (error) {
@@ -1664,7 +1660,7 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
       /*#__PURE__*/React.createElement("select", { value:metodo, onChange:e => setMetodo(e.target.value),
         className:"w-full px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white mb-2" },
         PAYMENT_METHODS.map(m => /*#__PURE__*/React.createElement("option", { key:m.id, value:m.id }, m.label, " · ", m.sub))),
-      /*#__PURE__*/React.createElement("p", { className:"text-xs text-slate-700 font-mono leading-relaxed" }, metodoSel.detail)),
+      /*#__PURE__*/React.createElement(BloquePago, { metodo: metodoSel, monto: ahora })),
 
     /*#__PURE__*/React.createElement("div", { className:"space-y-3" },
       campo("Tu nombre", nombre, setNombre, "text", "Nombre y apellido", true),
@@ -1747,7 +1743,7 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
   const [cedula, setCedula] = useState("");
   const [email, setEmail] = useState("");
   const [modalidad, setModalidad] = useState("deposito");
-  const [metodo, setMetodo] = useState(PAYMENT_METHODS[0].id);
+  const [metodo, setMetodo] = useState((PAYMENT_METHODS[0] || {}).id || "");
   const [referencia, setReferencia] = useState("");
   const [archivo, setArchivo] = useState(null);
   const [estado, setEstado] = useState({ enviando:false, error:"", reserva:null });
@@ -1762,7 +1758,7 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
   const total = dias.length * Number(vehiculo.price_per_day);
   const ahora = modalidad === "total" ? total : Math.round(total * 0.10 * 100) / 100;
   const alLlegar = total - ahora;
-  const metodoSel = PAYMENT_METHODS.find(m => m.id === metodo) || PAYMENT_METHODS[0];
+  const metodoSel = PAYMENT_METHODS.find(m => m.id === metodo) || PAYMENT_METHODS[0] || null;
 
   const reservar = async () => {
     if (!desde || !hasta) { setEstado({ enviando:false, error:"Elige las fechas de retiro y devolución.", reserva:null }); return; }
@@ -1808,7 +1804,7 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
       p_modalidad: modalidad,
       p_comprobante_url: ruta,
       p_comprobante_referencia: referencia.trim() || null,
-      p_comprobante_metodo: metodoSel.label
+      p_comprobante_metodo: metodoSel ? metodoSel.label : null
     });
     if (error) { setEstado({ enviando:false, error: error.message, reserva:null }); return; }
     setEstado({ enviando:false, error:"", reserva: data });
@@ -1896,7 +1892,7 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
             React.createElement("select", { value:metodo, onChange:e => setMetodo(e.target.value),
               className:"w-full px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white mb-2" },
               PAYMENT_METHODS.map(m => React.createElement("option", { key:m.id, value:m.id }, m.label, " · ", m.sub))),
-            React.createElement("p", { className:"text-xs text-slate-700 font-mono leading-relaxed" }, metodoSel.detail)),
+            React.createElement(BloquePago, { metodo: metodoSel, monto: ahora })),
 
           campo("Tu nombre", nombre, setNombre, "text", "Nombre y apellido"),
           campo("Tu WhatsApp o teléfono", telefono, setTelefono, "tel", "Ej. +58 424 1234567"),
@@ -4321,24 +4317,79 @@ function ChatModal({
 
 function MsBarraPlataforma({ t, onBack }) {
   return React.createElement("div", {
-    style: { background: t.texto, color: "#fff", position: "sticky", top: 0, zIndex: 40 }
+    style: { background: t.texto, color: "#fff", position: "sticky", top: 0, zIndex: 40,
+             borderBottom: "3px solid #FF6B00" }
   }, React.createElement("div", {
-    style: { maxWidth: 1120, margin: "0 auto", padding: "0 20px", height: 38,
-             display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }
+    style: { maxWidth: 1120, margin: "0 auto", padding: "0 20px", minHeight: 64,
+             display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }
   },
     React.createElement("button", {
       onClick: onBack,
-      style: { display: "flex", alignItems: "center", gap: 7, background: "none", border: "none",
-               color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0,
-               fontFamily: t.cuerpo, opacity: 0.92 },
+      style: { display: "flex", alignItems: "center", gap: 11, background: "none", border: "none",
+               color: "#fff", cursor: "pointer", padding: "10px 0", fontFamily: t.cuerpo },
       "aria-label": "Volver al inicio de Táchira GOO!!!"
     },
-      React.createElement(ArrowLeft, { size: 15 }),
-      React.createElement("span", null, "Táchira ",
-        React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!!!"))),
+      React.createElement(ArrowLeft, { size: 19, style: { opacity: 0.8 } }),
+      React.createElement(TachiraMark, { size: 30 }),
+      React.createElement("span", {
+        style: { fontSize: 21, fontWeight: 800, letterSpacing: "-0.02em", whiteSpace: "nowrap" }
+      }, "Táchira ", React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!!!"))),
     React.createElement("span", {
-      style: { fontSize: 11, opacity: 0.7, fontFamily: t.cuerpo, whiteSpace: "nowrap" }
-    }, "Reservas protegidas")));
+      style: { fontSize: 11.5, opacity: 0.72, fontFamily: t.cuerpo, textAlign: "right", lineHeight: 1.35 }
+    }, "Reservas protegidas", React.createElement("br"), "por la plataforma")));
+}
+
+/* -------------------------------------------------- OTROS DESTINOS
+   Enlaces internos a los demás negocios verificados. Además de ayudar al
+   viajero a seguir mirando, es lo que le enseña al buscador que estas
+   páginas forman un sitio y no islas sueltas. */
+function MsOtrosDestinos({ p, t, onIrAInicio }) {
+  const otros = (typeof ELITE_PROVIDERS !== "undefined" ? ELITE_PROVIDERS : [])
+    .filter(x => x.id !== p.id && x.slug).slice(0, 6);
+
+  const atajos = [
+    ["Tours y experiencias", "experiencias"],
+    ["Dónde dormir", "alojamientos"],
+    ["Alquiler de vehículos", "rentacar"]
+  ];
+
+  return React.createElement(MsSeccion, { t, id: "ms-otros", fondo: t.suave },
+    React.createElement(MsEyebrow, { t }, "Sigue explorando"),
+    React.createElement(MsTitulo, { t }, "Otros destinos que te pueden interesar"),
+    React.createElement("p", {
+      style: { fontFamily: t.cuerpo, fontSize: 15, color: t.tenue, marginTop: 12,
+               maxWidth: 580, lineHeight: 1.7 }
+    }, "Más negocios verificados del estado Táchira, con el mismo pago protegido."),
+
+    otros.length ? React.createElement("div", {
+      style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+               gap: 16, marginTop: 28 }
+    }, otros.map(o => React.createElement("a", {
+      key: o.id, href: "/" + o.slug,
+      style: { display: "block", textDecoration: "none", background: t.fondo,
+               border: `1px solid ${t.borde}`, borderRadius: t.radio, overflow: "hidden" }
+    },
+      o.portada ? React.createElement("img", {
+        src: o.portada, alt: "",
+        style: { width: "100%", height: 130, objectFit: "cover", display: "block" }
+      }) : null,
+      React.createElement("div", { style: { padding: 16 } },
+        React.createElement("p", {
+          style: { fontFamily: t.titulo, fontWeight: t.tituloPeso, fontSize: 16.5, color: t.texto, margin: 0 }
+        }, o.nombre),
+        React.createElement("p", {
+          style: { fontFamily: t.cuerpo, fontSize: 12.5, color: t.tenue, marginTop: 4 }
+        }, o.ubicacion, ", Táchira",
+           o.precioDesdeUSD != null ? ` · desde $${o.precioDesdeUSD} USD` : ""))))) : null,
+
+    React.createElement("div", {
+      style: { display: "flex", flexWrap: "wrap", gap: 10, marginTop: otros.length ? 28 : 24 }
+    }, atajos.map(([texto, cat]) => React.createElement("button", {
+      key: cat, onClick: () => onIrAInicio(cat),
+      style: { fontFamily: t.cuerpo, fontSize: 13.5, fontWeight: 600, padding: "11px 18px",
+               borderRadius: t.radioBoton, border: `1.5px solid ${t.borde}`,
+               background: t.fondo, color: t.texto, cursor: "pointer" }
+    }, texto, " →"))));
 }
 
 function MsEyebrow({ t, children }) {
@@ -4674,7 +4725,7 @@ function MsPie({ p, t, onBack, onOpenLegal }) {
 }
 
 /* ===================================================== MICROSITIO COMPLETO */
-function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrARentacar, currency, onOpenLegal }) {
+function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrARentacar, onIrAInicio, currency, onOpenLegal }) {
   const p = provider;
   const t = temaDe(p);
   const [hotelAbierto, setHotelAbierto] = useState(null);
@@ -4721,6 +4772,7 @@ function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrA
     seccionVisible(p, "resenas") ? React.createElement(MsResenas, { p, t }) : null,
     seccionVisible(p, "ubicacion") ? React.createElement(MsUbicacion, { p, t }) : null,
 
+    React.createElement(MsOtrosDestinos, { p, t, onIrAInicio }),
     React.createElement(MsPie, { p, t, onBack, onOpenLegal }),
 
     hotelAbierto ? React.createElement(HotelBookingPage, {
@@ -5073,12 +5125,21 @@ function CheckoutScreen({
           metodo ? React.createElement("div", {
             className: "mt-4 bg-blue-50/60 border border-blue-200 rounded-lg px-4 py-3" },
             React.createElement("p", { className: "text-sm font-semibold text-[#0052CC]" },
-              `Transfiere ${money(total, "USD")} por ${metodo.label}`),
-            React.createElement("p", { className: "text-xs text-slate-600 mt-1" }, metodo.detail),
+              metodo.tipo === "enlace"
+                ? `Paga ${money(total, "USD")} con ${metodo.label}`
+                : `Transfiere ${money(total, "USD")} por ${metodo.label}`),
+            React.createElement("div", { className: "mt-1.5" },
+              React.createElement(BloquePago, { metodo, monto: total })),
             React.createElement("p", { className: "text-xs text-slate-500 mt-1.5" },
               metodo.id === "pagomovil" ? `Equivale a ${money(total, "VES")} a la tasa de hoy.`
               : metodo.id === "nequi" ? `Equivale a ${money(total, "COP")} a la tasa de hoy.`
-              : `Equivale a ${money(total, "COP")} · ${money(total, "VES")}.`)) : null),
+              : `Equivale a ${money(total, "COP")} · ${money(total, "VES")}.`)) : null,
+
+          /* Sin métodos activos no se puede cobrar, y decirlo es mejor que
+             dejar al viajero llenando un formulario que no lleva a nada. */
+          !PAYMENT_METHODS.length ? React.createElement("div", {
+            className: "mt-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-3 leading-relaxed"
+          }, "En este momento no hay métodos de pago disponibles. Escríbenos y te ayudamos a completar la reserva.") : null),
 
         /* 3. Comprobante */
         React.createElement("section", null,
@@ -5271,6 +5332,28 @@ async function enviarVoucherPorCorreo(codigo){
   } catch (e) {
     console.warn("No se pudo enviar el voucher por correo:", e);
   }
+}
+
+/* Instrucciones del método elegido. Si es tarjeta, el cobro lo hace una
+   pasarela externa: aquí nunca se piden ni se guardan números de tarjeta. */
+function BloquePago({ metodo, monto }) {
+  if (!metodo) return null;
+  if (metodo.tipo === "enlace") {
+    return React.createElement("div", null,
+      metodo.detail ? React.createElement("p", {
+        className: "text-xs text-slate-700 leading-relaxed mb-2"
+      }, metodo.detail) : null,
+      metodo.enlace
+        ? React.createElement("a", {
+            href: metodo.enlace, target: "_blank", rel: "noopener",
+            className: "inline-flex items-center gap-2 bg-[#0052CC] hover:bg-[#0043A8] text-white text-sm font-bold px-4 py-2.5 rounded-lg"
+          }, "Pagar $", Number(monto || 0).toFixed(2), " con tarjeta ↗")
+        : React.createElement("p", { className: "text-xs text-red-700" },
+            "Este método aún no tiene enlace de cobro configurado."));
+  }
+  return React.createElement("p", {
+    className: "text-xs text-slate-700 font-mono leading-relaxed"
+  }, metodo.detail || "Sin datos de cobro configurados.");
 }
 
 /* Sube el comprobante al bucket privado. Devuelve la ruta interna: la ve el
@@ -6062,6 +6145,7 @@ function App() {
     onSelectTour: t => openTour(t, true),  
     onSelectAloj: a => openAloj(a, true),  
     onIrARentacar: () => { setCategory("rentacar"); setMunicipioFiltro(null); goHome(); },
+    onIrAInicio: (cat) => { setCategory(cat); setMunicipioFiltro(null); goHome(); },
     onOpenLegal: setLegalAbierto,
     currency: currency
   }), view === "detail" && activeItem && (activeItem.type === "tour" ? /*#__PURE__*/React.createElement(DetailScreenTour, {  
@@ -6377,6 +6461,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
   /* Las tasas primero: el catálogo convierte precios al construirse, así que
      si llegaran después las tarjetas mostrarían la conversión anterior. */
   try { await cargarTasas(); } catch (e) { console.error('No se pudieron cargar las tasas:', e); }
+  try { await cargarMetodosPago(); } catch (e) { console.error('No se pudieron cargar los métodos de pago:', e); }
   try {
     await cargarCatalogoReal();
   } catch (e) {

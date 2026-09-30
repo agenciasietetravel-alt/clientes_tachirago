@@ -113,6 +113,27 @@ function paginaInicio(d) {
         inLanguage: 'es-VE',
         publisher: { '@id': `${SITIO}/#organizacion` }
       },
+      {
+        '@type': 'FAQPage',
+        '@id': `${SITIO}/#preguntas`,
+        mainEntity: [
+          ['¿Hace falta crear una cuenta para reservar en Táchira GOO!!!?',
+           'No. Se reserva dejando nombre, cédula o pasaporte, teléfono y correo. Al confirmar recibes un código de reserva con el que puedes consultarla y gestionarla después, sin registrarte.'],
+          ['¿Cómo se paga?',
+           'Por Pago Móvil, Zelle, Nequi, USDT o tarjeta, según los métodos habilitados. Adjuntas el comprobante y la plataforma verifica el pago antes de confirmar la reserva.'],
+          ['¿En qué moneda están los precios?',
+           'Los precios se fijan en dólares y se muestran también en pesos colombianos y bolívares, con la tasa de referencia a la vista. Cada reserva guarda la tasa con la que se hizo.'],
+          ['¿Qué pasa si necesito cancelar?',
+           'Cada publicación indica su condición antes de reservar: 100% reembolsable, parcialmente reembolsable o sin reembolso. Las condiciones reembolsables aplican cancelando con al menos 48 horas de antelación.'],
+          ['¿Quién presta el servicio?',
+           'Cada servicio lo presta el proveedor que lo publica. Táchira GOO!!! verifica a los proveedores antes de publicarlos y custodia el pago hasta que se confirma el servicio.'],
+          ['¿Qué municipios del Táchira cubre?',
+           'La plataforma cubre todo el estado Táchira, con actividad concentrada en San Cristóbal, La Grita, Lobatera, Cordero, Rubio y Michelena.']
+        ].map(([q, a]) => ({
+          '@type': 'Question', name: q,
+          acceptedAnswer: { '@type': 'Answer', text: a }
+        }))
+      },
       ...(d.listados.length ? [{
         '@type': 'ItemList',
         name: 'Experiencias y tours en el estado Táchira',
@@ -181,6 +202,14 @@ function paginaNegocio(n, d) {
 
   const jsonld = {
     '@context': 'https://schema.org',
+    '@graph': [{
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Táchira GOO!!!', item: SITIO },
+      { '@type': 'ListItem', position: 2, name: n.municipio, item: `${SITIO}/` },
+      { '@type': 'ListItem', position: 3, name: n.business_name, item: `${SITIO}/${n.slug}` }
+    ]
+  }, {
     '@type': tipoSchema,
     '@id': `${SITIO}/${n.slug}#negocio`,
     name: n.business_name,
@@ -215,6 +244,7 @@ function paginaNegocio(n, d) {
         price: Number(v.price_per_day), priceCurrency: 'USD', availability: 'https://schema.org/InStock'
       }))
     ]
+  }]
   };
 
   const contenido = `
@@ -234,6 +264,13 @@ ${suyos.length ? `<h2>Tours y experiencias</h2><ul>${suyos.map(l =>
 ${vehiculos.length ? `<h2>Vehículos en alquiler</h2><ul>${vehiculos.map(v =>
   `<li><strong>${esc([v.brand, v.model].filter(Boolean).join(' ') || v.title)}</strong> — ${dinero(v.price_per_day)} por día.</li>`).join('')}</ul>` : ''}
 ${n.direccion ? `<h2>Cómo llegar</h2><p>${esc(n.direccion)}</p>` : ''}
+${(() => {
+  const otros = d.negocios.filter(o => o.id !== n.id).slice(0, 6);
+  return otros.length
+    ? `<h2>Otros destinos en el estado Táchira</h2><ul>${otros.map(o =>
+        `<li><a href="/${esc(o.slug)}">${esc(o.business_name)}</a> — ${esc(o.municipio)}</li>`).join('')}</ul>`
+    : '';
+})()}
 <p>Reservas gestionadas por <a href="/">Táchira GOO!!!</a> con pago protegido.</p>`;
 
   return {
