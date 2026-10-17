@@ -106,7 +106,7 @@ function paginaInicio(d) {
         name: 'Táchira GOO!!!',
         url: SITIO,
         logo: `${SITIO}/assets/favicon-512.png`,
-        image: `${SITIO}/assets/og.png`,
+        image: `${SITIO}/assets/og.jpg`,
         description: 'Plataforma de reservas de turismo del estado Táchira, Venezuela: tours, posadas, experiencias y alquiler de vehículos con proveedores locales verificados.',
         areaServed: {
           '@type': 'State', name: 'Táchira',

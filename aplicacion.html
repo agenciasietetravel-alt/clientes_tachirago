@@ -32,14 +32,14 @@
 <meta property="og:title" content="Qué hacer en Táchira: tours, posadas y alquiler de vehículos">
 <meta property="og:description" content="Reserva con proveedores locales verificados del estado Táchira. Tours al páramo, posadas de montaña, experiencias y vehículos. Pago protegido.">
 <meta property="og:url" content="https://tachiragoo.com/">
-<meta property="og:image" content="https://tachiragoo.com/assets/og.png">
+<meta property="og:image" content="https://tachiragoo.com/assets/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Táchira GOO!!! — qué hacer, dónde dormir y cómo moverte por el estado Táchira">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Qué hacer en Táchira: tours, posadas y alquiler de vehículos">
 <meta name="twitter:description" content="Reserva con proveedores locales verificados del estado Táchira.">
-<meta name="twitter:image" content="https://tachiragoo.com/assets/og.png">
+<meta name="twitter:image" content="https://tachiragoo.com/assets/og.jpg">
 
 <link rel="preconnect" href="https://vkgxvckooykxfulclodj.supabase.co" crossorigin>
 
@@ -305,7 +305,9 @@ async function cargarTasas(){
 }
 
 const IMAGES = {  
-  hero: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1200&q=70",  
+  hero: "/assets/portada.jpg",
+  heroMovil: "/assets/portada-movil.jpg",
+  respaldo: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1200&q=70",  
   coffee: "https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=600&q=60",  
   hike: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=600&q=60",  
   waterfall: "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=600&q=60",  
@@ -313,6 +315,21 @@ const IMAGES = {
 };
 
 /* Los 29 municipios oficiales del estado Táchira (verificados). */  
+/* Veintinueve municipios en un desplegable, veintiocho sin nada que mostrar,
+   son veintiocho callejones sin salida. Solo se listan los que tienen oferta,
+   con cuántas cosas hay en cada uno. */
+function municipiosConOferta() {
+  const cuenta = {};
+  const sumar = arr => (arr || []).forEach(x => {
+    if (x && x.municipio) cuenta[x.municipio] = (cuenta[x.municipio] || 0) + 1;
+  });
+  try {
+    sumar((CARDS_BY_CATEGORY || {}).experiencias);
+    sumar(ALOJAMIENTOS);
+    sumar(VEHICULOS);
+  } catch (e) { /* si algo aún no cargó, el filtro simplemente sale más corto */ }
+  return MUNICIPIOS.filter(m => cuenta[m]).map(m => ({ nombre: m, n: cuenta[m] }));
+}
 const MUNICIPIOS = ["Andrés Bello", "Antonio Rómulo Costa", "Ayacucho", "Bolívar", "Cárdenas", "Córdoba", "Fernández Feo", "Francisco de Miranda", "García de Hevia", "Guásimos", "Independencia", "Jáuregui", "José María Vargas", "Junín", "Libertad", "Libertador", "Lobatera", "Michelena", "Panamericano", "Pedro María Ureña", "Rafael Urdaneta", "Samuel Darío Maldonado", "San Cristóbal", "San Judas Tadeo", "Seboruco", "Simón Rodríguez", "Sucre", "Torbes", "Uribante"];
 
 /* Modificación: el dropdown "Cosas que hacer" muestra actividades/destinos de  
@@ -321,32 +338,23 @@ const ACTIVIDADES = ["Parapente", "Chichiriviche", "Margarita", "Ruta al llano",
 
 /* Cinta de autoridad: respaldos institucionales/tecnológicos mostrados en el marquee */  
 const AUTHORITY_PROVIDERS = ["SIETE TRAVEL", "AMADEUS", "SABRE", "KIU", "COTATUR", "CÁMARA DE TURISMO", "SOFITASA"];  
-const CATEGORIES = [{  
-  id: "alojamientos",  
-  label: "Alojamientos",  
-  icon: Bed  
-}, {  
-  id: "vuelos",  
-  label: "Vuelos",  
-  icon: Plane  
-}, {  
-  id: "rentacar",  
-  label: "Rentacar",  
-  icon: Car  
-}, {  
-  id: "experiencias",  
-  label: "Experiencias",  
-  icon: Compass  
-}, {  
-  id: "foraneos",  
-  label: "Tours nacionales",  
-  icon: MapIcon  
-}, {  
-  id: "internacionales",  
-  label: "Tours internacionales",  
-  icon: Globe2  
-}];  
-const FILTERABLE_CATEGORIES = ["experiencias", "vuelos", "rentacar"];
+/* La plataforma se concentra en tres cosas. El identificador "rentacar" se
+   conserva por dentro porque lo usan el catalogo y las reservas; de cara a la
+   gente la categoria se llama Movilidad. */
+const CATEGORIES = [{
+  id: "alojamientos",
+  label: "Alojamientos",
+  icon: Bed
+}, {
+  id: "rentacar",
+  label: "Movilidad",
+  icon: Car
+}, {
+  id: "experiencias",
+  label: "Experiencias",
+  icon: Compass
+}];
+const FILTERABLE_CATEGORIES = ["experiencias", "rentacar"];
 
 /* Catálogo real. Se llena en cargarCatalogoReal() con lo que publican los
    proveedores; arranca vacío para que nunca se muestre contenido inventado.
@@ -2542,11 +2550,6 @@ function SearchTabsBox({
     setMunicipioFiltro(destino || null);  
     scrollToCatalogo();  
   };  
-  const handleVuelos = destino => {  
-    setCategory("vuelos");  
-    setMunicipioFiltro(destino);  
-    scrollToCatalogo();  
-  };  
   const handleRentacar = (lugar, desde, hasta) => {
     setCategory("rentacar");
     // Los vehiculos no viven en el catalogo de tours: tienen su propia seccion.
@@ -2558,7 +2561,7 @@ function SearchTabsBox({
   return /*#__PURE__*/React.createElement("div", {  
     className: "w-full max-w-4xl mx-auto mt-8 bg-white rounded-2xl shadow-xl"  
   }, /*#__PURE__*/React.createElement("div", {  
-    className: "flex items-center gap-1 overflow-x-auto px-3 pt-3 pb-1"  
+    className: "flex items-center gap-1 px-3 pt-3 pb-1"
   }, CATEGORIES.map(cat => {  
     const Icon = cat.icon;  
     const active = category === cat.id;  
@@ -2568,13 +2571,13 @@ function SearchTabsBox({
         setCategory(cat.id);
         if (cat.id === "rentacar") setRentacarAbierto({});
         if (cat.id === "alojamientos" && HOTELES.length === 1) setHotelAbierto(HOTELES[0]);
-        if (cat.id === "foraneos") setCotizadorTour("tour_nacional");
-        if (cat.id === "internacionales") setCotizadorTour("tour_internacional");
       },  
-      className: `flex items-center gap-1.5 px-3 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition-colors shrink-0 ${active ? "bg-[#0052CC] text-white" : "text-slate-600 hover:bg-slate-100"}`  
-    }, /*#__PURE__*/React.createElement(Icon, {  
-      size: 14  
-    }), " ", cat.label);  
+      className: `flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition-colors ${active ? "bg-[#0052CC] text-white" : "text-slate-600 hover:bg-slate-100"}`  
+    }, /*#__PURE__*/React.createElement(Icon, {
+      size: 14,
+      className: "hidden sm:block",
+      style: { flexShrink: 0 }
+    }), cat.label);  
   })), /*#__PURE__*/React.createElement("div", {  
     className: "h-px bg-slate-100 mx-4"  
   }), /*#__PURE__*/React.createElement("div", {  
@@ -2583,21 +2586,9 @@ function SearchTabsBox({
     onSubmit: handleExperiencias  
   }), category === "alojamientos" && /*#__PURE__*/React.createElement(SearchAlojamientosForm, {  
     onSubmit: handleAlojamientos  
-  }), category === "vuelos" && /*#__PURE__*/React.createElement(SearchVuelosForm, {  
-    onSubmit: handleVuelos  
   }), category === "rentacar" && /*#__PURE__*/React.createElement(SearchRentacarForm, {  
     onSubmit: handleRentacar  
-  }), (category === "foraneos" || category === "internacionales") && /*#__PURE__*/React.createElement("div", {
-    className: "w-full flex flex-col sm:flex-row sm:items-center gap-3"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "text-sm text-slate-600 flex-1"
-  }, category === "foraneos"
-      ? "Margarita, Los Roques, Canaima, Mérida y más destinos dentro de Venezuela."
-      : "Colombia, el Caribe, Europa, Asia y más. Te cotizamos el viaje completo."),
-    /*#__PURE__*/React.createElement("button", {
-      onClick: () => setCotizadorTour(category === "foraneos" ? "tour_nacional" : "tour_internacional"),
-      className: "bg-[#FF6B00] hover:bg-[#EA580C] text-white text-sm font-semibold px-6 py-2.5 rounded-full shrink-0 transition-colors"
-    }, "Ver destinos")),
+  }),
     cotizadorTour && /*#__PURE__*/React.createElement(TourQuotePage, {
       tipo: cotizadorTour,
       onClose: () => setCotizadorTour(null)
@@ -2619,48 +2610,46 @@ function Hero({
   setMunicipioFiltro  
 }) {  
   return /*#__PURE__*/React.createElement("section", {  
-    className: "relative min-h-[70vh] flex items-center justify-center overflow-hidden"  
-  }, /*#__PURE__*/React.createElement("img", {  
-    src: IMAGES.hero,  
-    alt: "Paisaje andino de Táchira con flor de mayo",  
-    className: "hero-kenburns absolute inset-0 w-full h-full object-cover"  
-  }), /*#__PURE__*/React.createElement(MistLayer, null), /*#__PURE__*/React.createElement(PlantSilhouette, {  
-    className: "veg-far absolute bottom-0 left-0 w-40 md:w-56 opacity-40 pointer-events-none",  
-    fill: "#0b3b2c"  
-  }), /*#__PURE__*/React.createElement("div", {  
-    className: "absolute bottom-0 right-0 w-48 md:w-64 opacity-50 pointer-events-none",  
-    style: {  
-      transform: "scaleX(-1)"  
-    }  
-  }, /*#__PURE__*/React.createElement(PlantSilhouette, {  
-    className: "veg-mid w-full h-full",  
-    fill: "#0f4a37"  
-  })), /*#__PURE__*/React.createElement(PlantSilhouette, {  
-    className: "veg-front absolute -bottom-4 left-[-10px] w-56 md:w-80 opacity-80 pointer-events-none",  
-    fill: "#062a1f"  
-  }), /*#__PURE__*/React.createElement(OrchidFlower, {  
-    className: "flower-sway absolute bottom-24 left-8 md:left-16 opacity-90 pointer-events-none hidden sm:block",  
-    size: 46,  
-    hue: "#e0a8cf"  
-  }), /*#__PURE__*/React.createElement(OrchidFlower, {  
-    className: "flower-sway absolute bottom-16 right-10 md:right-24 opacity-85 pointer-events-none hidden sm:block",  
-    size: 38,  
-    hue: "#f2d1e6"  
-  }), /*#__PURE__*/React.createElement(OrchidFlower, {  
-    className: "flower-sway absolute bottom-40 left-1/3 opacity-80 pointer-events-none hidden md:block",  
-    size: 32,  
-    hue: "#c98fc0"  
-  }), /*#__PURE__*/React.createElement("div", {  
-    className: "absolute inset-0 bg-gradient-to-b from-[#0052CC]/70 via-black/40 to-black/60"  
-  }), /*#__PURE__*/React.createElement("div", {  
-    className: "relative z-10 max-w-4xl mx-auto px-4 text-center py-16"  
-  }, /*#__PURE__*/React.createElement("h1", {  
-    className: "text-3xl sm:text-4xl md:text-6xl font-extrabold text-white leading-tight"  
-  }, "Descubre y reserva actividades en ", /*#__PURE__*/React.createElement("span", {  
-    className: "animated-gradient-text"  
-  }, "TÁCHIRA")), /*#__PURE__*/React.createElement("p", {  
-    className: "text-white/90 mt-4 text-base md:text-lg"  
-  }, "Café de altura, cascadas andinas y páramos, todo en un solo lugar."), /*#__PURE__*/React.createElement(SearchTabsBox, {  
+    className: "relative flex items-center justify-center overflow-hidden",
+    style: { minHeight: "min(88vh, 760px)" }  
+  }, /*#__PURE__*/React.createElement("picture", {
+    className: "absolute inset-0 w-full h-full"
+  }, React.createElement("source", {
+    media: "(max-width: 640px)",
+    srcSet: IMAGES.heroMovil
+  }), React.createElement("img", {
+    src: IMAGES.hero,
+    alt: "Táchira: pueblos coloniales, parapente, ciclismo y rutas de montaña",
+    fetchpriority: "high",
+    className: "w-full h-full object-cover"
+  })),
+  /* Un solo velo, en dos capas: el degradado vertical sostiene el título y la
+     viñeta cierra los bordes. Nada de adornos encima de la foto — con una
+     portada así de cargada, cualquier cosa más es ruido. */
+  React.createElement("div", {
+    className: "absolute inset-0",
+    style: {
+      background: "linear-gradient(to bottom, rgba(3,15,34,.78) 0%, rgba(3,15,34,.74) 38%, rgba(3,15,34,.58) 62%, rgba(3,15,34,.74) 100%)"
+    }
+  }), React.createElement("div", {
+    className: "absolute inset-0 pointer-events-none",
+    style: {
+      background: "radial-gradient(78% 62% at 50% 44%, rgba(2,10,24,.42) 0%, transparent 72%)"
+    }
+  }), React.createElement("div", {  
+    className: "relative z-10 max-w-4xl mx-auto px-4 text-center py-16"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] sm:text-xs font-semibold uppercase mb-5",
+    style: { letterSpacing: ".22em", color: "rgba(255,255,255,.92)", textShadow: "0 1px 10px rgba(2,10,24,.8)" }
+  }, "Alojamientos · Movilidad · Experiencias"), /*#__PURE__*/React.createElement("h1", {
+    className: "text-3xl sm:text-4xl md:text-6xl font-extrabold text-white leading-tight",
+    style: { letterSpacing: "-.025em", textShadow: "0 2px 30px rgba(2,10,24,.75)" }
+  }, "Descubre y reserva actividades en ", /*#__PURE__*/React.createElement("span", {
+    className: "animated-gradient-text"
+  }, "TÁCHIRA")), /*#__PURE__*/React.createElement("p", {
+    className: "mt-4 text-base md:text-lg mx-auto",
+    style: { maxWidth: "46ch", color: "rgba(255,255,255,.94)", textShadow: "0 1px 16px rgba(2,10,24,.85)" }
+  }, "Dónde quedarte, cómo moverte y qué hacer en el Táchira. Reservas con comprobante verificado por la plataforma."), /*#__PURE__*/React.createElement(SearchTabsBox, {  
     category: category,  
     setCategory: setCategory,  
     setMunicipioFiltro: setMunicipioFiltro  
@@ -2729,8 +2718,15 @@ function TourCard({
     className: "p-3 flex-1 flex flex-col"  
   }, /*#__PURE__*/React.createElement("h3", {  
     className: "text-sm font-semibold text-slate-900 leading-snug line-clamp-2 min-h-[2.5rem]"  
-  }, card.title), /*#__PURE__*/React.createElement("p", {  
-    className: "text-xs text-slate-500 mt-1 line-clamp-1"  
+  }, card.title),
+  /* Quien presta el servicio va antes que cualquier otro dato: es lo que
+     convierte un listado suelto en la oferta de un negocio con nombre. */
+  card.proveedor ? /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-semibold mt-1 line-clamp-1",
+    style: { color: "#0052CC" },
+    title: card.proveedor
+  }, card.proveedor) : null, /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-slate-500 mt-0.5 line-clamp-1"
   }, card.duration), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-1 mt-1.5"
   }, card.rating ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Star, {
@@ -2911,12 +2907,16 @@ function ProviderCard({
     className: "inline-flex items-center gap-1 bg-blue-50 text-[#0052CC] text-[11px] font-semibold px-2 py-0.5 rounded-full"  
   }, /*#__PURE__*/React.createElement(ShieldCheck, {  
     size: 11  
-  }), " Verificado"), /*#__PURE__*/React.createElement("div", {  
-    className: "inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-[11px] font-semibold px-2 py-0.5 rounded-full"  
-  }, /*#__PURE__*/React.createElement(Star, {  
-    size: 11,  
-    className: "fill-amber-500 text-amber-500"  
-  }), " Excelencia verificada")), /*#__PURE__*/React.createElement("div", {  
+  }), " Verificado"),
+  /* La misma condición que usa el micrositio: la distinción se gana con
+     reseñas reales, no se reparte por estar listado. */
+  (Number(provider.rating || 0) >= 4.5 && Number(provider.reviews || 0) >= 5)
+    ? /*#__PURE__*/React.createElement("div", {
+    className: "inline-flex items-center gap-1 bg-amber-50 text-amber-700 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+  }, /*#__PURE__*/React.createElement(Star, {
+    size: 11,
+    className: "fill-amber-500 text-amber-500"
+  }), " Excelencia verificada") : null), /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-1 mt-2 text-xs text-slate-600"  
   }, /*#__PURE__*/React.createElement(Star, {  
     size: 12,  
@@ -2982,21 +2982,24 @@ function sortCatalogItems(items) {
   });  
 }
 
-/* Badge visible según la posición resultante del ordenamiento */  
-function getPositionBadge(index) {  
-  if (index === 0) return {  
-    label: "VIP",  
-    className: "bg-[#FF6B00] text-white"  
-  };  
-  if (index === 1) return {  
-    label: "Más vendido",  
-    className: "bg-[#0052CC] text-white"  
-  };  
-  if (index === 2) return {  
-    label: "Mejor valorado",  
-    className: "bg-slate-900 text-white"  
-  };  
-  return null;  
+/* La insignia nace del dato o no se pinta. Decir "Más vendido" sin una sola
+   venta, o "Mejor valorado" sin una sola reseña, es justo lo que hace que una
+   plataforma pierda la credibilidad que tanto cuesta construir. */
+function getPositionBadge(index, card) {
+  if (!card) return null;
+  if (Number(card.ventas || 0) >= 10) return {
+    label: "Más vendido",
+    className: "bg-[#0052CC] text-white"
+  };
+  if (Number(card.rating || 0) >= 4.8 && Number(card.reviews || 0) >= 10) return {
+    label: "Mejor valorado",
+    className: "bg-[#FF6B00] text-white"
+  };
+  if (card.isVip) return {
+    label: "Destacado",
+    className: "bg-slate-900 text-white"
+  };
+  return null;
 }
 
 /* Sección fija de destacados: SIEMPRE los mismos 6 tours (no cambian según la  
@@ -3017,7 +3020,8 @@ function FeaturedToursSection({
   /* Con poco catálogo, "Destacados" repetiría las mismas tarjetas que aparecen
      justo debajo en el catálogo completo. Hasta que haya de dónde elegir,
      la sección se oculta en vez de duplicar. */
-  if (items.length < 3) return null;
+  const totalCatalogo = (CARDS_BY_CATEGORY.experiencias || []).length;
+  if (items.length < 3 || totalCatalogo <= items.length + 4) return null;
   return /*#__PURE__*/React.createElement("section", {  
     className: "max-w-6xl mx-auto px-4 py-8 border-b border-slate-100"  
   }, /*#__PURE__*/React.createElement(SectionEyebrow, {  
@@ -3032,7 +3036,7 @@ function FeaturedToursSection({
     card: t,  
     onSelect: () => onSelectTour(t),  
     currency: currency,  
-    badge: getPositionBadge(i)  
+    badge: getPositionBadge(i, t)  
   }))));  
 }
 
@@ -3084,10 +3088,10 @@ function ProductsGridSection({
     className: "border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-[#0052CC] bg-white"  
   }, /*#__PURE__*/React.createElement("option", {  
     value: ""  
-  }, "Todos los municipios"), MUNICIPIOS.map(m => /*#__PURE__*/React.createElement("option", {  
-    key: m,  
-    value: m  
-  }, m)))), municipioFiltro && /*#__PURE__*/React.createElement("div", {  
+  }, "Todos los municipios"), municipiosConOferta().map(m => /*#__PURE__*/React.createElement("option", {
+    key: m.nombre,
+    value: m.nombre
+  }, m.nombre, " (", m.n, ")")))), municipioFiltro && /*#__PURE__*/React.createElement("div", {  
     className: "inline-flex items-center gap-2 bg-blue-50 text-[#0052CC] text-sm font-semibold px-3 py-1.5 rounded-full"  
   }, "Mostrando: ", municipioFiltro, /*#__PURE__*/React.createElement("button", {  
     onClick: () => setMunicipioFiltro(null),  
@@ -3155,12 +3159,12 @@ function ImageGrid({
 }) {
   /* El botón "Ver todo" no hacía nada. Ahora abre el visor que ya existe
      para las galerías de los micrositios. */
-  const fotos = [mainImg || IMAGES.hero, IMAGES.coffee, IMAGES.hike, IMAGES.waterfall, IMAGES.food].filter(Boolean);
+  const fotos = [mainImg || IMAGES.respaldo, IMAGES.coffee, IMAGES.hike, IMAGES.waterfall, IMAGES.food].filter(Boolean);
   const [visor, setVisor] = useState(null);
   return /*#__PURE__*/React.createElement("div", {  
     className: "relative grid grid-cols-4 grid-rows-2 gap-2 rounded-xl overflow-hidden h-[260px] md:h-[420px] mt-4"  
   }, /*#__PURE__*/React.createElement("img", {  
-    src: mainImg || IMAGES.hero,  
+    src: mainImg || IMAGES.respaldo,  
     alt: "Vista principal",  
     className: "col-span-4 md:col-span-2 row-span-2 w-full h-full object-cover"  
   }), /*#__PURE__*/React.createElement("img", {  
@@ -5892,7 +5896,7 @@ function LegalModal({ doc, onClose }) {
       }))));
 }
 
-function SiteFooter({ onOpenLegal }) {
+function SiteFooter({ onOpenLegal, onCotizar }) {
   const enlace = (clave, texto) => /*#__PURE__*/React.createElement("button", {
     key: clave,
     onClick: () => onOpenLegal(clave),
@@ -5912,7 +5916,15 @@ function SiteFooter({ onOpenLegal }) {
       "aria-label": "Avisos legales"
     }, [enlace("terminos", "Términos y condiciones"),
         enlace("privacidad", "Política de privacidad"),
-        enlace("cancelacion", "Política de cancelación")])),
+        enlace("cancelacion", "Política de cancelación"),
+        /* Vuelos y tours fuera del Táchira no son una categoría de la
+           plataforma: los cotiza la agencia aliada. Aquí abajo queda a mano
+           para quien los busque, sin competir con los tres pilares. */
+        /*#__PURE__*/React.createElement("button", {
+          key: "cotizar",
+          onClick: () => onCotizar && onCotizar("tour_nacional"),
+          className: "text-sm text-slate-500 hover:text-[#0052CC] transition-colors"
+        }, "Vuelos y viajes fuera del Táchira")])),
     /*#__PURE__*/React.createElement("div", { className: "border-t border-slate-200" },
       /*#__PURE__*/React.createElement("p", { className: "max-w-6xl mx-auto px-4 py-4 text-xs text-slate-400" },
         "© ", new Date().getFullYear(), " Táchira GOO!!!")));
@@ -5961,7 +5973,8 @@ function App() {
 
   const [paymentMethod, setPaymentMethod] = useState(null);  
   const [showSuccess, setShowSuccess] = useState(false);
-  const [legalAbierto, setLegalAbierto] = useState(null);  
+  const [legalAbierto, setLegalAbierto] = useState(null);
+  const [cotizarViaje, setCotizarViaje] = useState(null);  
   const handleAddToCart = item => {  
     let providerNombre = null;  
     if (item.providerId) {  
@@ -6226,7 +6239,11 @@ function App() {
     onCheckout: goToCheckout,  
     currency: currency  
   }), view !== "provider" && /*#__PURE__*/React.createElement(SiteFooter, {
-    onOpenLegal: setLegalAbierto
+    onOpenLegal: setLegalAbierto,
+    onCotizar: setCotizarViaje
+  }), cotizarViaje && /*#__PURE__*/React.createElement(TourQuotePage, {
+    tipo: cotizarViaje,
+    onClose: () => setCotizarViaje(null)
   }), legalAbierto && /*#__PURE__*/React.createElement(LegalModal, {
     doc: legalAbierto,
     onClose: () => setLegalAbierto(null)
