@@ -71,13 +71,17 @@ html { scroll-behavior: smooth; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }  
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }  
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }  
-.animated-gradient-text {  
-  background: linear-gradient(90deg, #FF6B00, #0052CC, #FF6B00);  
-  background-size: 200% auto;  
-  -webkit-background-clip: text;  
-  background-clip: text;  
-  color: transparent;  
-  animation: shine 3s linear infinite;  
+/* Va sobre la foto de portada, así que ningún punto del degradado puede
+   oscurecerse: el azul de marca se aclara a cielo y la sombra la dibuja un
+   drop-shadow, porque con background-clip:text el text-shadow no se ve. */
+.animated-gradient-text {
+  background: linear-gradient(90deg, #FF8A3D, #8FC2FF, #FF8A3D);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(2,10,24,.92)) drop-shadow(0 4px 22px rgba(2,10,24,.6));
+  animation: shine 3s linear infinite;
 }  
 @keyframes shine { to { background-position: -200% center; } }
 
@@ -1751,7 +1755,21 @@ function diasEntre(desde, hasta){
   return out;
 }
 
-function VehiculoCard({ v, onReservar }) {
+/* Un vehículo puede ofrecerse de dos maneras y con tarifas distintas: que el
+   viajero conduzca, o que lo lleve el dueño. "conChofer" manda en qué precio
+   se muestra y qué se le pide después a la base de datos. */
+function tarifaVehiculo(v, conChofer) {
+  return Number(conChofer ? v.precio_con_chofer : v.price_per_day) || 0;
+}
+function ofreceModalidad(v, conChofer) {
+  return conChofer ? !!v.ofrece_con_chofer : v.ofrece_sin_chofer !== false;
+}
+const MODALIDADES_MOVILIDAD = [
+  { id: "sin", conChofer: false, label: "Yo conduzco", sub: "Rent a car" },
+  { id: "con", conChofer: true,  label: "Con chofer",  sub: "Te llevamos" }
+];
+
+function VehiculoCard({ v, onReservar, conChofer }) {
   const specs = [VEH_CAT_LABEL[v.category] || v.category, VEH_TRANS_LABEL[v.transmission], v.seats ? v.seats + " puestos" : null].filter(Boolean).join(" · ");
   return /*#__PURE__*/React.createElement("article", {
     className: "border border-slate-200 rounded-xl overflow-hidden bg-white hover:shadow-lg transition-shadow flex flex-col"
@@ -1768,17 +1786,22 @@ function VehiculoCard({ v, onReservar }) {
       /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-0.5" }, "📍 ", v.municipio),
       /*#__PURE__*/React.createElement("div", { className: "flex items-end justify-between mt-3 gap-2" },
         /*#__PURE__*/React.createElement("span", null,
-          /*#__PURE__*/React.createElement("span", { className: "text-lg font-bold text-[#0052CC]" }, "$", v.price_per_day),
+          /*#__PURE__*/React.createElement("span", { className: "text-lg font-bold text-[#0052CC]" }, "$", tarifaVehiculo(v, conChofer)),
           /*#__PURE__*/React.createElement("span", { className: "text-xs text-slate-500" }, " / día")),
-        Number(v.deposit) > 0 && /*#__PURE__*/React.createElement("span", { className: "text-[10px] text-slate-400 text-right leading-tight" },
-          "Depósito $", v.deposit, /*#__PURE__*/React.createElement("br"), "Mín. ", v.min_days, " ", v.min_days === 1 ? "día" : "días")),
+        /* Con chofer no hay depósito: el vehículo no sale de manos del dueño. */
+        (!conChofer && Number(v.deposit) > 0)
+          ? /*#__PURE__*/React.createElement("span", { className: "text-[10px] text-slate-400 text-right leading-tight" },
+              "Depósito $", v.deposit, /*#__PURE__*/React.createElement("br"), "Mín. ", v.min_days, " ", v.min_days === 1 ? "día" : "días")
+          : /*#__PURE__*/React.createElement("span", { className: "text-[10px] text-slate-400 text-right leading-tight" },
+              conChofer ? "Chofer incluido" : null, conChofer ? /*#__PURE__*/React.createElement("br") : null,
+              "Mín. ", v.min_days, " ", v.min_days === 1 ? "día" : "días")),
       /*#__PURE__*/React.createElement("button", {
         onClick: () => onReservar(v),
         className: "w-full mt-3 bg-[#FF6B00] hover:bg-[#EA580C] text-white text-xs font-bold py-2.5 rounded-lg transition-colors"
       }, "Ver disponibilidad")));
 }
 
-function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose }) {
+function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, conChofer = false, onClose }) {
   const [desde, setDesde] = useState(desdeInicial || "");
   const [hasta, setHasta] = useState(hastaInicial || "");
   const [nombre, setNombre] = useState("");
@@ -1798,7 +1821,7 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
   }, [onClose]);
 
   const dias = (desde && hasta && hasta >= desde) ? diasEntre(desde, hasta) : [];
-  const total = dias.length * Number(vehiculo.price_per_day);
+  const total = dias.length * tarifaVehiculo(vehiculo, conChofer);
   const ahora = modalidad === "total" ? total : Math.round(total * 0.10 * 100) / 100;
   const alLlegar = total - ahora;
   const metodoSel = PAYMENT_METHODS.find(m => m.id === metodo) || PAYMENT_METHODS[0] || null;
@@ -1847,7 +1870,8 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
       p_modalidad: modalidad,
       p_comprobante_url: ruta,
       p_comprobante_referencia: referencia.trim() || null,
-      p_comprobante_metodo: metodoSel ? metodoSel.label : null
+      p_comprobante_metodo: metodoSel ? metodoSel.label : null,
+      p_con_chofer: !!conChofer
     });
     if (error) { setEstado({ enviando:false, error: error.message, reserva:null }); return; }
     setEstado({ enviando:false, error:"", reserva: data });
@@ -1962,7 +1986,8 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, onClose })
             "Verificamos tu pago y te confirmamos. Con tu código y tu cédula o correo puedes seguir la reserva."))));
 }
 
-function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, onClose }) {
+function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferInicial = false, onClose }) {
+  const [conChofer, setConChofer] = useState(!!conChoferInicial);
   const [municipio, setMunicipio] = useState(municipioInicial || "");
   const [desde, setDesde] = useState(desdeInicial || "");
   const [hasta, setHasta] = useState(hastaInicial || "");
@@ -1977,7 +2002,10 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, onClose })
     return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
   }, [onClose]);
 
-  const municipios = useMemo(() => [...new Set(VEHICULOS.map(v => v.municipio))].sort(), []);
+  /* Cada modalidad tiene su propia flota: hay dueños que alquilan pero no
+     manejan, y al revés. */
+  const flota = useMemo(() => VEHICULOS.filter(v => ofreceModalidad(v, conChofer)), [conChofer]);
+  const municipios = useMemo(() => [...new Set(flota.map(v => v.municipio))].sort(), [flota]);
 
   const buscar = async () => {
     if (!desde || !hasta) { setDisponibles(null); return; }
@@ -1989,14 +2017,14 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, onClose })
     const porVehiculo = {};
     (data || []).forEach(r => { (porVehiculo[r.vehicle_id] = porVehiculo[r.vehicle_id] || new Set()).add(r.date); });
     /* Un vehículo solo sirve si tiene libres TODOS los días del rango. */
-    setDisponibles(new Set(VEHICULOS.filter(v => {
+    setDisponibles(new Set(flota.filter(v => {
       const libres = porVehiculo[v.id];
       return libres && dias.every(d => libres.has(d));
     }).map(v => v.id)));
     setBuscando(false);
   };
 
-  const lista = VEHICULOS.filter(v =>
+  const lista = flota.filter(v =>
     (!municipio || v.municipio === municipio) &&
     (disponibles === null || disponibles.has(v.id)));
 
@@ -2006,16 +2034,32 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, onClose })
     /*#__PURE__*/React.createElement("div", { className: "sticky top-0 bg-white border-b border-slate-200 z-10" },
       /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4" },
         /*#__PURE__*/React.createElement("div", null,
-          /*#__PURE__*/React.createElement("p", { className: "text-[11px] font-bold tracking-widest text-[#0052CC] uppercase" }, "Rentacar"),
-          /*#__PURE__*/React.createElement("h2", { className: "text-xl font-bold text-slate-900" }, "Alquiler de vehículos")),
+          /*#__PURE__*/React.createElement("p", { className: "text-[11px] font-bold tracking-widest text-[#0052CC] uppercase" }, "Movilidad"),
+          /*#__PURE__*/React.createElement("h2", { className: "text-xl font-bold text-slate-900" },
+            conChofer ? "Movilidad con chofer" : "Alquiler de vehículos")),
         /*#__PURE__*/React.createElement("button", { onClick: onClose, "aria-label":"Cerrar",
           className: "text-slate-400 hover:text-slate-700 text-3xl leading-none shrink-0" }, "×"))),
 
     /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-4 py-7" },
-      /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-600 mb-5 max-w-2xl leading-relaxed" },
-        "Vehículos de dueños locales. Cada uno aprueba una revisión legal de sus documentos y una revisión física antes de publicarse."),
+      /*#__PURE__*/React.createElement("div", { className: "flex gap-2 mb-5", role: "tablist", "aria-label": "Tipo de movilidad" },
+        MODALIDADES_MOVILIDAD.map(m => /*#__PURE__*/React.createElement("button", {
+          key: m.id,
+          role: "tab",
+          "aria-selected": conChofer === m.conChofer,
+          onClick: () => { setConChofer(m.conChofer); setMunicipio(""); setDisponibles(null); },
+          className: `flex-1 sm:flex-none text-left px-4 py-3 rounded-xl border-2 transition-colors ${conChofer === m.conChofer ? "border-[#0052CC] bg-blue-50" : "border-slate-200 hover:border-slate-300"}`
+        }, /*#__PURE__*/React.createElement("span", {
+          className: `block text-sm font-bold ${conChofer === m.conChofer ? "text-[#0052CC]" : "text-slate-700"}`
+        }, m.label), /*#__PURE__*/React.createElement("span", {
+          className: "block text-xs text-slate-500 mt-0.5"
+        }, m.sub, " · ", VEHICULOS.filter(v => ofreceModalidad(v, m.conChofer)).length)))),
 
-      VEHICULOS.length > 0 && municipios.length > 0 && /*#__PURE__*/React.createElement("div", { className: "mb-5" },
+      /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-600 mb-5 max-w-2xl leading-relaxed" },
+        conChofer
+          ? "Un conductor del propio negocio te lleva. No se pide depósito ni licencia: el vehículo nunca sale de manos de su dueño."
+          : "Vehículos de dueños locales. Cada uno aprueba una revisión legal de sus documentos y una revisión física antes de publicarse."),
+
+      flota.length > 0 && municipios.length > 0 && /*#__PURE__*/React.createElement("div", { className: "mb-5" },
         /*#__PURE__*/React.createElement("p", { className: "text-xs font-semibold text-slate-500 mb-2" },
           "Disponibles en ", municipios.length, " ", municipios.length === 1 ? "municipio" : "municipios"),
         /*#__PURE__*/React.createElement("div", { className: "flex flex-wrap gap-2" },
@@ -2025,9 +2069,9 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, onClose })
             className: `text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${municipio === m ? "bg-[#0052CC] border-[#0052CC] text-white" : "border-slate-200 text-slate-600 hover:border-[#0052CC] hover:text-[#0052CC]"}`
           }, "📍 ", m, " ",
              /*#__PURE__*/React.createElement("span", { className: municipio === m ? "text-white/70" : "text-slate-400" },
-               "(", VEHICULOS.filter(v => v.municipio === m).length, ")"))))),
+               "(", flota.filter(v => v.municipio === m).length, ")"))))),
 
-      VEHICULOS.length > 0 && /*#__PURE__*/React.createElement("div", {
+      flota.length > 0 && /*#__PURE__*/React.createElement("div", {
         className: "flex flex-wrap items-end gap-3 mb-6 p-4 bg-slate-50 rounded-xl"
       }, /*#__PURE__*/React.createElement("label", { className: "block" },
           /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Retiro"),
@@ -2043,19 +2087,20 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, onClose })
         /*#__PURE__*/React.createElement("button", { onClick: limpiar,
           className: "px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm" }, "Limpiar")),
 
-      VEHICULOS.length === 0
+      flota.length === 0
         ? /*#__PURE__*/React.createElement("div", { className: "rounded-xl border border-dashed border-slate-200 p-12 text-center" },
-            /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-600 font-semibold" }, "Todavía no hay vehículos disponibles para alquilar."),
+            /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-600 font-semibold" },
+              conChofer ? "Todavía nadie ofrece traslados con chofer." : "Todavía no hay vehículos disponibles para alquilar."),
             /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-400 mt-2 max-w-md mx-auto leading-relaxed" },
               "Cada vehículo debe aprobar una revisión legal y una revisión física antes de publicarse. ¿Tienes un vehículo para alquilar? Regístrate como proveedor y publícalo."))
         : lista.length === 0
           ? /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-500 py-10 text-center" },
               "Ningún vehículo tiene libre el rango completo de fechas.")
           : /*#__PURE__*/React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" },
-              lista.map(v => /*#__PURE__*/React.createElement(VehiculoCard, { key: v.id, v: v, onReservar: setReservando }))),
+              lista.map(v => /*#__PURE__*/React.createElement(VehiculoCard, { key: v.id, v: v, conChofer: conChofer, onReservar: setReservando }))),
 
       reservando && /*#__PURE__*/React.createElement(ReservaVehiculoModal, {
-        vehiculo: reservando, desdeInicial: desde, hastaInicial: hasta,
+        vehiculo: reservando, desdeInicial: desde, hastaInicial: hasta, conChofer: conChofer,
         onClose: () => setReservando(null)
       })));
 }
@@ -2426,14 +2471,26 @@ function SearchVuelosForm({
 }
 
 /* Formulario: Rentacar → Lugar de entrega + Fecha ida/vuelta */  
-function SearchRentacarForm({  
-  onSubmit  
-}) {  
-  const [lugar, setLugar] = useState("");  
-  const [fechaIda, setFechaIda] = useState("");  
-  const [fechaVuelta, setFechaVuelta] = useState("");  
-  return /*#__PURE__*/React.createElement("div", {  
-    className: "flex flex-col md:flex-row md:items-center gap-2 w-full"  
+function SearchRentacarForm({
+  onSubmit
+}) {
+  const [lugar, setLugar] = useState("");
+  const [fechaIda, setFechaIda] = useState("");
+  const [fechaVuelta, setFechaVuelta] = useState("");
+  /* Lo primero que hay que saber en Movilidad es quién maneja: cambia la
+     flota, el precio y si se pide depósito. */
+  const [conChofer, setConChofer] = useState(false);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "w-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-1.5 mb-2.5"
+  }, MODALIDADES_MOVILIDAD.map(m => /*#__PURE__*/React.createElement("button", {
+    key: m.id,
+    onClick: () => setConChofer(m.conChofer),
+    "aria-pressed": conChofer === m.conChofer,
+    className: `text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${conChofer === m.conChofer ? "bg-[#0052CC] border-[#0052CC] text-white" : "border-slate-200 text-slate-600 hover:border-[#0052CC]"}`
+  }, m.label))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col md:flex-row md:items-center gap-2 w-full"
   }, /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-2 flex-1 min-w-0 border border-slate-200 rounded-full px-4 py-2.5"  
   }, /*#__PURE__*/React.createElement(Car, {  
@@ -2463,9 +2520,9 @@ function SearchRentacarForm({
     "aria-label": "Fecha de vuelta",  
     className: "text-sm text-slate-600 outline-none bg-transparent w-[88px] md:w-[112px]"  
   })), /*#__PURE__*/React.createElement("button", {  
-    onClick: () => onSubmit(lugar || null, fechaIda || null, fechaVuelta || null),  
-    className: "bg-[#FF6B00] hover:bg-[#EA580C] text-white text-sm font-semibold px-6 py-2.5 rounded-full shrink-0 transition-colors"  
-  }, "Buscar"));  
+    onClick: () => onSubmit(lugar || null, fechaIda || null, fechaVuelta || null, conChofer),
+    className: "bg-[#FF6B00] hover:bg-[#EA580C] text-white text-sm font-semibold px-6 py-2.5 rounded-full shrink-0 transition-colors"
+  }, "Buscar")));
 }
 
 /* Formulario: Tours (foráneos/internacionales) → Destino + Fecha + Personas (Adultos/Niños) */  
@@ -2550,10 +2607,10 @@ function SearchTabsBox({
     setMunicipioFiltro(destino || null);  
     scrollToCatalogo();  
   };  
-  const handleRentacar = (lugar, desde, hasta) => {
+  const handleRentacar = (lugar, desde, hasta, conChofer) => {
     setCategory("rentacar");
     // Los vehiculos no viven en el catalogo de tours: tienen su propia seccion.
-    setRentacarAbierto({ municipio: lugar || "", desde: desde || "", hasta: hasta || "" });
+    setRentacarAbierto({ municipio: lugar || "", desde: desde || "", hasta: hasta || "", conChofer: !!conChofer });
   };  
   const handleTours = () => {  
     scrollToCatalogo();  
@@ -2597,6 +2654,7 @@ function SearchTabsBox({
       municipioInicial: rentacarAbierto.municipio,
       desdeInicial: rentacarAbierto.desde,
       hastaInicial: rentacarAbierto.hasta,
+      conChoferInicial: rentacarAbierto.conChofer,
       onClose: () => setRentacarAbierto(null)
     }),
     hotelAbierto && /*#__PURE__*/React.createElement(HotelBookingPage, {
@@ -2629,26 +2687,26 @@ function Hero({
   React.createElement("div", {
     className: "absolute inset-0",
     style: {
-      background: "linear-gradient(to bottom, rgba(3,15,34,.78) 0%, rgba(3,15,34,.74) 38%, rgba(3,15,34,.58) 62%, rgba(3,15,34,.74) 100%)"
+      background: "linear-gradient(to bottom, rgba(3,15,34,.52) 0%, rgba(3,15,34,.46) 38%, rgba(3,15,34,.30) 62%, rgba(3,15,34,.50) 100%)"
     }
   }), React.createElement("div", {
     className: "absolute inset-0 pointer-events-none",
     style: {
-      background: "radial-gradient(78% 62% at 50% 44%, rgba(2,10,24,.42) 0%, transparent 72%)"
+      background: "radial-gradient(70% 55% at 50% 44%, rgba(2,10,24,.34) 0%, transparent 70%)"
     }
   }), React.createElement("div", {  
     className: "relative z-10 max-w-4xl mx-auto px-4 text-center py-16"
   }, /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] sm:text-xs font-semibold uppercase mb-5",
-    style: { letterSpacing: ".22em", color: "rgba(255,255,255,.92)", textShadow: "0 1px 10px rgba(2,10,24,.8)" }
+    style: { letterSpacing: ".22em", color: "rgba(255,255,255,.92)", textShadow: "0 1px 6px rgba(2,10,24,.95), 0 2px 16px rgba(2,10,24,.7)" }
   }, "Alojamientos · Movilidad · Experiencias"), /*#__PURE__*/React.createElement("h1", {
     className: "text-3xl sm:text-4xl md:text-6xl font-extrabold text-white leading-tight",
-    style: { letterSpacing: "-.025em", textShadow: "0 2px 30px rgba(2,10,24,.75)" }
+    style: { letterSpacing: "-.025em", textShadow: "0 2px 10px rgba(2,10,24,.85), 0 4px 34px rgba(2,10,24,.6)" }
   }, "Descubre y reserva actividades en ", /*#__PURE__*/React.createElement("span", {
     className: "animated-gradient-text"
   }, "TÁCHIRA")), /*#__PURE__*/React.createElement("p", {
     className: "mt-4 text-base md:text-lg mx-auto",
-    style: { maxWidth: "46ch", color: "rgba(255,255,255,.94)", textShadow: "0 1px 16px rgba(2,10,24,.85)" }
+    style: { maxWidth: "46ch", color: "rgba(255,255,255,.94)", textShadow: "0 1px 6px rgba(2,10,24,.95), 0 2px 18px rgba(2,10,24,.7)" }
   }, "Dónde quedarte, cómo moverte y qué hacer en el Táchira. Reservas con comprobante verificado por la plataforma."), /*#__PURE__*/React.createElement(SearchTabsBox, {  
     category: category,  
     setCategory: setCategory,  
@@ -3426,6 +3484,137 @@ function Counter({
    DETAIL — TOUR (estructura GetYourGuide, basada en personas)  
    ========================================================================== */
 
+
+/* ==========================================================================
+   AGREGAR MOVILIDAD
+   Quien ya eligió fechas y personas para una experiencia o un alojamiento casi
+   siempre necesita además cómo llegar. En vez de mandarlo a otra sección y que
+   pierda lo que llevaba, el traslado se suma al mismo carrito desde aquí.
+   ========================================================================== */
+function AgregarMovilidad({ desde, hasta, municipio, onAgregar }) {
+  const [abierto, setAbierto] = useState(false);
+  const [conChofer, setConChofer] = useState(null);   // null = aún no eligió
+  const [libres, setLibres] = useState(null);         // null = sin comprobar
+  const [buscando, setBuscando] = useState(false);
+
+  const dias = (desde && hasta && hasta >= desde) ? diasEntre(desde, hasta) : [];
+  const flota = useMemo(
+    () => conChofer === null ? [] : VEHICULOS.filter(v => ofreceModalidad(v, conChofer)),
+    [conChofer]);
+
+  /* Se comprueba la disponibilidad real antes de ofrecer nada: proponer un
+     vehículo que el dueño tiene cerrado es peor que no proponer ninguno. */
+  useEffect(() => {
+    let vivo = true;
+    if (conChofer === null || !dias.length) { setLibres(null); return; }
+    setBuscando(true);
+    window.__tgSupabase.from("vehicle_availability")
+      .select("vehicle_id, date").eq("is_open", true).in("date", dias)
+      .then(({ data }) => {
+        if (!vivo) return;
+        const porVehiculo = {};
+        (data || []).forEach(r => {
+          (porVehiculo[r.vehicle_id] = porVehiculo[r.vehicle_id] || new Set()).add(r.date);
+        });
+        setLibres(new Set(flota.filter(v => {
+          const abiertos = porVehiculo[v.id];
+          return abiertos && dias.every(d => abiertos.has(d));
+        }).map(v => v.id)));
+        setBuscando(false);
+      });
+    return () => { vivo = false; };
+  }, [conChofer, desde, hasta, flota]);
+
+  /* Sin fechas no se puede proponer nada, pero esconder el botón haría que
+     nadie supiera que la opción existe: se muestra desactivado y explica qué
+     falta. */
+  const sinFechas = !desde || !hasta || hasta < desde;
+
+  const disponibles = flota.filter(v =>
+    (libres === null || libres.has(v.id)) &&
+    (!municipio || !v.municipio || v.municipio === municipio || true));
+
+  const sumar = v => {
+    const tarifa = tarifaVehiculo(v, conChofer);
+    onAgregar({
+      id: `veh-${Date.now()}`,
+      vehicleId: v.id,
+      tipo: "vehiculo",
+      titulo: (conChofer ? "Traslado con chofer · " : "Alquiler · ") + v.title,
+      img: v.cover_image_url || null,
+      desde, hasta,
+      dias: dias.length,
+      conChofer,
+      total: tarifa * dias.length,
+      providerId: v.provider_id || null
+    });
+    setAbierto(false);
+    setConChofer(null);
+  };
+
+  if (!abierto || sinFechas) {
+    return /*#__PURE__*/React.createElement("div", { className: "mt-3" },
+      /*#__PURE__*/React.createElement("button", {
+        onClick: () => !sinFechas && setAbierto(true),
+        disabled: sinFechas,
+        className: `w-full border-2 border-dashed text-sm font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 ${sinFechas ? "border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300 text-slate-600 hover:border-[#0052CC] hover:text-[#0052CC]"}`
+      }, /*#__PURE__*/React.createElement(Car, { size: 16 }), "Agregar movilidad"),
+      sinFechas ? /*#__PURE__*/React.createElement("p", {
+        className: "text-[11px] text-slate-400 text-center mt-1.5"
+      }, "Elige las fechas y te mostramos los vehículos libres.") : null);
+  }
+
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between mb-2.5"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-sm font-bold text-slate-900"
+  }, "¿Cómo te mueves?"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => { setAbierto(false); setConChofer(null); },
+    "aria-label": "Cerrar movilidad",
+    className: "text-slate-400 hover:text-slate-700 text-xl leading-none"
+  }, "×")),
+
+    /*#__PURE__*/React.createElement("div", { className: "flex gap-2" },
+      MODALIDADES_MOVILIDAD.map(m => /*#__PURE__*/React.createElement("button", {
+        key: m.id,
+        onClick: () => setConChofer(m.conChofer),
+        className: `flex-1 text-left px-3 py-2 rounded-lg border-2 transition-colors ${conChofer === m.conChofer ? "border-[#0052CC] bg-white" : "border-slate-200 bg-white hover:border-slate-300"}`
+      }, /*#__PURE__*/React.createElement("span", {
+        className: `block text-xs font-bold ${conChofer === m.conChofer ? "text-[#0052CC]" : "text-slate-700"}`
+      }, m.label), /*#__PURE__*/React.createElement("span", {
+        className: "block text-[11px] text-slate-500"
+      }, m.sub)))),
+
+    conChofer !== null && /*#__PURE__*/React.createElement("div", { className: "mt-3" },
+      buscando
+        ? /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 py-3 text-center" }, "Buscando vehículos libres…")
+        : disponibles.length === 0
+          ? /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 py-3 text-center leading-relaxed" },
+              conChofer
+                ? "Nadie tiene chofer libre en esas fechas."
+                : "Ningún vehículo está libre todos esos días.")
+          : /*#__PURE__*/React.createElement("div", { className: "space-y-2" },
+              disponibles.map(v => /*#__PURE__*/React.createElement("div", {
+                key: v.id,
+                className: "flex items-center gap-3 bg-white rounded-lg border border-slate-200 p-2"
+              }, v.cover_image_url && /*#__PURE__*/React.createElement("img", {
+                src: v.cover_image_url, alt: "",
+                className: "w-14 h-12 object-cover rounded shrink-0"
+              }), /*#__PURE__*/React.createElement("div", { className: "min-w-0 flex-1" },
+                /*#__PURE__*/React.createElement("p", {
+                  className: "text-xs font-bold text-slate-900 truncate"
+                }, v.title),
+                /*#__PURE__*/React.createElement("p", { className: "text-[11px] text-slate-500" },
+                  "$", tarifaVehiculo(v, conChofer), " / día · ", dias.length, " ", dias.length === 1 ? "día" : "días",
+                  " · ", v.municipio)),
+              /*#__PURE__*/React.createElement("button", {
+                onClick: () => sumar(v),
+                className: "shrink-0 bg-[#0052CC] hover:bg-[#003D99] text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+              }, "+ $", tarifaVehiculo(v, conChofer) * dias.length))))));
+}
+
 function DetailScreenTour({  
   tour,  
   onBack,  
@@ -3553,9 +3742,13 @@ function DetailScreenTour({
   }, "Total"), /*#__PURE__*/React.createElement("span", {  
     className: "text-lg font-bold text-slate-900"  
   }, money(total, currency))), /*#__PURE__*/React.createElement("button", {  
-    onClick: handleAdd,  
-    className: "w-full mt-4 bg-[#FF6B00] hover:bg-[#EA580C] text-white font-bold py-3 rounded-lg transition-colors"  
-  }, "Añadir al carrito"), /*#__PURE__*/React.createElement("div", {  
+    onClick: handleAdd,
+    className: "w-full mt-4 bg-[#FF6B00] hover:bg-[#EA580C] text-white font-bold py-3 rounded-lg transition-colors"
+  }, "Añadir al carrito"),
+  /* La excursión es de un día: el traslado se propone para esa misma fecha. */
+  /*#__PURE__*/React.createElement(AgregarMovilidad, {
+    desde: date, hasta: date, municipio: tour.municipio, onAgregar: onAddToCart
+  }), /*#__PURE__*/React.createElement("div", {
     className: "mt-4 space-y-1.5"  
   }, /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-2 text-sm text-slate-600"  
@@ -3714,10 +3907,14 @@ function AlojamientoDetailScreen({
   }, /*#__PURE__*/React.createElement("span", null, "Total"), /*#__PURE__*/React.createElement("span", null, money(total, currency)))) : /*#__PURE__*/React.createElement("p", {  
     className: "text-xs text-slate-400 mt-4"  
   }, "Selecciona check-in y check-out para ver el total."), /*#__PURE__*/React.createElement("button", {  
-    onClick: handleAdd,  
-    disabled: noches <= 0,  
-    className: "w-full mt-4 bg-[#FF6B00] hover:bg-[#EA580C] disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition-colors"  
-  }, "Añadir al carrito"), /*#__PURE__*/React.createElement("div", {  
+    onClick: handleAdd,
+    disabled: noches <= 0,
+    className: "w-full mt-4 bg-[#FF6B00] hover:bg-[#EA580C] disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition-colors"
+  }, "Añadir al carrito"),
+  /* El vehículo se necesita toda la estadía: del check-in al check-out. */
+  /*#__PURE__*/React.createElement(AgregarMovilidad, {
+    desde: checkIn, hasta: checkOut, municipio: aloj.municipio, onAgregar: onAddToCart
+  }), /*#__PURE__*/React.createElement("div", {
     className: "mt-4 space-y-1.5"  
   }, /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-2 text-sm text-slate-600"  
@@ -4881,7 +5078,11 @@ function CartDrawer({
     className: "text-[11px] text-[#0052CC] font-medium mt-0.5"  
   }, item.providerNombre), /*#__PURE__*/React.createElement("p", {  
     className: "text-xs text-slate-500 mt-0.5"  
-  }, item.tipo === "tour" ? `${item.adults} adulto(s)${item.children ? " · " + item.children + " niño(s)" : ""} · ${item.fecha || "sin fecha"}` : `${item.checkIn || "?"} → ${item.checkOut || "?"} · ${item.noches} noche(s)`), /*#__PURE__*/React.createElement("p", {  
+  }, item.tipo === "vehiculo"
+       ? `${item.desde} → ${item.hasta} · ${item.dias} día(s)${item.conChofer ? " · con chofer" : ""}`
+       : item.tipo === "tour"
+         ? `${item.adults} adulto(s)${item.children ? " · " + item.children + " niño(s)" : ""} · ${item.fecha || "sin fecha"}`
+         : `${item.checkIn || "?"} → ${item.checkOut || "?"} · ${item.noches} noche(s)`), /*#__PURE__*/React.createElement("p", {  
     className: "text-sm font-bold text-[#FF6B00] mt-1"  
   }, money(item.total, currency))), /*#__PURE__*/React.createElement("button", {  
     onClick: () => onRemove(item.id),  
@@ -5226,7 +5427,9 @@ function CheckoutScreen({
                   React.createElement("div", { className: "min-w-0 pr-2" },
                     React.createElement("p", { className: "text-slate-800 font-medium line-clamp-1" }, item.titulo),
                     React.createElement("p", { className: "text-xs text-slate-400" },
-                      item.tipo === "tour" ? `${item.adults + item.children} pax` : `${item.noches} noche(s)`,
+                      item.tipo === "vehiculo" ? `${item.dias} día(s)`
+                        : item.tipo === "tour" ? `${item.adults + item.children} pax`
+                        : `${item.noches} noche(s)`,
                       item.providerNombre ? ` · ${item.providerNombre}` : "")),
                   React.createElement("span", { className: "font-semibold text-slate-900 shrink-0" },
                     money(item.total, "USD"))))),
@@ -6091,7 +6294,9 @@ function App() {
     if (!sb) { setErrorReserva("No hay conexión con el servidor. Intenta de nuevo."); return; }
 
     const metodo = PAYMENT_METHODS.find(m => m.id === paymentMethod);
-    const items = cart.filter(i => i.listingId);
+    /* El carrito puede traer experiencias y además el traslado que se agregó
+       desde la misma pantalla. Cada tipo va por su propia RPC. */
+    const items = cart.filter(i => i.listingId || i.vehicleId);
     if (!items.length) {
       setErrorReserva("No pudimos identificar los servicios del carrito. Vuelve a agregarlos.");
       return;
@@ -6109,10 +6314,7 @@ function App() {
 
     const hechas = [];
     for (const i of items) {
-      const { data, error } = await sb.rpc("reservar_tour", {
-        p_listing_id: i.listingId,
-        p_fecha: i.fecha || i.checkIn,
-        p_personas: (i.adults || 0) + (i.children || 0) || 1,
+      const comunes = {
         p_modalidad: "total",
         p_nombre: form.nombre.trim(),
         p_telefono: form.whatsapp.trim(),
@@ -6121,7 +6323,19 @@ function App() {
         p_comprobante_url: ruta,
         p_comprobante_referencia: referenciaPago.trim() || null,
         p_comprobante_metodo: metodo ? metodo.label : null
-      });
+      };
+      const { data, error } = i.vehicleId
+        ? await sb.rpc("reservar_vehiculo", Object.assign({
+            p_vehicle_id: i.vehicleId,
+            p_start: i.desde,
+            p_end: i.hasta,
+            p_con_chofer: !!i.conChofer
+          }, comunes))
+        : await sb.rpc("reservar_tour", Object.assign({
+            p_listing_id: i.listingId,
+            p_fecha: i.fecha || i.checkIn,
+            p_personas: (i.adults || 0) + (i.children || 0) || 1
+          }, comunes));
       if (error) {
         setEnviandoReserva(false);
         /* Si algo falla a mitad, no callamos: el viajero tiene que saber qué
