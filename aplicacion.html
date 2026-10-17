@@ -169,6 +169,165 @@ html { scroll-behavior: smooth; }
               animation: ssrLatido 1.1s ease-in-out infinite; flex-shrink: 0; }
 @keyframes ssrLatido { 0%, 100% { opacity: .25 } 50% { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .ssr__punto { animation: none; opacity: .8 } }
+
+/* ==========================================================================
+   CAPA DE ACABADO
+   El esqueleto es Tailwind precompilado. En vez de tocar cada componente, se
+   reafinan aquí los pocos valores que definen el carácter: la tipografía, la
+   profundidad de las sombras, el papel sobre el que se apoya todo y el modo
+   en que se pintan los botones. Es lo que separa un sitio plano de uno con
+   materia.
+   ========================================================================== */
+:root{
+  --tg-tinta:#0C1320;
+  --tg-papel:#FBFAF8;
+  --tg-azul:#0052CC;
+  --tg-naranja:#FF6B00;
+  --tg-linea:#E7E4DE;
+}
+body{
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--tg-papel);
+  color:var(--tg-tinta);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-feature-settings:"cv05" 1,"ss01" 1;
+}
+h1,h2,h3,.tg-display{ letter-spacing:-.023em; text-wrap:balance; }
+h1{ letter-spacing:-.03em; }
+
+/* La luz no cae plana: los botones tienen un gradiente mínimo y una sombra
+   del color del propio botón, que es lo que les da cuerpo. */
+.bg-\[\#FF6B00\]{
+  background-image:linear-gradient(176deg,#FF8023 0%,#F76000 58%,#EC5A00 100%);
+  box-shadow:0 1px 1px rgba(12,19,32,.06),0 10px 22px -10px rgba(236,90,0,.62);
+}
+.bg-\[\#FF6B00\]:hover{
+  background-image:linear-gradient(176deg,#FF8A33 0%,#F56A08 58%,#E45700 100%);
+  box-shadow:0 1px 1px rgba(12,19,32,.07),0 14px 28px -10px rgba(236,90,0,.72);
+}
+.bg-\[\#0052CC\]{
+  background-image:linear-gradient(176deg,#0B61DC 0%,#0050C6 58%,#00429F 100%);
+  box-shadow:0 1px 1px rgba(12,19,32,.06),0 10px 22px -11px rgba(0,66,159,.70);
+}
+.bg-\[\#0052CC\]:hover{
+  background-image:linear-gradient(176deg,#1169E6 0%,#0057D2 58%,#004AB0 100%);
+}
+button{ transition:transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .16s ease, background-color .16s ease; }
+button:active{ transform:translateY(1px); }
+
+/* Las tarjetas se separan por profundidad, no por línea. */
+.border-slate-200{ border-color:var(--tg-linea); }
+.border-slate-100{ border-color:#EFEDE8; }
+.bg-slate-50{ background-color:#F5F3EF; }
+.rounded-xl{ border-radius:15px; }
+.rounded-2xl{ border-radius:20px; }
+.shadow-xl{
+  box-shadow:0 1px 2px rgba(12,19,32,.04),0 14px 32px -10px rgba(12,19,32,.14),
+             0 44px 88px -40px rgba(12,19,32,.22);
+}
+.hover\:shadow-lg:hover{
+  box-shadow:0 1px 2px rgba(12,19,32,.05),0 16px 32px -12px rgba(12,19,32,.20);
+}
+.shadow-lg{ box-shadow:0 1px 2px rgba(12,19,32,.05),0 14px 30px -12px rgba(12,19,32,.18); }
+
+/* Las fotos de las tarjetas respiran un segundo al pasar por encima. */
+.group:hover img, a:hover > div > img, article:hover img{ transform:scale(1.035); }
+article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,.7,.3,1); }
+
+/* Los números alineados en columna (precios, totales) con ancho fijo. */
+.tg-cifras{ font-variant-numeric:tabular-nums; }
+
+/* Foco visible: accesible sin ensuciar el diseño. */
+:focus-visible{ outline:2px solid var(--tg-azul); outline-offset:2px; border-radius:6px; }
+
+@media (prefers-reduced-motion: reduce){
+  button, article img, .rounded-xl > div > img{ transition:none !important; transform:none !important; }
+}
+
+
+/* ==========================================================================
+   UTILIDADES QUE EL BUILD NO GENERÓ
+   La hoja de Tailwind viene precompilada de un escaneo que no cubrió todo el
+   código. Ochenta y tantas clases se usaban sin existir: los "space-y" que
+   dan ritmo vertical a las listas, los rojos y ámbar de los mensajes de
+   error, los tamaños fraccionarios. Aquí se escriben a mano, con los mismos
+   valores que tendrían en Tailwind.
+   ========================================================================== */
+.gap-2\.5{gap:.625rem}.gap-5{gap:1.25rem}
+.gap-x-6{column-gap:1.5rem}.gap-y-2{row-gap:.5rem}
+.h-6{height:1.5rem}.h-10{height:2.5rem}.h-11{height:2.75rem}.h-64{height:16rem}
+.w-11{width:2.75rem}
+.mx-1{margin-left:.25rem;margin-right:.25rem}.my-8{margin-top:2rem;margin-bottom:2rem}
+.mb-2\.5{margin-bottom:.625rem}.mb-3\.5{margin-bottom:.875rem}.mb-9{margin-bottom:2.25rem}
+.mt-3\.5{margin-top:.875rem}.mt-12{margin-top:3rem}.mt-16{margin-top:4rem}
+.p-14{padding:3.5rem}.pt-3\.5{padding-top:.875rem}.px-3\.5{padding-left:.875rem;padding-right:.875rem}
+.py-9{padding-top:2.25rem;padding-bottom:2.25rem}.py-12{padding-top:3rem;padding-bottom:3rem}
+.py-24{padding-top:6rem;padding-bottom:6rem}
+.max-w-lg{max-width:32rem}.max-w-5xl{max-width:64rem}
+
+.space-y-1\.5>:not([hidden])~:not([hidden]){margin-top:.375rem}
+.space-y-2>:not([hidden])~:not([hidden]){margin-top:.5rem}
+.space-y-2\.5>:not([hidden])~:not([hidden]){margin-top:.625rem}
+.space-y-3>:not([hidden])~:not([hidden]){margin-top:.75rem}
+.space-y-4>:not([hidden])~:not([hidden]){margin-top:1rem}
+.space-y-5>:not([hidden])~:not([hidden]){margin-top:1.25rem}
+.space-y-6>:not([hidden])~:not([hidden]){margin-top:1.5rem}
+.space-y-8>:not([hidden])~:not([hidden]){margin-top:2rem}
+.divide-y>:not([hidden])~:not([hidden]){border-top-width:1px;border-bottom-width:0}
+.divide-slate-100>:not([hidden])~:not([hidden]){border-color:#f1f5f9}
+.last\:border-0:last-child{border-width:0}
+
+/* Los avisos tienen que leerse como avisos: el rojo y el ámbar faltaban. */
+.bg-red-50{background-color:#FEF2F2}
+.text-red-600{color:#DC2626}.text-red-700{color:#B91C1C}.text-red-800{color:#991B1B}
+.border-red-200{border-color:#FECACA}
+.text-amber-800{color:#92400E}.text-amber-900{color:#78350F}.border-amber-200{border-color:#FDE68A}
+.text-green-800{color:#166534}.border-green-200{border-color:#BBF7D0}
+.border-blue-200{border-color:#BFDBFE}
+.bg-blue-50\/60{background-color:rgba(239,246,255,.6)}
+.bg-slate-50\/40{background-color:rgba(248,250,252,.4)}
+
+.leading-none{line-height:1}
+.tracking-widest{letter-spacing:.1em}
+.opacity-70{opacity:.7}
+.whitespace-pre-wrap{white-space:pre-wrap}
+.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.rounded-t-xl{border-top-left-radius:.75rem;border-top-right-radius:.75rem}
+.transition-shadow{transition:box-shadow .15s cubic-bezier(.4,0,.2,1)}
+.line-clamp-3{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3}
+.hover\:shadow-md:hover{box-shadow:0 1px 2px rgba(12,19,32,.05),0 10px 22px -12px rgba(12,19,32,.18)}
+.hover\:text-white:hover{color:#fff}
+.disabled\:opacity-40:disabled{opacity:.4}
+.disabled\:opacity-50:disabled{opacity:.5}
+.disabled\:opacity-60:disabled{opacity:.6}
+.disabled\:shadow-none:disabled{box-shadow:none}
+
+/* El selector de archivo del comprobante se veía como un control del sistema. */
+.file\:mr-3::file-selector-button{margin-right:.75rem}
+.file\:rounded-lg::file-selector-button{border-radius:.5rem}
+.file\:border-0::file-selector-button{border-width:0}
+.file\:bg-slate-100::file-selector-button{background-color:#f1f5f9}
+.file\:px-3::file-selector-button{padding-left:.75rem;padding-right:.75rem}
+.file\:py-2::file-selector-button{padding-top:.5rem;padding-bottom:.5rem}
+.file\:text-sm::file-selector-button{font-size:.875rem}
+.file\:text-xs::file-selector-button{font-size:.75rem}
+.file\:font-semibold::file-selector-button{font-weight:600}
+.file\:text-slate-700::file-selector-button{color:#334155}
+.hover\:file\:bg-slate-200:hover::file-selector-button{background-color:#e2e8f0}
+
+@media (min-width:640px){
+  .sm\:flex-none{flex:none}
+  .sm\:h-auto{height:auto}
+  .sm\:items-center{align-items:center}
+  .sm\:items-stretch{align-items:stretch}
+  .sm\:px-4{padding-left:1rem;padding-right:1rem}
+  .sm\:text-xs{font-size:.75rem;line-height:1rem}
+  .sm\:w-56{width:14rem}
+}
+@media (min-width:768px){ .md\:items-start{align-items:flex-start} }
+@media print{ .print\:p-0{padding:0} .no-imprimir{display:none !important} }
+
 </style>  
 </head>  
 <body>  
@@ -1404,7 +1563,36 @@ function FlightQuoteModal({
    por fechas, mostrar la escasez real, y decir con claridad qué se paga ahora y
    qué se paga al llegar.
    ========================================================================== */
+
+/* Las pantallas que se abren encima (movilidad, hotel, cotizador) no cambian
+   la dirección, así que para el navegador no son "otra página": al tocar
+   atrás te sacaba del sitio. Cada una deja una marca en el historial al
+   abrirse, y atrás la consume cerrándola en vez de salir. */
+function useCerrarConAtras(cerrar) {
+  const propio = useRef(false);
+  /* El callback llega nuevo en cada render; si el efecto dependiera de él se
+     montaría y desmontaría sin parar, y la limpieza cerraría la pantalla al
+     instante. Se guarda en una referencia y el efecto corre una sola vez. */
+  const alCerrar = useRef(cerrar);
+  alCerrar.current = cerrar;
+  useEffect(() => {
+    window.history.pushState({ tgCapa: true }, "", window.location.href);
+    propio.current = true;
+    const alVolver = () => { propio.current = false; alCerrar.current(); };
+    window.addEventListener("popstate", alVolver);
+    return () => {
+      window.removeEventListener("popstate", alVolver);
+      /* Si se cerró con la × y no con atrás, hay que retirar la marca para no
+         dejar un paso muerto en el historial. */
+      if (propio.current && window.history.state && window.history.state.tgCapa) {
+        window.history.back();
+      }
+    };
+  }, []);
+}
+
 function HotelBookingPage({ hotel, onClose }) {
+  useCerrarConAtras(onClose);
   const hoy = new Date();
   const manana = new Date(hoy.getTime() + 86400000);
   const [checkIn, setCheckIn] = useState(fechaISO(hoy));
@@ -1532,7 +1720,7 @@ function HotelBookingPage({ hotel, onClose }) {
                     !cabe && /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-1.5" },
                       "Esta habitación admite hasta ", t.capacidad, " huéspedes"),
                     /*#__PURE__*/React.createElement("p", { className: "text-xs text-[#12805C] font-semibold mt-1.5" },
-                      "✓ Cancelación gratis hasta 48h antes")),
+                      "Cancelación gratis hasta 48h antes")),
                   /*#__PURE__*/React.createElement("div", { className: "text-right shrink-0" },
                     /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-400" }, noches, " ", noches===1?"noche":"noches"),
                     /*#__PURE__*/React.createElement("p", { className: "text-xl font-bold text-slate-900" }, "$", total),
@@ -1769,36 +1957,70 @@ const MODALIDADES_MOVILIDAD = [
   { id: "con", conChofer: true,  label: "Con chofer",  sub: "Te llevamos" }
 ];
 
-function VehiculoCard({ v, onReservar, conChofer }) {
-  const specs = [VEH_CAT_LABEL[v.category] || v.category, VEH_TRANS_LABEL[v.transmission], v.seats ? v.seats + " puestos" : null].filter(Boolean).join(" · ");
+function VehiculoCard({ v, onReservar, conChofer, dias = 0 }) {
+  const tarifa = tarifaVehiculo(v, conChofer);
+  const specs = [VEH_CAT_LABEL[v.category] || v.category,
+                 conChofer ? null : VEH_TRANS_LABEL[v.transmission],
+                 v.seats ? v.seats + " puestos" : null].filter(Boolean);
   return /*#__PURE__*/React.createElement("article", {
-    className: "border border-slate-200 rounded-xl overflow-hidden bg-white hover:shadow-lg transition-shadow flex flex-col"
-  }, /*#__PURE__*/React.createElement("div", { className: "relative h-40 bg-slate-100 shrink-0" },
-    v.cover_image_url
-      ? /*#__PURE__*/React.createElement("img", { src: v.cover_image_url, alt: v.title, className: "w-full h-full object-cover" })
-      : /*#__PURE__*/React.createElement("div", { className: "w-full h-full flex items-center justify-center text-slate-400 text-xs" }, "Sin foto"),
-    /*#__PURE__*/React.createElement("span", {
-      className: "absolute top-2 left-2 bg-white/95 text-[10px] font-bold text-[#12805C] px-2 py-1 rounded-full"
-    }, "✓ Revisión legal y física")),
+    className: "rounded-2xl overflow-hidden flex flex-col border transition-shadow hover:shadow-lg",
+    style: { borderColor: "#E7E4DE", background: "#fff", boxShadow: "0 1px 2px rgba(12,19,32,.04)" }
+  },
+    /*#__PURE__*/React.createElement("div", {
+      className: "relative overflow-hidden shrink-0",
+      style: { aspectRatio: "16 / 10", background: "#F1EFEA" }
+    },
+      v.cover_image_url
+        ? /*#__PURE__*/React.createElement("img", {
+            src: v.cover_image_url, alt: v.title, loading: "lazy",
+            className: "w-full h-full object-cover" })
+        : /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full flex items-center justify-center text-slate-300"
+          }, /*#__PURE__*/React.createElement(Car, { size: 34 })),
+      /*#__PURE__*/React.createElement("span", {
+        className: "absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1.5 rounded-full",
+        style: { background: "rgba(255,255,255,.94)", color: "#0C1320",
+                 backdropFilter: "blur(8px)", boxShadow: "0 2px 8px rgba(12,19,32,.14)" }
+      }, conChofer ? "Chofer incluido" : "Revisión legal y física")),
+
     /*#__PURE__*/React.createElement("div", { className: "p-4 flex-1 flex flex-col" },
-      /*#__PURE__*/React.createElement("h3", { className: "font-bold text-slate-900 leading-snug" }, v.title),
-      /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-1" }, specs),
-      /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-0.5" }, "📍 ", v.municipio),
-      /*#__PURE__*/React.createElement("div", { className: "flex items-end justify-between mt-3 gap-2" },
-        /*#__PURE__*/React.createElement("span", null,
-          /*#__PURE__*/React.createElement("span", { className: "text-lg font-bold text-[#0052CC]" }, "$", tarifaVehiculo(v, conChofer)),
-          /*#__PURE__*/React.createElement("span", { className: "text-xs text-slate-500" }, " / día")),
-        /* Con chofer no hay depósito: el vehículo no sale de manos del dueño. */
-        (!conChofer && Number(v.deposit) > 0)
-          ? /*#__PURE__*/React.createElement("span", { className: "text-[10px] text-slate-400 text-right leading-tight" },
-              "Depósito $", v.deposit, /*#__PURE__*/React.createElement("br"), "Mín. ", v.min_days, " ", v.min_days === 1 ? "día" : "días")
-          : /*#__PURE__*/React.createElement("span", { className: "text-[10px] text-slate-400 text-right leading-tight" },
-              conChofer ? "Chofer incluido" : null, conChofer ? /*#__PURE__*/React.createElement("br") : null,
-              "Mín. ", v.min_days, " ", v.min_days === 1 ? "día" : "días")),
+      /*#__PURE__*/React.createElement("h3", {
+        className: "font-bold text-slate-900 leading-snug text-[15px]"
+      }, v.title),
+      /*#__PURE__*/React.createElement("p", {
+        className: "text-[12.5px] text-slate-500 mt-1"
+      }, specs.join(" · ")),
+      /*#__PURE__*/React.createElement("p", {
+        className: "text-[12.5px] text-slate-400 mt-0.5"
+      }, v.municipio),
+
+      /*#__PURE__*/React.createElement("div", { className: "flex-1" }),
+
+      /*#__PURE__*/React.createElement("div", {
+        className: "flex items-end justify-between gap-2 mt-4 pt-3.5 border-t",
+        style: { borderColor: "#F0EEE9" }
+      },
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("span", {
+            className: "text-[21px] font-bold text-slate-900 tg-cifras"
+          }, "$", tarifa),
+          /*#__PURE__*/React.createElement("span", { className: "text-[12.5px] text-slate-500" }, " / día"),
+          /* Si ya eligió fechas, lo que importa es el total, no la tarifa. */
+          dias > 0 ? /*#__PURE__*/React.createElement("p", {
+            className: "text-[12px] text-slate-500 mt-0.5 tg-cifras"
+          }, "$", tarifa * dias, " por ", dias, dias === 1 ? " día" : " días") : null),
+        /*#__PURE__*/React.createElement("span", {
+          className: "text-[11px] text-slate-400 text-right leading-tight shrink-0"
+        }, conChofer
+             ? "Sin depósito"
+             : (Number(v.deposit) > 0 ? ["Depósito $" + v.deposit, /*#__PURE__*/React.createElement("br", { key: "b" }),
+                                         "Mín. " + v.min_days + (v.min_days === 1 ? " día" : " días")]
+                                      : "Mín. " + v.min_days + (v.min_days === 1 ? " día" : " días")))),
+
       /*#__PURE__*/React.createElement("button", {
         onClick: () => onReservar(v),
-        className: "w-full mt-3 bg-[#FF6B00] hover:bg-[#EA580C] text-white text-xs font-bold py-2.5 rounded-lg transition-colors"
-      }, "Ver disponibilidad")));
+        className: "w-full mt-3.5 bg-[#0052CC] text-white text-[13px] font-bold py-3 rounded-xl"
+      }, dias > 0 ? "Reservar" : "Ver disponibilidad")));
 }
 
 function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, conChofer = false, onClose }) {
@@ -1986,7 +2208,33 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, conChofer 
             "Verificamos tu pago y te confirmamos. Con tu código y tu cédula o correo puedes seguir la reserva."))));
 }
 
+
+/* Cada paso se anuncia con su número y se marca cuando ya está resuelto: la
+   persona sabe en todo momento dónde está y qué falta. */
+
+/* Estas pantallas se abren desde el buscador, que vive dentro del hero. El
+   hero crea su propio contexto de apilamiento, así que por mucho z-index que
+   se le diera, la capa quedaba por debajo de la barra de navegación.
+   Montándola en el body deja de depender de dónde se disparó. */
+function enCapa(contenido) {
+  return ReactDOM.createPortal(contenido, document.body);
+}
+
+function PasoMovilidad({ n, titulo, listo }) {
+  return /*#__PURE__*/React.createElement("div", { className: "flex items-center gap-2.5 mb-3.5" },
+    /*#__PURE__*/React.createElement("span", {
+      className: "w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0",
+      style: listo
+        ? { background: "#0C1320", color: "#fff" }
+        : { background: "#EDEAE4", color: "#94A3B8" }
+    }, n),
+    /*#__PURE__*/React.createElement("h3", {
+      className: "text-[15px] font-bold text-slate-900"
+    }, titulo));
+}
+
 function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferInicial = false, onClose }) {
+  useCerrarConAtras(onClose);
   const [conChofer, setConChofer] = useState(!!conChoferInicial);
   const [municipio, setMunicipio] = useState(municipioInicial || "");
   const [desde, setDesde] = useState(desdeInicial || "");
@@ -2030,79 +2278,168 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
 
   const limpiar = () => { setMunicipio(""); setDesde(""); setHasta(""); setDisponibles(null); };
 
-  return /*#__PURE__*/React.createElement("div", { className: "fixed inset-0 bg-white overflow-y-auto", style: { zIndex: 85 } },
-    /*#__PURE__*/React.createElement("div", { className: "sticky top-0 bg-white border-b border-slate-200 z-10" },
-      /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4" },
-        /*#__PURE__*/React.createElement("div", null,
-          /*#__PURE__*/React.createElement("p", { className: "text-[11px] font-bold tracking-widest text-[#0052CC] uppercase" }, "Movilidad"),
-          /*#__PURE__*/React.createElement("h2", { className: "text-xl font-bold text-slate-900" },
-            conChofer ? "Movilidad con chofer" : "Alquiler de vehículos")),
-        /*#__PURE__*/React.createElement("button", { onClick: onClose, "aria-label":"Cerrar",
-          className: "text-slate-400 hover:text-slate-700 text-3xl leading-none shrink-0" }, "×"))),
+  const rango = desde && hasta && hasta >= desde;
+  const paso = !rango ? 2 : 3;
 
-    /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-4 py-7" },
-      /*#__PURE__*/React.createElement("div", { className: "flex gap-2 mb-5", role: "tablist", "aria-label": "Tipo de movilidad" },
-        MODALIDADES_MOVILIDAD.map(m => /*#__PURE__*/React.createElement("button", {
-          key: m.id,
-          role: "tab",
-          "aria-selected": conChofer === m.conChofer,
-          onClick: () => { setConChofer(m.conChofer); setMunicipio(""); setDisponibles(null); },
-          className: `flex-1 sm:flex-none text-left px-4 py-3 rounded-xl border-2 transition-colors ${conChofer === m.conChofer ? "border-[#0052CC] bg-blue-50" : "border-slate-200 hover:border-slate-300"}`
-        }, /*#__PURE__*/React.createElement("span", {
-          className: `block text-sm font-bold ${conChofer === m.conChofer ? "text-[#0052CC]" : "text-slate-700"}`
-        }, m.label), /*#__PURE__*/React.createElement("span", {
-          className: "block text-xs text-slate-500 mt-0.5"
-        }, m.sub, " · ", VEHICULOS.filter(v => ofreceModalidad(v, m.conChofer)).length)))),
+  return enCapa(/*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 overflow-y-auto",
+    style: { zIndex: 85, background: "#FBFAF8" }
+  },
+    /* --- Cabecera: siempre a la vista, con salida clara --- */
+    /*#__PURE__*/React.createElement("div", {
+      className: "sticky top-0 z-10 border-b",
+      style: { background: "rgba(251,250,248,.86)", backdropFilter: "blur(14px)", borderColor: "#E7E4DE" }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "max-w-5xl mx-auto px-5 h-16 flex items-center gap-3"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: onClose,
+      "aria-label": "Volver",
+      className: "shrink-0 w-9 h-9 rounded-full border flex items-center justify-center text-slate-500 hover:text-slate-900",
+      style: { borderColor: "#E7E4DE", background: "#fff" }
+    }, /*#__PURE__*/React.createElement(ArrowLeft, { size: 17 })),
+      /*#__PURE__*/React.createElement("div", { className: "min-w-0" },
+        /*#__PURE__*/React.createElement("p", {
+          className: "text-[10px] font-bold uppercase text-slate-400",
+          style: { letterSpacing: ".18em" }
+        }, "Movilidad"),
+        /*#__PURE__*/React.createElement("h2", {
+          className: "text-[17px] font-bold text-slate-900 leading-tight truncate"
+        }, conChofer ? "Traslados con chofer" : "Alquiler de vehículos")))),
 
-      /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-600 mb-5 max-w-2xl leading-relaxed" },
-        conChofer
-          ? "Un conductor del propio negocio te lleva. No se pide depósito ni licencia: el vehículo nunca sale de manos de su dueño."
-          : "Vehículos de dueños locales. Cada uno aprueba una revisión legal de sus documentos y una revisión física antes de publicarse."),
+    /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-5 py-9" },
 
-      flota.length > 0 && municipios.length > 0 && /*#__PURE__*/React.createElement("div", { className: "mb-5" },
-        /*#__PURE__*/React.createElement("p", { className: "text-xs font-semibold text-slate-500 mb-2" },
-          "Disponibles en ", municipios.length, " ", municipios.length === 1 ? "municipio" : "municipios"),
-        /*#__PURE__*/React.createElement("div", { className: "flex flex-wrap gap-2" },
-          municipios.map(m => /*#__PURE__*/React.createElement("button", {
+      /* ----- Paso 1: quién maneja ----- */
+      /*#__PURE__*/React.createElement(PasoMovilidad, { n: 1, titulo: "¿Quién maneja?", listo: true }),
+      /*#__PURE__*/React.createElement("div", { className: "grid sm:grid-cols-2 gap-3 mb-9" },
+        MODALIDADES_MOVILIDAD.map(m => {
+          const activo = conChofer === m.conChofer;
+          const cuantos = VEHICULOS.filter(v => ofreceModalidad(v, m.conChofer));
+          const minimo = cuantos.length
+            ? Math.min(...cuantos.map(v => tarifaVehiculo(v, m.conChofer))) : null;
+          return /*#__PURE__*/React.createElement("button", {
+            key: m.id,
+            onClick: () => { setConChofer(m.conChofer); setMunicipio(""); setDisponibles(null); },
+            "aria-pressed": activo,
+            className: "text-left p-5 rounded-2xl border-2 transition-all",
+            style: {
+              borderColor: activo ? "#0052CC" : "#E7E4DE",
+              background: "#fff",
+              boxShadow: activo
+                ? "0 1px 2px rgba(12,19,32,.05), 0 16px 34px -14px rgba(0,82,204,.38)"
+                : "0 1px 2px rgba(12,19,32,.04)"
+            }
+          },
+            /*#__PURE__*/React.createElement("div", { className: "flex items-start justify-between gap-3" },
+              /*#__PURE__*/React.createElement("div", {
+                className: "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
+                style: { background: activo ? "#0052CC" : "#F1EFEA", color: activo ? "#fff" : "#64748B" }
+              }, /*#__PURE__*/React.createElement(m.conChofer ? Users : Car, { size: 21 })),
+              activo ? /*#__PURE__*/React.createElement("span", {
+                className: "text-[10px] font-bold uppercase px-2 py-1 rounded-full",
+                style: { letterSpacing: ".1em", background: "#EAF2FF", color: "#0052CC" }
+              }, "Elegido") : null),
+            /*#__PURE__*/React.createElement("p", {
+              className: "font-bold text-slate-900 mt-3.5 text-[15px]"
+            }, m.label),
+            /*#__PURE__*/React.createElement("p", {
+              className: "text-[13px] text-slate-500 mt-1 leading-relaxed"
+            }, m.conChofer
+                 ? "Un conductor del negocio te lleva. Sin depósito y sin licencia."
+                 : "Tú conduces. Se pide depósito reembolsable y licencia vigente."),
+            /*#__PURE__*/React.createElement("p", {
+              className: "text-[13px] mt-3 tg-cifras",
+              style: { color: cuantos.length ? "#0C1320" : "#94A3B8" }
+            }, cuantos.length
+                 ? ["Desde ", /*#__PURE__*/React.createElement("b", { key: "p" }, "$" + minimo), " / día · ",
+                    cuantos.length, cuantos.length === 1 ? " vehículo" : " vehículos"]
+                 : "Sin vehículos por ahora"));
+        })),
+
+      /* ----- Paso 2: cuándo y dónde ----- */
+      /*#__PURE__*/React.createElement(PasoMovilidad, { n: 2, titulo: "¿Cuándo lo necesitas?", listo: rango }),
+      /*#__PURE__*/React.createElement("div", {
+        className: "rounded-2xl border p-2 mb-3 flex flex-col sm:flex-row sm:items-stretch gap-2",
+        style: { borderColor: "#E7E4DE", background: "#fff", boxShadow: "0 1px 2px rgba(12,19,32,.04)" }
+      },
+        /*#__PURE__*/React.createElement("label", { className: "flex-1 px-3 py-2 rounded-xl", style: { background: "#F7F5F1" } },
+          /*#__PURE__*/React.createElement("span", { className: "block text-[10px] font-bold uppercase text-slate-400", style: { letterSpacing: ".12em" } }, "Retiro"),
+          /*#__PURE__*/React.createElement("input", {
+            type: "date", value: desde, min: fechaISO(new Date()),
+            onChange: e => { setDesde(e.target.value); setDisponibles(null); },
+            className: "w-full bg-transparent outline-none text-sm font-semibold text-slate-800 mt-0.5"
+          })),
+        /*#__PURE__*/React.createElement("label", { className: "flex-1 px-3 py-2 rounded-xl", style: { background: "#F7F5F1" } },
+          /*#__PURE__*/React.createElement("span", { className: "block text-[10px] font-bold uppercase text-slate-400", style: { letterSpacing: ".12em" } }, "Devolución"),
+          /*#__PURE__*/React.createElement("input", {
+            type: "date", value: hasta, min: desde || fechaISO(new Date()),
+            onChange: e => { setHasta(e.target.value); setDisponibles(null); },
+            className: "w-full bg-transparent outline-none text-sm font-semibold text-slate-800 mt-0.5"
+          })),
+        /*#__PURE__*/React.createElement("button", {
+          onClick: buscar, disabled: buscando || !rango,
+          className: "bg-[#0052CC] disabled:opacity-40 disabled:shadow-none text-white text-sm font-bold px-7 py-3 rounded-xl shrink-0"
+        }, buscando ? "Buscando…" : "Ver disponibles")),
+
+      /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-400 mb-9" },
+        rango
+          ? ["Del ", desde, " al ", hasta, " · ", diasEntre(desde, hasta).length, " días",
+             disponibles ? " · disponibilidad comprobada" : " · toca Ver disponibles para comprobar"]
+          : "Elige las dos fechas y comprobamos qué está realmente libre."),
+
+      /* ----- Paso 3: elegir ----- */
+      /*#__PURE__*/React.createElement(PasoMovilidad, {
+        n: 3, titulo: "Elige tu vehículo", listo: paso === 3 && lista.length > 0
+      }),
+
+      flota.length > 1 && municipios.length > 1 && /*#__PURE__*/React.createElement("div", {
+        className: "flex flex-wrap gap-1.5 mb-5"
+      }, [/*#__PURE__*/React.createElement("button", {
+            key: "todos",
+            onClick: () => setMunicipio(""),
+            className: "text-xs font-semibold px-3.5 py-2 rounded-full border transition-colors",
+            style: !municipio
+              ? { background: "#0C1320", borderColor: "#0C1320", color: "#fff" }
+              : { borderColor: "#E7E4DE", color: "#475569", background: "#fff" }
+          }, "Todos")].concat(municipios.map(m => /*#__PURE__*/React.createElement("button", {
             key: m,
             onClick: () => setMunicipio(municipio === m ? "" : m),
-            className: `text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${municipio === m ? "bg-[#0052CC] border-[#0052CC] text-white" : "border-slate-200 text-slate-600 hover:border-[#0052CC] hover:text-[#0052CC]"}`
-          }, "📍 ", m, " ",
-             /*#__PURE__*/React.createElement("span", { className: municipio === m ? "text-white/70" : "text-slate-400" },
-               "(", flota.filter(v => v.municipio === m).length, ")"))))),
-
-      flota.length > 0 && /*#__PURE__*/React.createElement("div", {
-        className: "flex flex-wrap items-end gap-3 mb-6 p-4 bg-slate-50 rounded-xl"
-      }, /*#__PURE__*/React.createElement("label", { className: "block" },
-          /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Retiro"),
-          /*#__PURE__*/React.createElement("input", { type:"date", value:desde, onChange:e => setDesde(e.target.value),
-            className:"px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white" })),
-        /*#__PURE__*/React.createElement("label", { className: "block" },
-          /*#__PURE__*/React.createElement("span", { className: "block text-xs font-semibold text-slate-600 mb-1" }, "Devolución"),
-          /*#__PURE__*/React.createElement("input", { type:"date", value:hasta, onChange:e => setHasta(e.target.value),
-            className:"px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white" })),
-        /*#__PURE__*/React.createElement("button", { onClick: buscar, disabled: buscando,
-          className: "px-5 py-2 rounded-lg bg-[#0052CC] hover:bg-[#003D99] disabled:opacity-60 text-white text-sm font-semibold" },
-          buscando ? "Buscando…" : "Buscar"),
-        /*#__PURE__*/React.createElement("button", { onClick: limpiar,
-          className: "px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm" }, "Limpiar")),
+            className: "text-xs font-semibold px-3.5 py-2 rounded-full border transition-colors",
+            style: municipio === m
+              ? { background: "#0C1320", borderColor: "#0C1320", color: "#fff" }
+              : { borderColor: "#E7E4DE", color: "#475569", background: "#fff" }
+          }, m, " · ", flota.filter(v => v.municipio === m).length)))),
 
       flota.length === 0
-        ? /*#__PURE__*/React.createElement("div", { className: "rounded-xl border border-dashed border-slate-200 p-12 text-center" },
-            /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-600 font-semibold" },
-              conChofer ? "Todavía nadie ofrece traslados con chofer." : "Todavía no hay vehículos disponibles para alquilar."),
-            /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-400 mt-2 max-w-md mx-auto leading-relaxed" },
-              "Cada vehículo debe aprobar una revisión legal y una revisión física antes de publicarse. ¿Tienes un vehículo para alquilar? Regístrate como proveedor y publícalo."))
+        ? /*#__PURE__*/React.createElement("div", {
+            className: "rounded-2xl border border-dashed p-14 text-center",
+            style: { borderColor: "#DDD9D1" }
+          },
+            /*#__PURE__*/React.createElement("p", { className: "text-[15px] text-slate-700 font-bold" },
+              conChofer ? "Todavía nadie ofrece traslados con chofer." : "Todavía no hay vehículos para alquilar."),
+            /*#__PURE__*/React.createElement("p", { className: "text-[13px] text-slate-400 mt-2 max-w-md mx-auto leading-relaxed" },
+              "Cada vehículo aprueba una revisión legal y una física antes de publicarse. ¿Tienes uno? Regístrate como proveedor y publícalo."))
         : lista.length === 0
-          ? /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-500 py-10 text-center" },
-              "Ningún vehículo tiene libre el rango completo de fechas.")
-          : /*#__PURE__*/React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" },
-              lista.map(v => /*#__PURE__*/React.createElement(VehiculoCard, { key: v.id, v: v, conChofer: conChofer, onReservar: setReservando }))),
+          ? /*#__PURE__*/React.createElement("div", {
+              className: "rounded-2xl border border-dashed p-14 text-center",
+              style: { borderColor: "#DDD9D1" }
+            }, /*#__PURE__*/React.createElement("p", { className: "text-[15px] text-slate-700 font-bold" },
+                 "Ninguno está libre el rango completo."),
+               /*#__PURE__*/React.createElement("button", {
+                 onClick: limpiar,
+                 className: "text-[13px] font-semibold mt-3",
+                 style: { color: "#0052CC" }
+               }, "Probar otras fechas"))
+          : /*#__PURE__*/React.createElement("div", { className: "grid sm:grid-cols-2 lg:grid-cols-3 gap-4" },
+              lista.map(v => /*#__PURE__*/React.createElement(VehiculoCard, {
+                key: v.id, v: v, conChofer: conChofer, dias: rango ? diasEntre(desde, hasta).length : 0,
+                onReservar: setReservando
+              }))),
 
       reservando && /*#__PURE__*/React.createElement(ReservaVehiculoModal, {
         vehiculo: reservando, desdeInicial: desde, hastaInicial: hasta, conChofer: conChofer,
         onClose: () => setReservando(null)
-      })));
+      }))));
+
 }
 
 /* ==========================================================================
@@ -2176,6 +2513,7 @@ const DESTINOS_INTERNACIONALES = [
 ];
 
 function TourQuotePage({ tipo, onClose }) {
+  useCerrarConAtras(onClose);
   const nacional = tipo === "tour_nacional";
   const destinos = nacional ? DESTINOS_NACIONALES : DESTINOS_INTERNACIONALES;
 
