@@ -501,7 +501,7 @@ const MUNICIPIOS = ["Andrés Bello", "Antonio Rómulo Costa", "Ayacucho", "Bolí
 const ACTIVIDADES = ["Parapente", "Chichiriviche", "Margarita", "Ruta al llano", "Chinácota", "Medellín", "Los Roques", "Senderismo", "Cascadas", "Caminatas", "Páramos", "Ruta del café"];
 
 /* Cinta de autoridad: respaldos institucionales/tecnológicos mostrados en el marquee */  
-const AUTHORITY_PROVIDERS = ["SIETE TRAVEL", "AMADEUS", "SABRE", "KIU", "COTATUR", "CÁMARA DE TURISMO", "SOFITASA"];  
+const AUTHORITY_PROVIDERS = ["SIETE TRAVEL", "SIETE.AI", "AMADEUS", "SABRE", "KIU"];  
 /* La plataforma se concentra en tres cosas. El identificador "rentacar" se
    conserva por dentro porque lo usan el catalogo y las reservas; de cara a la
    gente la categoria se llama Movilidad. */
@@ -2066,10 +2066,14 @@ function tarifaVehiculo(v, conChofer) {
 function ofreceModalidad(v, conChofer) {
   return conChofer ? !!v.ofrece_con_chofer : v.ofrece_sin_chofer !== false;
 }
+/* "Con chofer" se retiro de cara al publico: no es un alquiler por dia sino
+   una carrera con monto base mas kilometro, y eso vive en el modulo de
+   traslados. Vuelve a aparecer solo, en los tres sitios que la ofrecen, al
+   devolver su entrada a esta lista. */
 const MODALIDADES_MOVILIDAD = [
-  { id: "sin", conChofer: false, label: "Yo conduzco", sub: "Rent a car" },
-  { id: "con", conChofer: true,  label: "Con chofer",  sub: "Te llevamos" }
+  { id: "sin", conChofer: false, label: "Yo conduzco", sub: "Rent a car" }
 ];
+const ELIGE_MODALIDAD = MODALIDADES_MOVILIDAD.length > 1;
 
 function VehiculoCard({ v, onReservar, conChofer, dias = 0 }) {
   const tarifa = tarifaVehiculo(v, conChofer);
@@ -2423,8 +2427,8 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
     /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-5 py-9" },
 
       /* ----- Paso 1: quién maneja ----- */
-      /*#__PURE__*/React.createElement(PasoMovilidad, { n: 1, titulo: "¿Quién maneja?", listo: true }),
-      /*#__PURE__*/React.createElement("div", { className: "grid sm:grid-cols-2 gap-3 mb-9" },
+      ELIGE_MODALIDAD && /*#__PURE__*/React.createElement(PasoMovilidad, { n: 1, titulo: "¿Quién maneja?", listo: true }),
+      ELIGE_MODALIDAD && /*#__PURE__*/React.createElement("div", { className: "grid sm:grid-cols-2 gap-3 mb-9" },
         MODALIDADES_MOVILIDAD.map(m => {
           const activo = conChofer === m.conChofer;
           const cuantos = VEHICULOS.filter(v => ofreceModalidad(v, m.conChofer));
@@ -2470,7 +2474,7 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
         })),
 
       /* ----- Paso 2: cuándo y dónde ----- */
-      /*#__PURE__*/React.createElement(PasoMovilidad, { n: 2, titulo: "¿Cuándo lo necesitas?", listo: rango }),
+      /*#__PURE__*/React.createElement(PasoMovilidad, { n: ELIGE_MODALIDAD ? 2 : 1, titulo: "¿Cuándo lo necesitas?", listo: rango }),
       /*#__PURE__*/React.createElement("div", {
         className: "rounded-2xl border p-2 mb-3 flex flex-col sm:flex-row sm:items-stretch gap-2",
         style: { borderColor: "#E7E4DE", background: "#fff", boxShadow: "0 1px 2px rgba(12,19,32,.04)" }
@@ -2502,7 +2506,7 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
 
       /* ----- Paso 3: elegir ----- */
       /*#__PURE__*/React.createElement(PasoMovilidad, {
-        n: 3, titulo: "Elige tu vehículo", listo: paso === 3 && lista.length > 0
+        n: ELIGE_MODALIDAD ? 3 : 2, titulo: "Elige tu vehículo", listo: paso === 3 && lista.length > 0
       }),
 
       flota.length > 1 && municipios.length > 1 && /*#__PURE__*/React.createElement("div", {
@@ -2934,14 +2938,14 @@ function SearchRentacarForm({
   const [conChofer, setConChofer] = useState(false);
   return /*#__PURE__*/React.createElement("div", {
     className: "w-full"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, ELIGE_MODALIDAD ? /*#__PURE__*/React.createElement("div", {
     className: "flex gap-1.5 mb-2.5"
   }, MODALIDADES_MOVILIDAD.map(m => /*#__PURE__*/React.createElement("button", {
     key: m.id,
     onClick: () => setConChofer(m.conChofer),
     "aria-pressed": conChofer === m.conChofer,
     className: `text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${conChofer === m.conChofer ? "bg-[#0052CC] border-[#0052CC] text-white" : "border-slate-200 text-slate-600 hover:border-[#0052CC]"}`
-  }, m.label))), /*#__PURE__*/React.createElement("div", {
+  }, m.label))) : null, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col md:flex-row md:items-center gap-2 w-full"
   }, /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-2 flex-1 min-w-0 border border-slate-200 rounded-full px-4 py-2.5"  
@@ -3945,7 +3949,7 @@ function Counter({
    ========================================================================== */
 function AgregarMovilidad({ desde, hasta, municipio, onAgregar }) {
   const [abierto, setAbierto] = useState(false);
-  const [conChofer, setConChofer] = useState(null);   // null = aún no eligió
+  const [conChofer, setConChofer] = useState(ELIGE_MODALIDAD ? null : false);   // null = aún no eligió
   const [libres, setLibres] = useState(null);         // null = sin comprobar
   const [buscando, setBuscando] = useState(false);
 
@@ -4001,7 +4005,7 @@ function AgregarMovilidad({ desde, hasta, municipio, onAgregar }) {
       providerId: v.provider_id || null
     });
     setAbierto(false);
-    setConChofer(null);
+    setConChofer(ELIGE_MODALIDAD ? null : false);
   };
 
   if (!abierto || sinFechas) {
@@ -4023,12 +4027,12 @@ function AgregarMovilidad({ desde, hasta, municipio, onAgregar }) {
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-sm font-bold text-slate-900"
   }, "¿Cómo te mueves?"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => { setAbierto(false); setConChofer(null); },
+    onClick: () => { setAbierto(false); setConChofer(ELIGE_MODALIDAD ? null : false); },
     "aria-label": "Cerrar movilidad",
     className: "text-slate-400 hover:text-slate-700 text-xl leading-none"
   }, "×")),
 
-    /*#__PURE__*/React.createElement("div", { className: "flex gap-2" },
+    ELIGE_MODALIDAD && /*#__PURE__*/React.createElement("div", { className: "flex gap-2" },
       MODALIDADES_MOVILIDAD.map(m => /*#__PURE__*/React.createElement("button", {
         key: m.id,
         onClick: () => setConChofer(m.conChofer),
