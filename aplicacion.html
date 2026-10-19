@@ -2422,16 +2422,16 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
     if (!desde || !hasta) { setDisponibles(null); return; }
     if (hasta < desde) return;
     setBuscando(true);
-    const dias = diasEntre(desde, hasta);
-    const { data } = await window.__tgSupabase.from("vehicle_availability")
-      .select("vehicle_id, date").eq("is_open", true).in("date", dias);
-    const porVehiculo = {};
-    (data || []).forEach(r => { (porVehiculo[r.vehicle_id] = porVehiculo[r.vehicle_id] || new Set()).add(r.date); });
-    /* Un vehículo solo sirve si tiene libres TODOS los días del rango. */
-    setDisponibles(new Set(flota.filter(v => {
-      const libres = porVehiculo[v.id];
-      return libres && dias.every(d => libres.has(d));
-    }).map(v => v.id)));
+    /* Esta pantalla miraba la tabla de disponibilidad por su cuenta y exigía
+       un día abierto explícito por cada fecha del rango. Eso escondía
+       vehículos que sí se podían alquilar, y además mostraba como libres los
+       que ya estaban alquilados: el viajero no puede leer las reservas de
+       nadie. El motor de búsqueda sí sabe las dos cosas. */
+    const { data } = await window.__tgSupabase.rpc("buscar", {
+      p_pilar: "movilidad", p_desde: desde, p_hasta: hasta, p_limite: 200
+    });
+    const libres = new Set((data || []).map(r => r.id));
+    setDisponibles(new Set(flota.filter(v => libres.has(v.id)).map(v => v.id)));
     setBuscando(false);
   };
 
