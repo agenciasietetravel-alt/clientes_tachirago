@@ -871,6 +871,15 @@ function JoinProviderModal({
 }) {
   const [form, setForm] = useState({ business: "", municipio: "", email: "", password: "" });
   const [status, setStatus] = useState({ loading: false, error: "", ok: "" });
+  /* El rubro no es un dato más: de él dependen los módulos que ve el
+     proveedor, la comisión y el plan. Esta puerta lo registraba sin
+     preguntarlo, así que todo el que entraba por la portada nacía como
+     "otro" y con un panel genérico. Los tipos salen de la base —la misma
+     tabla que usa el portal de proveedores— para que agregar uno no
+     obligue a tocar los tres portales. */
+  const [tipos, setTipos] = useState([]);
+  const [tipo, setTipo] = useState("");
+  const [sinTipos, setSinTipos] = useState(false);
   useEffect(() => {
     const onKey = e => {
       if (e.key === "Escape") onClose();
@@ -878,12 +887,28 @@ function JoinProviderModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+  useEffect(() => {
+    let vivo = true;
+    const sb = window.__tgSupabase;
+    if (!sb) { setSinTipos(true); return; }
+    sb.from("business_types").select("tipo,etiqueta,frase,orden").order("orden")
+      .then(({ data, error }) => {
+        if (!vivo) return;
+        if (error || !data || !data.length) { setSinTipos(true); return; }
+        setTipos(data);
+      });
+    return () => { vivo = false; };
+  }, []);
   const set = k => e => setForm(f => Object.assign({}, f, { [k]: e.target.value }));
   const providerUrl = window.location.hostname === "localhost" ? "/proveedores_tachiragoo/" : "/proveedores";
   const submit = async () => {
     const sb = window.__tgSupabase;
     if (!sb) {
       setStatus({ loading: false, error: "No se pudo conectar con el servidor. Recarga la página e intenta de nuevo.", ok: "" });
+      return;
+    }
+    if (!tipo && !sinTipos) {
+      setStatus({ loading: false, error: "Elige primero qué tipo de negocio tienes.", ok: "" });
       return;
     }
     if (!form.business.trim() || !form.municipio || !form.email.trim() || !form.password) {
@@ -906,11 +931,11 @@ function JoinProviderModal({
       return;
     }
     await sb.from("profiles").upsert({ id: data.user.id, role: "proveedor" });
-    const { error: pErr } = await sb.from("providers").upsert({
+    const { error: pErr } = await sb.from("providers").upsert(Object.assign({
       owner_id: data.user.id,
       business_name: form.business.trim(),
       municipio: form.municipio
-    }, { onConflict: "owner_id" });
+    }, tipo ? { business_type: tipo } : null), { onConflict: "owner_id" });
     if (pErr) {
       setStatus({ loading: false, error: "Tu cuenta se creó, pero falló el perfil de negocio: " + pErr.message, ok: "" });
       return;
@@ -955,7 +980,33 @@ function JoinProviderModal({
     className: "rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3"
   }, status.ok) : /*#__PURE__*/React.createElement("div", {
     className: "space-y-3"
-  }, field("Nombre del negocio", "business", "text", "Ej. Parapente Los Andes"), /*#__PURE__*/React.createElement("label", {
+  }, tipos.length ? /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("span", {
+      className: "block text-xs font-semibold text-slate-600 mb-1"
+    }, "¿Qué tipo de negocio tienes?"),
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }
+    }, tipos.map(t => /*#__PURE__*/React.createElement("button", {
+      key: t.tipo, type: "button",
+      onClick: () => { setTipo(t.tipo); setStatus(e => ({ loading: e.loading, error: "", ok: e.ok })); },
+      disabled: status.loading,
+      "aria-pressed": tipo === t.tipo,
+      style: {
+        textAlign: "left", padding: "10px 12px", borderRadius: 10, cursor: "pointer",
+        border: "1.5px solid " + (tipo === t.tipo ? "#0052CC" : "#E2E8F0"),
+        background: tipo === t.tipo ? "#EFF5FF" : "#fff", transition: "border-color .15s, background .15s"
+      }
+    },
+      /*#__PURE__*/React.createElement("span", {
+        style: { display: "block", fontSize: 13, fontWeight: 700, color: tipo === t.tipo ? "#0052CC" : "#0F172A" }
+      }, t.etiqueta),
+      /*#__PURE__*/React.createElement("span", {
+        style: { display: "block", fontSize: 11, lineHeight: 1.35, color: "#64748B", marginTop: 2 }
+      }, t.frase))))
+  ) : (sinTipos ? /*#__PURE__*/React.createElement("div", {
+    className: "rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2"
+  }, "No pudimos cargar los tipos de negocio. Crea tu cuenta igual: el primer paso de tu panel te preguntará a qué te dedicas.") : null),
+  field("Nombre del negocio", "business", "text", "Ej. Parapente Los Andes"), /*#__PURE__*/React.createElement("label", {
     className: "block"
   }, /*#__PURE__*/React.createElement("span", {
     className: "block text-xs font-semibold text-slate-600 mb-1"
