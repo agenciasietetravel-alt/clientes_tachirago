@@ -1707,7 +1707,10 @@ function perfilDeNegocio(fuente) {
     .map(t => (t || "").trim()).find(t => t.length > 0) || "";
   return {
     nombre,
-    slug: e.slug || fuente.slug || null,
+    /* El enlace a la página propia sale solo de la lista autorizada. Con el
+       respaldo a fuente.slug, un negocio sin micrositio pagado igual
+       enseñaba el botón y llevaba a una dirección que no existe. */
+    slug: e.slug || null,
     logo: e.logo || fuente.logo || null,
     portada: e.portada || fuente.portada || null,
     municipio: e.ubicacion || fuente.municipio || null,
@@ -5773,6 +5776,60 @@ function MsResenas({ p, t }) {
 }
 
 /* ------------------------------------------------------------- CÓMO LLEGAR */
+/* Antes esto era un enlace a Google Maps: el viajero salía del sitio para
+   ver un punto. Ahora el negocio aparece dibujado en su municipio, con las
+   atracciones que tiene cerca, que es lo que de verdad ayuda a decidir. */
+function MsMapa({ p, t }) {
+  if (p.lat == null || p.lng == null) return null;
+  const mun = MAPA_PATHS.find(m => m.n === p.ubicacion);
+  const caja = mun ? cajaDeMunicipio(p.ubicacion) : VISTA_ESTADO;
+  const cerca = useMemo(() => ATRACCIONES
+    .filter(a => a.municipio === p.ubicacion)
+    .slice(0, 6), [p.ubicacion]);
+  const upp = caja[2] / 620;
+  const px = n => n * upp;
+  return React.createElement("div", {
+    style: { marginTop: 22, borderRadius: 18, overflow: "hidden", background: "#050D1E",
+             border: "1px solid rgba(120,170,255,.22)" }
+  },
+    React.createElement("svg", {
+      viewBox: caja.join(" "), style: { display: "block", width: "100%", height: "auto" },
+      role: "img", "aria-label": "Dónde está " + p.nombre
+    },
+      React.createElement("defs", null,
+        React.createElement("radialGradient", { id: "ms-g", cx: "50%", cy: "40%", r: "75%" },
+          React.createElement("stop", { offset: "0%", stopColor: "#13305F" }),
+          React.createElement("stop", { offset: "100%", stopColor: "#050D1E" })),
+        React.createElement("filter", { id: "ms-glow", x: "-80%", y: "-80%", width: "260%", height: "260%" },
+          React.createElement("feGaussianBlur", { stdDeviation: "6", result: "b" }),
+          React.createElement("feMerge", null,
+            React.createElement("feMergeNode", { in: "b" }),
+            React.createElement("feMergeNode", { in: "SourceGraphic" })))),
+      React.createElement("rect", {
+        x: caja[0] - 200, y: caja[1] - 200, width: caja[2] + 400, height: caja[3] + 400, fill: "url(#ms-g)" }),
+      MAPA_PATHS.map(m => React.createElement("path", {
+        key: m.n, d: m.d, className: "tg-mun" + (m.n === p.ubicacion ? " tiene" : ""),
+        style: { pointerEvents: "none", fill: m.n === p.ubicacion ? "rgba(255,107,0,.14)" : "rgba(140,185,255,.05)",
+                 stroke: m.n === p.ubicacion ? "#FF8A33" : "rgba(130,175,255,.26)" } })),
+      cerca.map(a => React.createElement("g", {
+        key: a.id, transform: "translate(" + mx(a.lng).toFixed(1) + "," + my(a.lat).toFixed(1) + ")" },
+        React.createElement("circle", { r: px(5), fill: "#C9A4FF", opacity: .85 }),
+        React.createElement("text", {
+          y: -px(10), className: "tg-pin-txt",
+          style: { fontSize: px(11).toFixed(1) + "px", strokeWidth: px(3) } }, a.nombre))),
+      React.createElement("g", { transform: "translate(" + mx(p.lng).toFixed(1) + "," + my(p.lat).toFixed(1) + ")" },
+        React.createElement("circle", { r: px(18), fill: "#FF6B00", opacity: .2 }),
+        React.createElement("circle", { r: px(9), fill: "#FF6B00", filter: "url(#ms-glow)" }),
+        React.createElement("circle", { r: px(3.4), fill: "#fff" }),
+        React.createElement("text", {
+          y: -px(17), className: "tg-pin-txt",
+          style: { fontSize: px(13).toFixed(1) + "px", strokeWidth: px(3.5) } }, p.nombre))),
+    cerca.length ? React.createElement("div", {
+      style: { padding: "12px 16px", fontFamily: t.cuerpo, fontSize: 12.5,
+               color: "rgba(255,255,255,.66)", borderTop: "1px solid rgba(255,255,255,.1)" }
+    }, "Cerca: ", cerca.map(a => a.nombre).join(" · ")) : null);
+}
+
 function MsUbicacion({ p, t }) {
   if (!p.direccion && !p.lat) return null;
   const consulta = p.lat && p.lng
@@ -5785,11 +5842,12 @@ function MsUbicacion({ p, t }) {
       style: { fontFamily: t.cuerpo, fontSize: 15.5, color: t.tenue, marginTop: 16,
                lineHeight: 1.7, maxWidth: 560 }
     }, p.direccion) : null,
-    React.createElement("div", { style: { marginTop: 22 } },
+    React.createElement(MsMapa, { p, t }),
+    React.createElement("div", { style: { marginTop: 18 } },
       React.createElement(MsBoton, {
         t, secundario: true,
         href: `https://www.google.com/maps/search/?api=1&query=${consulta}`
-      }, React.createElement(MapPin, { size: 16 }), " Abrir en el mapa")));
+      }, React.createElement(MapPin, { size: 16 }), " Cómo llegar en coche")));
 }
 
 /* ------------------------------------------------------------------- PIE */
@@ -7448,18 +7506,13 @@ async function cargarCatalogoReal(){
   });
   CARDS_BY_CATEGORY.experiencias = experiencias;
 
-  /* Micrositios: solo de proveedores que el administrador ya verificó. */
-  const aprobados = new Map();
-  validos.forEach(l => {
-    const p = l.providers;
-    if (p && p.verification_status === 'approved' && !aprobados.has(p.id)) aprobados.set(p.id, p);
-  });
-  /* Un hotel vende habitaciones, no listados. Sin esto se quedaba sin
-     micrositio por no tener ningún listing publicado. */
-  const { data: aprobadosHotel } = await sb.from('providers').select('*')
-    .eq('verification_status', 'approved').eq('business_type', 'hotel');
-  (aprobadosHotel || []).forEach(p => { if (!aprobados.has(p.id)) aprobados.set(p.id, p); });
-  aprobados.forEach(p => {
+  /* Micrositios: quién tiene página pública lo decide el servidor, no esta
+     pantalla. La vista 'micrositios' ya cruza las tres condiciones —estar
+     verificado, tener dirección propia y tener el módulo abierto— así que
+     una operadora sin membresía no aparece aquí aunque esté aprobada. */
+  const { data: paginas, error: errMs } = await sb.from('micrositios').select('*');
+  if (errMs) console.error('Error cargando micrositios:', errMs.message);
+  (paginas || []).forEach(p => {
     ELITE_PROVIDERS.push({
       id: p.id,
       slug: p.slug || null,
