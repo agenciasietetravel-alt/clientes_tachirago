@@ -455,6 +455,33 @@ let TASA_VES = 40;
 let TASA_EUR = 0.92; // EUR por 1 USD (aprox.)
 let TASAS_ACTUALIZADAS = null;
 
+/* La plataforma cobra un recargo sobre la tarifa del proveedor, y la base
+   de datos lo aplica al reservar. Si el cliente mostrara la tarifa pelada,
+   el viajero vería un número y se le cobraría otro. Se leen las mismas
+   reglas que usa el servidor, y el precio se muestra ya con el recargo y
+   desglosado: esconderlo es lo que genera el reclamo. */
+let COMISIONES = {};
+
+async function cargarComisiones(){
+  const sb = window.__tgSupabase;
+  if(!sb) return;
+  const { data, error } = await sb.from("mkt_comisiones").select("*");
+  if(error || !data) return;
+  data.forEach(c => { COMISIONES[c.pilar] = c; });
+}
+
+function recargoDe(pilar, base, unidades){
+  const c = COMISIONES[pilar];
+  if(!c) return 0;
+  const pct = Number(c.recargo_viajero_pct || 0);
+  const seg = Number(c.recargo_seguro || 0) * (c.seguro_por_unidad ? Math.max(unidades || 1, 1) : 1);
+  return Math.round((Number(base || 0) * pct / 100 + seg) * 100) / 100;
+}
+
+function totalViajero(pilar, base, unidades){
+  return Math.round((Number(base || 0) + recargoDe(pilar, base, unidades)) * 100) / 100;
+}
+
 async function cargarTasas(){
   const sb = window.__tgSupabase;
   if(!sb) return;
@@ -1873,7 +1900,9 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const total = dato.total * habitaciones;
+  const tarifa = dato.total * habitaciones;
+  const servicio = recargoDe("alojamiento", tarifa, noches);
+  const total = Math.round((tarifa + servicio) * 100) / 100;
   const deposito = Math.round(total * 0.10 * 100) / 100;
   const ahora = modalidad === "total" ? total : deposito;
   const alLlegar = total - ahora;
@@ -1996,7 +2025,15 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
     /*#__PURE__*/React.createElement("div", { className:"bg-slate-50 rounded-lg p-4 mb-4 text-sm" },
       /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1" },
         /*#__PURE__*/React.createElement("span", { className:"text-slate-600" }, noches, " ", noches===1?"noche":"noches", " × ", habitaciones, " ", habitaciones===1?"habitación":"habitaciones"),
-        /*#__PURE__*/React.createElement("span", null, "$", total)),
+        /*#__PURE__*/React.createElement("span", null, "$", tarifa.toFixed(2))),
+      /* El recargo se muestra aparte. Un total que no cuadra con la tarifa
+         anunciada es lo que hace que la gente abandone el pago. */
+      servicio > 0 ? /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1 text-slate-600" },
+        /*#__PURE__*/React.createElement("span", null, "Servicio Táchira GOO"),
+        /*#__PURE__*/React.createElement("span", null, "$", servicio.toFixed(2))) : null,
+      /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1 font-semibold text-slate-900" },
+        /*#__PURE__*/React.createElement("span", null, "Total"),
+        /*#__PURE__*/React.createElement("span", null, "$", total.toFixed(2))),
       /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1 border-t border-slate-200 mt-1 pt-2" },
         /*#__PURE__*/React.createElement("span", { className:"font-bold text-slate-900" }, "Pagas ahora"),
         /*#__PURE__*/React.createElement("span", { className:"font-bold text-[#0052CC] text-lg" }, "$", ahora)),
@@ -2161,7 +2198,9 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, conChofer 
   }, [onClose]);
 
   const dias = (desde && hasta && hasta >= desde) ? diasEntre(desde, hasta) : [];
-  const total = dias.length * tarifaVehiculo(vehiculo, conChofer);
+  const tarifa = dias.length * tarifaVehiculo(vehiculo, conChofer);
+  const servicio = recargoDe("vehiculo", tarifa, dias.length);
+  const total = Math.round((tarifa + servicio) * 100) / 100;
   const ahora = modalidad === "total" ? total : Math.round(total * 0.10 * 100) / 100;
   const alLlegar = total - ahora;
   const metodoSel = PAYMENT_METHODS.find(m => m.id === metodo) || PAYMENT_METHODS[0] || null;
@@ -2284,6 +2323,12 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, conChofer 
           dias.length > 0 && React.createElement("div", { className: "bg-slate-50 rounded-lg p-4 mt-3 text-sm" },
             React.createElement("div", { className:"flex justify-between py-1" },
               React.createElement("span", { className:"text-slate-600" }, dias.length, " ", dias.length===1?"día":"días"),
+              React.createElement("span", null, "$", tarifa.toFixed(2))),
+            servicio > 0 && React.createElement("div", { className:"flex justify-between py-1" },
+              React.createElement("span", { className:"text-slate-600" }, "Servicio Táchira GOO"),
+              React.createElement("span", null, "$", servicio.toFixed(2))),
+            React.createElement("div", { className:"flex justify-between py-1 font-semibold text-slate-900" },
+              React.createElement("span", null, "Total"),
               React.createElement("span", null, "$", total.toFixed(2))),
             React.createElement("div", { className:"flex justify-between py-1 border-t border-slate-200 mt-1 pt-2" },
               React.createElement("span", { className:"font-bold text-slate-900" }, "Pagas ahora"),
@@ -4085,8 +4130,11 @@ function DetailScreenTour({
      tarjeta ofrecía un precio y el detalle cobraba otro. */
   const precioAdulto = Number(tour.priceCOP ? tour.priceCOP / TASA_COP : 0) || PRICE_ADULT;
   const precioNino = Math.round(precioAdulto * 0.6 * 100) / 100;
-  const total = useMemo(() => adults * precioAdulto + children * precioNino,
+  const tarifa = useMemo(() => adults * precioAdulto + children * precioNino,
     [adults, children, precioAdulto, precioNino]);
+  const servicio = useMemo(() => recargoDe("experiencia", tarifa, adults + children),
+    [tarifa, adults, children]);
+  const total = useMemo(() => Math.round((tarifa + servicio) * 100) / 100, [tarifa, servicio]);
   const handleAdd = () => {  
     onAddToCart({  
       id: `tour-${Date.now()}`,
@@ -4211,7 +4259,11 @@ function DetailScreenTour({
     className: "text-sm font-semibold text-slate-700"  
   }, "Total"), /*#__PURE__*/React.createElement("span", {  
     className: "text-lg font-bold text-slate-900"  
-  }, money(total, currency))), /*#__PURE__*/React.createElement("button", {  
+  }, money(total, currency))),
+  servicio > 0 ? /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-slate-500 mt-1.5"
+  }, "Incluye $", servicio.toFixed(2), " de servicio Táchira GOO.") : null,
+  /*#__PURE__*/React.createElement("button", {  
     onClick: handleAdd,
     className: "w-full mt-4 bg-[#FF6B00] hover:bg-[#EA580C] text-white font-bold py-3 rounded-lg transition-colors"
   }, "Añadir al carrito"),
@@ -4848,7 +4900,7 @@ function ProviderCatalog({
         /*#__PURE__*/React.createElement("div", { className: "flex items-end justify-between mt-3" },
           /*#__PURE__*/React.createElement("div", null,
             /*#__PURE__*/React.createElement("p", { className: "text-lg font-bold text-slate-900" },
-              "$", Number(h.precio_base).toFixed(0)),
+              "$", totalViajero("alojamiento", Number(h.precio_base), 1).toFixed(0)),
             /*#__PURE__*/React.createElement("p", { className: "text-[11px] text-slate-400" }, "por noche")),
           /*#__PURE__*/React.createElement("button", {
             onClick: () => onAbrirHotel && onAbrirHotel(hotel),
@@ -4878,7 +4930,7 @@ function ProviderCatalog({
         /*#__PURE__*/React.createElement("div", { className: "flex items-end justify-between mt-3" },
           /*#__PURE__*/React.createElement("div", null,
             /*#__PURE__*/React.createElement("p", { className: "text-lg font-bold text-slate-900" },
-              "$", Number(v.price_per_day).toFixed(0)),
+              "$", totalViajero("vehiculo", Number(v.price_per_day), 1).toFixed(0)),
             /*#__PURE__*/React.createElement("p", { className: "text-[11px] text-slate-400" }, "por día")),
           /*#__PURE__*/React.createElement("button", {
             onClick: () => onAbrirVehiculos && onAbrirVehiculos(),
@@ -5269,7 +5321,7 @@ function MsHabitaciones({ p, t, ancla, hotel, onAbrir }) {
       key: h.id, t, img: h.cover_image_url, titulo: h.nombre,
       sub: `Hasta ${h.capacidad} ${h.capacidad === 1 ? "huésped" : "huéspedes"}`,
       descripcion: h.descripcion,
-      precio: `$${Number(h.precio_base).toFixed(0)}`, precioSub: "por noche",
+      precio: `$${totalViajero("alojamiento", Number(h.precio_base), 1).toFixed(0)}`, precioSub: "por noche",
       onClick: () => onAbrir(hotel)
     }))));
 }
@@ -5303,7 +5355,7 @@ function MsFlota({ p, t, ancla, vehiculos, onIrARentacar }) {
       titulo: [v.brand, v.model].filter(Boolean).join(" ") || v.title,
       sub: `${v.year} · ${v.transmission === "automatica" ? "Automática" : "Manual"} · ${v.seats} puestos`,
       descripcion: v.description,
-      precio: `$${Number(v.price_per_day).toFixed(0)}`, precioSub: "por día",
+      precio: `$${totalViajero("vehiculo", Number(v.price_per_day), 1).toFixed(0)}`, precioSub: "por día",
       etiqueta: "Revisión legal y física",
       onClick: onIrARentacar
     }))));
@@ -7108,7 +7160,7 @@ async function cargarCatalogoReal(){
       portada: hp.cover_image_url,
       about: hp.about || '',
       habitaciones,
-      desde: Math.min.apply(null, habitaciones.map(t => Number(t.precio_base)))
+      desde: Math.min.apply(null, habitaciones.map(t => totalViajero("alojamiento", Number(t.precio_base), 1)))
     });
   });
 
@@ -7145,10 +7197,10 @@ async function cargarCatalogoReal(){
     ).filter(Boolean)));
 
     const precios = [].concat(
-      habitaciones.map(h => Number(h.precio_base)),
+      habitaciones.map(h => totalViajero("alojamiento", Number(h.precio_base), 1)),
       susTours.map(t => t.priceCOP / TASA_COP),
       susAloj.map(a => Number(a.precioNocheUSD)),
-      susAutos.map(v => Number(v.price_per_day))
+      susAutos.map(v => totalViajero("vehiculo", Number(v.price_per_day), 1))
     ).filter(n => Number.isFinite(n) && n > 0);
     prov.precioDesdeUSD = precios.length ? Math.round(Math.min.apply(null, precios)) : null;
 
@@ -7197,6 +7249,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
   /* Las tasas primero: el catálogo convierte precios al construirse, así que
      si llegaran después las tarjetas mostrarían la conversión anterior. */
   try { await cargarTasas(); } catch (e) { console.error('No se pudieron cargar las tasas:', e); }
+  try { await cargarComisiones(); } catch (e) { console.error('No se pudieron cargar las comisiones:', e); }
   try { await cargarMetodosPago(); } catch (e) { console.error('No se pudieron cargar los métodos de pago:', e); }
   try {
     await cargarCatalogoReal();
