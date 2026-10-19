@@ -2179,6 +2179,22 @@ function VehiculoCard({ v, onReservar, conChofer, dias = 0 }) {
 }
 
 function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, conChofer = false, onClose }) {
+  const [puntos, setPuntos] = useState([]);
+
+  /* Además del sitio del pin, el dueño puede ofrecer otros: el aeropuerto,
+     un hotel, el terminal. Se muestran para que el viajero sepa que existen
+     y cuánto cuestan; el traslado se acuerda con el dueño en el chat de la
+     reserva, que es donde hoy se cierran estos detalles. */
+  useEffect(() => {
+    let vivo = true;
+    window.__tgSupabase.from("vehicle_puntos")
+      .select("nombre, municipio, costo, entrega, devolucion")
+      .eq("vehicle_id", vehiculo.id).order("costo")
+      .then(({ data }) => { if (vivo) setPuntos(data || []); });
+    return () => { vivo = false; };
+  }, [vehiculo.id]);
+
+
   const [desde, setDesde] = useState(desdeInicial || "");
   const [hasta, setHasta] = useState(hastaInicial || "");
   const [nombre, setNombre] = useState("");
@@ -2299,6 +2315,17 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, conChofer 
       : React.createElement("div", null,
           vehiculo.pickup_address && React.createElement("div", { className: "text-xs bg-slate-50 rounded-lg p-3 mb-4 leading-relaxed" },
             React.createElement("strong", null, "Entrega: "), vehiculo.pickup_address),
+
+          puntos.length > 0 && React.createElement("div", { className: "text-xs bg-slate-50 rounded-lg p-3 mb-4 leading-relaxed" },
+            React.createElement("strong", null, "También lo lleva a:"),
+            React.createElement("ul", { className: "mt-1.5" },
+              puntos.map((pt, i) => React.createElement("li", { key: i, className: "text-slate-600" },
+                pt.nombre,
+                pt.municipio ? " (" + pt.municipio + ")" : "",
+                Number(pt.costo) > 0 ? " · +$" + Number(pt.costo) : " · sin cargo",
+                !pt.entrega ? " · solo devolución" : (!pt.devolucion ? " · solo entrega" : "")))),
+            React.createElement("p", { className: "text-slate-500 mt-1.5" },
+              "Lo coordinas con el dueño por el chat de la reserva.")),
 
           React.createElement("div", { className: "grid grid-cols-2 gap-3" },
             React.createElement("label", { className: "block" },
