@@ -374,6 +374,13 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 .tg-mun.tiene{fill:rgba(76,154,255,.12);stroke:rgba(150,195,255,.5)}
 .tg-mun:hover{fill:rgba(140,185,255,.2)}
 .tg-mun.elegido{stroke-width:2.2}
+.tg-rio{fill:none;stroke:rgba(104,186,255,.4);stroke-width:1.15;stroke-linecap:round;
+  vector-effect:non-scaling-stroke;pointer-events:none}
+.tg-pueblo{fill:rgba(205,225,255,.5);pointer-events:none}
+.tg-pueblo.grande{fill:rgba(255,232,205,.9)}
+.tg-pueblo-txt{fill:rgba(236,243,255,.78);font-weight:600;text-anchor:middle;paint-order:stroke;
+  stroke:#050D1E;stroke-linejoin:round;pointer-events:none}
+.tg-pueblo-txt.vivo{fill:#fff}
 .tg-luz{fill:rgba(190,215,255,.45)}
 .tg-luz.viva{fill:#FFD9B3}
 .tg-rotulo{fill:#fff;font-weight:700;text-anchor:middle;paint-order:stroke;stroke:#050D1E;
@@ -3818,13 +3825,67 @@ const MAPA_PATHS = TACHIRA_GEO.map(m => ({
 }));
 
 const VISTA_ESTADO = [-40, -40, MAPA_W + 80, MAPA_H + 80];
+/* El lienzo se adapta a la forma del municipio, pero dentro de un margen:
+   un municipio tres veces más alto que ancho, encuadrado tal cual, deja el
+   mapa convertido en una tira. Fuera de estos límites se rellena. */
+const MAPA_RATIO_MIN = 0.58, MAPA_RATIO_MAX = 1.5;
+function encuadrar(x0, y0, x1, y1, margen) {
+  let w = (x1 - x0) + margen * 2, h = (y1 - y0) + margen * 2;
+  if (w / h > MAPA_RATIO_MAX) h = w / MAPA_RATIO_MAX;
+  else if (w / h < MAPA_RATIO_MIN) w = h * MAPA_RATIO_MIN;
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  return [cx - w / 2, cy - h / 2, w, h];
+}
 
 function cajaDeMunicipio(nombre) {
   const m = MAPA_PATHS.find(p => p.n === nombre);
   if (!m) return VISTA_ESTADO;
   const [x0, y0, x1, y1] = m.caja;
-  const margen = Math.max((x1 - x0), (y1 - y0)) * 0.3 + 18;
-  return [x0 - margen, y0 - margen, (x1 - x0) + margen * 2, (y1 - y0) + margen * 2];
+  /* El margen es corto a propósito: al elegir un municipio hay que quedar
+     dentro de él, no mirándolo de lejos. */
+  return encuadrar(x0, y0, x1, y1, Math.max(x1 - x0, y1 - y0) * 0.04 + 6);
+}
+
+/* ---- El detalle, que no viaja con la página -----------------------------
+   El contorno fino de los 29 municipios, los ríos y los 645 pueblos pesan
+   300 KB: diez veces el mapa de la portada. Visto de lejos no se distinguen
+   del dibujo estilizado, así que no se descargan hasta que alguien entra en
+   un municipio; de ahí quedan en memoria y en la caché del navegador. */
+let DETALLE = null, DETALLE_PIDIENDO = null;
+
+function unaLinea(puntos) {
+  return "M" + puntos.map(p => mx(p[0]).toFixed(1) + " " + my(p[1]).toFixed(1)).join("L");
+}
+
+function pedirDetalle() {
+  if (DETALLE) return Promise.resolve(DETALLE);
+  if (!DETALLE_PIDIENDO) {
+    DETALLE_PIDIENDO = fetch("/assets/mapa/tachira-detalle.json")
+      .then(r => r.ok ? r.json() : Promise.reject(new Error("detalle " + r.status)))
+      .then(d => {
+        const porMun = {}, pueblos = {};
+        d.m.forEach(m => { porMun[m.n] = m.r.map(r => unaLinea(r) + "Z").join(" "); });
+        d.l.forEach(([n, lng, lat, rango, municipio]) => {
+          (pueblos[municipio] = pueblos[municipio] || []).push({ n, x: mx(lng), y: my(lat), rango });
+        });
+        /* Hasta doce nombres por municipio: el resto queda como punto y dice
+           cómo se llama al pasar por encima. Cincuenta y un rótulos en
+           Ayacucho tapaban el municipio entero. */
+        Object.keys(pueblos).forEach(k => {
+          pueblos[k].sort((a, b) => a.rango - b.rango);
+          pueblos[k].forEach((p, i) => { p.rotulo = i < 12; });
+        });
+        DETALLE = { porMun, pueblos, rios: d.rios.map(r => ({ n: r.n, d: unaLinea(r.g) })) };
+        return DETALLE;
+      })
+      .catch(e => { console.warn("El mapa se queda sin detalle:", e); DETALLE_PIDIENDO = null; return null; });
+  }
+  return DETALLE_PIDIENDO;
+}
+
+/* El contorno del municipio: el fino si ya llegó, el estilizado mientras no. */
+function dibujoDe(m, detalle) {
+  return (detalle && detalle.porMun[m.n]) || m.d;
 }
 
 function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir }) {
@@ -3836,6 +3897,7 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
   const [encima, setEncima] = useState(null);
   const [vista, setVista] = useState(VISTA_ESTADO);
   const [anchoPx, setAnchoPx] = useState(560);
+  const [detalle, setDetalle] = useState(DETALLE);
   const animRef = useRef(null);
   const svgRef = useRef(null);
 
@@ -3843,7 +3905,13 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
      aleja: en un teléfono quedaba de dos píxeles, imposible de tocar. Se
      mide el lienzo y se dibuja todo en píxeles de pantalla. */
   useEffect(() => {
-    const medir = () => { if (svgRef.current) setAnchoPx(svgRef.current.getBoundingClientRect().width || 560); };
+    /* Un lienzo de cero píxeles —la pestaña todavía sin pintar— haría que
+       todo se dibujara enorme. Por debajo de 50 px no hay medida que valga. */
+    const medir = () => {
+      if (!svgRef.current) return;
+      const w = svgRef.current.getBoundingClientRect().width;
+      setAnchoPx(w > 50 ? w : 560);
+    };
     medir();
     window.addEventListener("resize", medir);
     return () => window.removeEventListener("resize", medir);
@@ -3870,6 +3938,16 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
   useEffect(() => {
     irAVista(municipioFiltro ? cajaDeMunicipio(municipioFiltro) : VISTA_ESTADO);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  }, [municipioFiltro]);
+
+  /* De cerca el contorno estilizado se nota: se pide el fino la primera vez
+     que alguien entra en un municipio. Si no llega, el mapa sigue andando
+     con el dibujo de siempre. */
+  useEffect(() => {
+    if (!municipioFiltro || detalle) return;
+    let vivo = true;
+    pedirDetalle().then(d => { if (vivo && d) setDetalle(d); });
+    return () => { vivo = false; };
   }, [municipioFiltro]);
 
   /* Los pines solo existen cuando hay algo que buscar. */
@@ -3913,9 +3991,32 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
     return s;
   }, []);
 
+  /* Los 287 tramos de río se arman una sola vez. Con el elemento ya hecho,
+     React no vuelve a recorrerlos en cada cuadro del acercamiento. */
+  const riosEl = useMemo(() => detalle && /*#__PURE__*/React.createElement("g", { className: "tg-rios" },
+    detalle.rios.map((r, i) => /*#__PURE__*/React.createElement("path", { key: i, d: r.d, className: "tg-rio" }))), [detalle]);
+
   const elegir = nombre => setMunicipioFiltro(municipioFiltro === nombre ? "" : nombre);
   const upp = vista[2] / (anchoPx || 560);          // unidades de mapa por píxel
   const px = n => n * upp;
+
+  /* Los pueblos del municipio. Cuáles llevan nombre escrito no se puede
+     decidir de antemano: depende de lo cerca que queden en pantalla. Se
+     reparten aquí, de mayor a menor, y el que caiga encima de otro ya puesto
+     se queda como punto —dice su nombre al pasarle por encima. */
+  const pueblos = (municipioFiltro && detalle && detalle.pueblos[municipioFiltro]) || [];
+  const capital = (MAPA_PATHS.find(p => p.n === municipioFiltro) || {}).cap;
+  const conNombre = new Set();
+  if (pueblos.length) {
+    const puestos = [];
+    const cap = MAPA_PATHS.find(p => p.n === municipioFiltro);
+    if (cap) puestos.push({ x: cap.cx, y: cap.cy });
+    pueblos.forEach(l => {
+      if (l.n === capital || puestos.length > 10) return;
+      if (puestos.some(o => Math.hypot(o.x - l.x, o.y - l.y) < px(34))) return;
+      puestos.push(l); conNombre.add(l);
+    });
+  }
 
   return /*#__PURE__*/React.createElement("section", { className: "tg-mapa" },
     /*#__PURE__*/React.createElement("div", { className: "tg-mapa-wrap" },
@@ -3980,13 +4081,35 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
             const senalado = encima === m.n;
             const tiene = conProductos.has(m.n);
             return /*#__PURE__*/React.createElement("path", {
-              key: m.n, d: m.d,
+              key: m.n, d: dibujoDe(m, detalle),
               onClick: () => elegir(m.n),
               onMouseEnter: () => setEncima(m.n),
               onMouseLeave: () => setEncima(null),
               className: "tg-mun" + (elegido ? " elegido" : "") + (tiene ? " tiene" : ""),
               style: elegido ? { stroke: color, fill: color + "26" } : (senalado ? { stroke: "#8FB8FF" } : null)
             });
+          }),
+
+          /* Los ríos solo aparecen de cerca: en la vista del estado serían
+             una maraña, y de cerca son lo que hace que el municipio se
+             parezca al territorio y no a una mancha. */
+          municipioFiltro ? riosEl : null,
+
+          pueblos.map(l => {
+            if (l.n === capital) return null;        // la capital ya tiene su luz y su rótulo
+            const vivo = encima === "l:" + l.n;
+            return /*#__PURE__*/React.createElement("g", {
+              key: "l" + l.n + l.x, transform: "translate(" + l.x.toFixed(1) + "," + l.y.toFixed(1) + ")",
+              onMouseEnter: () => setEncima("l:" + l.n),
+              onMouseLeave: () => setEncima(null)
+            },
+              /*#__PURE__*/React.createElement("circle", { r: px(9), fill: "transparent" }),
+              /*#__PURE__*/React.createElement("circle", {
+                r: px(l.rango <= 1 ? 2.6 : 1.8), className: "tg-pueblo" + (l.rango <= 1 ? " grande" : "") }),
+              (conNombre.has(l) || vivo) && /*#__PURE__*/React.createElement("text", {
+                y: -px(l.rango <= 1 ? 6.5 : 5.5), className: "tg-pueblo-txt" + (vivo ? " vivo" : ""),
+                style: { fontSize: px(l.rango <= 1 ? 10.5 : 9).toFixed(1) + "px", strokeWidth: px(2.6) }
+              }, l.n));
           }),
 
           /* Las capitales encendidas: son las luces del mapa. */
@@ -5786,6 +5909,14 @@ function MsMapa({ p, t }) {
   const cerca = useMemo(() => ATRACCIONES
     .filter(a => a.municipio === p.ubicacion)
     .slice(0, 6), [p.ubicacion]);
+  /* Este mapa es de cerca desde el primer segundo, así que el contorno fino
+     se pide al entrar; mientras llega se ve el estilizado. */
+  const [detalle, setDetalle] = useState(DETALLE);
+  useEffect(() => {
+    let vivo = true;
+    pedirDetalle().then(d => { if (vivo && d) setDetalle(d); });
+    return () => { vivo = false; };
+  }, []);
   const upp = caja[2] / 620;
   const px = n => n * upp;
   return React.createElement("div", {
@@ -5808,9 +5939,26 @@ function MsMapa({ p, t }) {
       React.createElement("rect", {
         x: caja[0] - 200, y: caja[1] - 200, width: caja[2] + 400, height: caja[3] + 400, fill: "url(#ms-g)" }),
       MAPA_PATHS.map(m => React.createElement("path", {
-        key: m.n, d: m.d, className: "tg-mun" + (m.n === p.ubicacion ? " tiene" : ""),
+        key: m.n, d: dibujoDe(m, detalle), className: "tg-mun" + (m.n === p.ubicacion ? " tiene" : ""),
         style: { pointerEvents: "none", fill: m.n === p.ubicacion ? "rgba(255,107,0,.14)" : "rgba(140,185,255,.05)",
                  stroke: m.n === p.ubicacion ? "#FF8A33" : "rgba(130,175,255,.26)" } })),
+      detalle && React.createElement("g", null,
+        detalle.rios.map((r, i) => React.createElement("path", { key: "r" + i, d: r.d, className: "tg-rio" }))),
+      detalle && (() => {
+        /* Mismo reparto que en el mapa grande: nombre al que quepa. */
+        const puestos = [{ x: mx(p.lng), y: my(p.lat) }], conN = [];
+        (detalle.pueblos[p.ubicacion] || []).forEach(l => {
+          if (puestos.length > 9) return;
+          if (puestos.some(o => Math.hypot(o.x - l.x, o.y - l.y) < px(36))) return;
+          puestos.push(l); conN.push(l);
+        });
+        return conN;
+      })().map(l =>
+        React.createElement("g", { key: "l" + l.n + l.x, transform: "translate(" + l.x.toFixed(1) + "," + l.y.toFixed(1) + ")" },
+          React.createElement("circle", { r: px(l.rango <= 1 ? 2.6 : 1.8), className: "tg-pueblo" + (l.rango <= 1 ? " grande" : "") }),
+          React.createElement("text", {
+            y: -px(l.rango <= 1 ? 6.5 : 5.5), className: "tg-pueblo-txt",
+            style: { fontSize: px(l.rango <= 1 ? 10.5 : 9).toFixed(1) + "px", strokeWidth: px(2.6) } }, l.n))),
       cerca.map(a => React.createElement("g", {
         key: a.id, transform: "translate(" + mx(a.lng).toFixed(1) + "," + my(a.lat).toFixed(1) + ")" },
         React.createElement("circle", { r: px(5), fill: "#C9A4FF", opacity: .85 }),
