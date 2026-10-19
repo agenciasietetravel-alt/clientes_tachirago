@@ -7303,8 +7303,13 @@ function App() {
     setActiveProvider(p);
     setView("provider");
     /* El micrositio necesita dirección propia: es lo que el negocio comparte
-       en sus redes. Sin esto la página existe pero no se puede enlazar. */
-    if (!sinHistorial && p && p.slug) {
+       en sus redes. Sin esto la página existe pero no se puede enlazar.
+       La dirección se pone solo si el negocio está en la lista autorizada: al
+       entrar por esa misma dirección la aplicación la busca ahí, y una que no
+       figure contestaría «no encontrada» —dejaríamos al visitante con un
+       enlace roto en la barra. */
+    const autorizado = p && p.slug && ELITE_PROVIDERS.some(x => x.id === p.id || x.slug === p.slug);
+    if (!sinHistorial && autorizado) {
       window.history.pushState({ slug: p.slug }, "", "/" + p.slug);
     }
     window.scrollTo({ top: 0, behavior: "smooth" });

@@ -12,15 +12,22 @@ async function consulta(ruta) {
   return r.json();
 }
 
+/* Quién tiene página propia no se decide aquí. La vista 'micrositios' ya
+   cruza las tres condiciones —negocio verificado, dirección propia elegida y
+   módulo de micrositio activo— y es la misma que mira el navegador. Antes
+   esto preguntaba por 'providers' aprobados con slug: el sitemap, el
+   pre-renderizado y llms.txt publicaban páginas de negocios que todavía no
+   tienen el módulo, y el buscador terminaba indexando direcciones que la
+   aplicación contesta con un «no encontrada». */
 async function catalogo() {
   const [negocios, listados, habitaciones, vehiculos] = await Promise.all([
-    consulta('providers?select=*&verification_status=eq.approved'),
+    consulta('micrositios?select=*'),
     consulta('listings?select=*,providers(business_name,slug)&status=eq.published'),
     consulta('room_types?select=*&status=eq.published'),
     consulta('vehicles?select=*&status=eq.published&is_approved=eq.true')
   ]);
   return {
-    negocios: negocios.filter(n => n.slug),
+    negocios,
     listados,
     habitaciones,
     vehiculos

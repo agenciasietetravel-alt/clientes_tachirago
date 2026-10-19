@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
         loc: `${SITIO}/${n.slug}`,
         prioridad: '0.8',
         frecuencia: 'weekly',
-        fecha: (fechas[fechas.length - 1] || n.created_at || hoy).slice(0, 10)
+        fecha: (fechas[fechas.length - 1] || n.microsite_published_at || hoy).slice(0, 10)
       });
     });
   } catch (e) { /* al menos la portada entra en el sitemap */ }
