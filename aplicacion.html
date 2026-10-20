@@ -5880,49 +5880,96 @@ function MsBoton({ t, onClick, href, children, secundario }) {
 }
 
 /* ---------------------------------------------------------------- PORTADA */
+/* La portada en cinco plantillas. No cambia lo que dice: cambia cómo entra.
+   "sobria" no usa foto —hay negocios que no tienen una buena y es mejor un
+   color limpio que una imagen borrosa—; "partida" pone la foto a un lado,
+   así que el texto va sobre el fondo del negocio y no sobre la imagen. */
 function MsPortada({ p, t, onVerOferta }) {
+  const forma = t.heroForma || "plena";
+  const velo = t.heroVelo == null ? 0.45 : t.heroVelo;
+  const centrado = (t.heroAlineacion || "izquierda") === "centro";
+  const conFoto = forma !== "sobria" && !!p.portada;
+  const partida = forma === "partida";
+  const tarjeta = forma === "tarjeta";
+  /* Sobre foto con velo el texto va en blanco; sin foto, en el color del
+     negocio: blanco sobre blanco no se lee. La tarjeta cuenta como "sin
+     foto" aunque haya una detrás —el texto va dentro de la tarjeta, sobre
+     su propio fondo, no sobre la imagen. */
+  const sobreFoto = conFoto && !partida && !tarjeta && velo > 0.15;
+  const colorTitulo = sobreFoto ? "#fff" : t.texto;
+  const colorTexto = sobreFoto ? "rgba(255,255,255,.93)" : t.tenue;
+
+  const bloque = React.createElement("div", {
+    style: Object.assign(
+      { position: "relative", width: "100%", maxWidth: partida ? 560 : 1120,
+        margin: partida ? 0 : "0 auto", padding: partida ? "0 44px" : "0 20px 54px",
+        textAlign: centrado ? "center" : "left" },
+      tarjeta ? { background: t.fondo, borderRadius: t.radio, padding: "34px 36px",
+                  maxWidth: 580, margin: centrado ? "0 auto" : "0 0 46px 0",
+                  boxShadow: "0 18px 50px rgba(0,0,0,.28)" } : null) },
+    p.logo ? React.createElement("img", {
+      src: p.logo, alt: "",
+      style: { width: 78, height: 78, objectFit: "cover", borderRadius: t.radio,
+               border: "3px solid #fff", background: "#fff", display: "block", marginBottom: 18,
+               marginLeft: centrado ? "auto" : 0, marginRight: centrado ? "auto" : 0 }
+    }) : null,
+    React.createElement("h1", {
+      style: { fontFamily: t.titulo, fontWeight: t.tituloPeso, letterSpacing: t.tituloEspaciado,
+               color: colorTitulo, fontSize: "clamp(32px, 5.4vw, 56px)", lineHeight: 1.05, margin: 0,
+               textShadow: sobreFoto ? "0 2px 22px rgba(0,0,0,.4)" : "none", maxWidth: 820 }
+    }, p.nombre),
+    p.lema ? React.createElement("p", {
+      style: { fontFamily: t.cuerpo, color: colorTexto, fontSize: 17.5,
+               marginTop: 14, maxWidth: 580, lineHeight: 1.55,
+               marginLeft: centrado ? "auto" : 0, marginRight: centrado ? "auto" : 0 }
+    }, p.lema) : null,
+    React.createElement("div", {
+      style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, marginTop: 18,
+               justifyContent: centrado ? "center" : "flex-start",
+               fontFamily: t.cuerpo, fontSize: 13,
+               color: sobreFoto ? "rgba(255,255,255,.85)" : t.tenue }
+    },
+      React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 5 } },
+        React.createElement(MapPin, { size: 14 }), p.ubicacion, ", Táchira"),
+      p.anioFundacion ? React.createElement("span", null, "Desde ", p.anioFundacion) : null,
+      p.rating ? React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 5 } },
+        React.createElement(Star, { size: 14, style: { fill: t.acento2, color: t.acento2 } }),
+        p.rating, " · ", p.reviews, p.reviews === 1 ? " reseña" : " reseñas") : null),
+    React.createElement("div", { style: { marginTop: 26 } },
+      React.createElement(MsBoton, { t, onClick: onVerOferta }, "Ver disponibilidad")));
+
+  const foto = conFoto ? React.createElement("img", {
+    src: p.portada, alt: "",
+    style: { position: partida ? "relative" : "absolute", inset: partida ? "auto" : 0,
+             width: "100%", height: "100%", objectFit: "cover", display: "block" }
+  }) : null;
+
+  if (partida) {
+    return React.createElement("header", { style: { background: t.fondo } },
+      React.createElement("div", {
+        style: { display: "grid", gridTemplateColumns: conFoto ? "1fr 1fr" : "1fr",
+                 minHeight: t.heroAlto, alignItems: "center" }
+      },
+        React.createElement("div", {
+          style: { display: "flex", alignItems: "center", padding: "46px 0" } }, bloque),
+        conFoto ? React.createElement("div", {
+          style: { position: "relative", alignSelf: "stretch", overflow: "hidden" } }, foto) : null));
+  }
+
   return React.createElement("header", { style: { position: "relative", background: t.suave } },
     React.createElement("div", {
-      style: { position: "relative", minHeight: t.heroAlto, display: "flex", alignItems: "flex-end",
-               overflow: "hidden" }
+      style: { position: "relative", minHeight: t.heroAlto, display: "flex",
+               alignItems: centrado ? "center" : "flex-end",
+               justifyContent: centrado ? "center" : "flex-start",
+               background: conFoto ? undefined : t.suave, overflow: "hidden" }
     },
-      p.portada ? React.createElement("img", {
-        src: p.portada, alt: "",
-        style: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }
-      }) : null,
-      React.createElement("div", {
+      foto,
+      conFoto && velo > 0 ? React.createElement("div", {
         style: { position: "absolute", inset: 0,
-                 background: "linear-gradient(to top, rgba(0,0,0,.82) 0%, rgba(0,0,0,.35) 45%, rgba(0,0,0,.12) 100%)" }
-      }),
-      React.createElement("div", {
-        style: { position: "relative", maxWidth: 1120, margin: "0 auto", padding: "0 20px 54px", width: "100%" }
-      },
-        p.logo ? React.createElement("img", {
-          src: p.logo, alt: "",
-          style: { width: 78, height: 78, objectFit: "cover", borderRadius: t.radio,
-                   border: "3px solid #fff", background: "#fff", display: "block", marginBottom: 18 }
-        }) : null,
-        React.createElement("h1", {
-          style: { fontFamily: t.titulo, fontWeight: t.tituloPeso, letterSpacing: t.tituloEspaciado,
-                   color: "#fff", fontSize: "clamp(32px, 5.4vw, 56px)", lineHeight: 1.05, margin: 0,
-                   textShadow: "0 2px 22px rgba(0,0,0,.4)", maxWidth: 820 }
-        }, p.nombre),
-        p.lema ? React.createElement("p", {
-          style: { fontFamily: t.cuerpo, color: "rgba(255,255,255,.93)", fontSize: 17.5,
-                   marginTop: 14, maxWidth: 580, lineHeight: 1.55 }
-        }, p.lema) : null,
-        React.createElement("div", {
-          style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, marginTop: 18,
-                   fontFamily: t.cuerpo, fontSize: 13, color: "rgba(255,255,255,.85)" }
-        },
-          React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 5 } },
-            React.createElement(MapPin, { size: 14 }), p.ubicacion, ", Táchira"),
-          p.anioFundacion ? React.createElement("span", null, "Desde ", p.anioFundacion) : null,
-          p.rating ? React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 5 } },
-            React.createElement(Star, { size: 14, style: { fill: t.acento2, color: t.acento2 } }),
-            p.rating, " · ", p.reviews, p.reviews === 1 ? " reseña" : " reseñas") : null),
-        React.createElement("div", { style: { marginTop: 26 } },
-          React.createElement(MsBoton, { t, onClick: onVerOferta }, "Ver disponibilidad")))));
+                 background: "linear-gradient(to top, rgba(0,0,0," + (velo + 0.37).toFixed(2) + ") 0%, rgba(0,0,0,"
+                   + (velo * 0.78).toFixed(2) + ") 45%, rgba(0,0,0," + (velo * 0.27).toFixed(2) + ") 100%)" }
+      }) : null,
+      bloque));
 }
 
 /* -------------------------------------------------------------- NOSOTROS */
@@ -6292,20 +6339,21 @@ function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrA
         ? React.createElement(MsFlota, { p, t, ancla: "ms-oferta", vehiculos, onIrARentacar })
         : React.createElement(MsExperiencias, { p, t, ancla: "ms-oferta", tours, onSelectTour, currency }),
 
-    seccionVisible(p, "nosotros") ? React.createElement(MsNosotros, { p, t }) : null,
-    seccionVisible(p, "galeria") ? React.createElement(MsGaleria, { p, t }) : null,
-
-    seccionVisible(p, "catalogo") ? React.createElement(React.Fragment, null,
-      React.createElement(MsCatalogo, {
-        p, t, items: secundarios, titulo: "Tours y experiencias", onSelectTour }),
-      rubro !== "flota" && vehiculos.length
-        ? React.createElement(MsFlota, { p, t, vehiculos, onIrARentacar }) : null,
-      rubro !== "habitaciones" && hotel
-        ? React.createElement(MsHabitaciones, { p, t, hotel, onAbrir: setHotelAbierto }) : null
-    ) : null,
-
-    seccionVisible(p, "resenas") ? React.createElement(MsResenas, { p, t }) : null,
-    seccionVisible(p, "ubicacion") ? React.createElement(MsUbicacion, { p, t }) : null,
+    /* Las secciones de abajo van en el orden que puso el dueño. */
+    seccionesDe(p).map(id => {
+      if (id === "nosotros") return React.createElement(MsNosotros, { key: id, p, t });
+      if (id === "galeria") return React.createElement(MsGaleria, { key: id, p, t });
+      if (id === "resenas") return React.createElement(MsResenas, { key: id, p, t });
+      if (id === "ubicacion") return React.createElement(MsUbicacion, { key: id, p, t });
+      if (id === "catalogo") return React.createElement(React.Fragment, { key: id },
+        React.createElement(MsCatalogo, {
+          p, t, items: secundarios, titulo: "Tours y experiencias", onSelectTour }),
+        rubro !== "flota" && vehiculos.length
+          ? React.createElement(MsFlota, { p, t, vehiculos, onIrARentacar }) : null,
+        rubro !== "habitaciones" && hotel
+          ? React.createElement(MsHabitaciones, { p, t, hotel, onAbrir: setHotelAbierto }) : null);
+      return null;
+    }),
 
     React.createElement(MsOtrosDestinos, { p, t, onIrAInicio }),
     React.createElement(MsPie, { p, t, onBack, onOpenLegal }),
@@ -6813,7 +6861,59 @@ const TEMAS = {
   }
 };
 
-function temaDe(p){ return TEMAS[(p && p.tema) || "clasico"] || TEMAS.clasico; }
+/* ---- Paleta, tipografía y portada, cada una por su lado -----------------
+   El tema de antes ataba colores, letra y forma en un solo paquete: quien
+   quería el verde del Andino se llevaba su serifa de propina. Ahora las
+   tres se eligen sueltas, y el catálogo vive en la base —tabla ms_estilos—
+   para que el portal del proveedor y esta página pinten lo mismo sin que
+   nadie tenga que desplegar dos veces.
+
+   El tema sigue siendo el punto de partida: un negocio que nunca entró al
+   personalizador se ve exactamente igual que antes. */
+const ESTILOS = { paleta: {}, tipografia: {}, portada: {}, listas: { paleta: [], tipografia: [], portada: [] } };
+
+function guardarEstilos(filas) {
+  (filas || []).forEach(f => {
+    if (!ESTILOS[f.tipo]) return;
+    const e = Object.assign({ id: f.id, nombre: f.nombre, resumen: f.resumen }, f.valores || {});
+    ESTILOS[f.tipo][f.id] = e;
+    ESTILOS.listas[f.tipo].push(e);
+  });
+  pedirLetras();
+}
+
+/* Las fuentes de Google solo se piden si alguna página las usa de verdad. */
+const LETRAS_PEDIDAS = new Set();
+function pedirLetras() {
+  const familias = [];
+  ESTILOS.listas.tipografia.forEach(t => (t.web || []).forEach(w => {
+    if (!LETRAS_PEDIDAS.has(w)) { LETRAS_PEDIDAS.add(w); familias.push(w); }
+  }));
+  if (!familias.length) return;
+  const l = document.createElement("link");
+  l.rel = "stylesheet";
+  l.href = "https://fonts.googleapis.com/css2?" + familias.map(f => "family=" + f).join("&") + "&display=swap";
+  document.head.appendChild(l);
+}
+
+function temaDe(p){
+  const base = TEMAS[(p && p.tema) || "clasico"] || TEMAS.clasico;
+  const pal = p && p.paleta && ESTILOS.paleta[p.paleta];
+  const tip = p && p.tipografia && ESTILOS.tipografia[p.tipografia];
+  const por = p && p.plantillaPortada && ESTILOS.portada[p.plantillaPortada];
+  if (!pal && !tip && !por) return base;
+  const t = Object.assign({}, base);
+  if (pal) Object.assign(t, {
+    acento: pal.acento, acento2: pal.acento2, fondo: pal.fondo, suave: pal.suave,
+    texto: pal.texto, tenue: pal.tenue, borde: pal.borde });
+  if (tip) Object.assign(t, {
+    titulo: tip.titulo, cuerpo: tip.cuerpo,
+    tituloPeso: tip.peso, tituloEspaciado: tip.espaciado });
+  if (por) Object.assign(t, {
+    heroAlto: por.alto, heroAlineacion: por.alineacion,
+    heroVelo: por.velo, heroForma: por.forma });
+  return t;
+}
 
 /* Las secciones que el negocio puede quitar. La portada y su rubro principal
    no están aquí: son lo que vende, siempre van. */
@@ -6827,6 +6927,15 @@ const SECCIONES_MICROSITIO = [
 
 function seccionVisible(p, id){
   return !((p && p.seccionesOcultas) || []).includes(id);
+}
+
+/* El orden lo pone el dueño; lo que no haya nombrado va detrás, como
+   estaba. Así una lista vieja o a medias nunca pierde una sección. */
+function seccionesDe(p){
+  const base = SECCIONES_MICROSITIO.map(x => x.id);
+  const suyo = ((p && p.seccionesOrden) || []).filter(id => base.includes(id));
+  return suyo.concat(base.filter(id => !suyo.includes(id)))
+             .filter(id => seccionVisible(p, id));
 }
 
 /* Qué vende principalmente este negocio: es lo primero que ve el viajero. */
@@ -7886,6 +7995,15 @@ async function cargarCatalogoReal(){
      una operadora sin membresía no aparece aquí aunque esté aprobada. */
   const { data: paginas, error: errMs } = await sb.from('micrositios').select('*');
   if (errMs) console.error('Error cargando micrositios:', errMs.message);
+
+  /* El catálogo de estilos viaja con los micrositios: si no hay ninguno,
+     tampoco hace falta. Sin él, cada página se ve con su tema de siempre. */
+  if ((paginas || []).length) {
+    const { data: estilos, error: errEst } = await sb.from('ms_estilos')
+      .select('tipo,id,nombre,resumen,valores,orden').order('tipo').order('orden');
+    if (errEst) console.error('Error cargando estilos:', errEst.message);
+    else guardarEstilos(estilos);
+  }
   (paginas || []).forEach(p => {
     ELITE_PROVIDERS.push({
       id: p.id,
@@ -7902,7 +8020,12 @@ async function cargarCatalogoReal(){
       tagline: p.cover_title || p.cover_tagline || '',
       /* Lo que el negocio configura de su propia página. */
       tema: p.tema || 'clasico',
+      paleta: p.paleta || null,
+      tipografia: p.tipografia || null,
+      /* "portada" ya era la foto; la plantilla necesita su propio nombre. */
+      plantillaPortada: p.portada || null,
       seccionesOcultas: p.secciones_ocultas || [],
+      seccionesOrden: p.secciones_orden || null,
       lema: p.lema || p.cover_tagline || '',
       historia: p.historia || '',
       queHacemos: p.que_hacemos || '',
