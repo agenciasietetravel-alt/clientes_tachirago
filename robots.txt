@@ -1,4 +1,4 @@
-# Táchira GOO!!! — https://tachiragoo.com
+# Andes GOO! — https://tachiragoo.com
 
 User-agent: *
 Allow: /

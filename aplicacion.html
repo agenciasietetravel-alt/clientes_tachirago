@@ -3,11 +3,11 @@
 <meta charset="UTF-8">
 <!-- maximum-scale bloqueaba el zoom: es un problema de accesibilidad y Google lo penaliza. -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Qué hacer en Táchira: tours, posadas y alquiler de vehículos | Táchira GOO!!!</title>
-<meta name="description" content="Reserva tours, posadas, experiencias y alquiler de vehículos en el estado Táchira. Proveedores locales verificados en San Cristóbal, La Grita, Lobatera y todo el estado. Pago protegido y confirmación por WhatsApp.">
+<title>Qué hacer en Táchira y Mérida: tours, posadas y alquiler de vehículos | Andes GOO!</title>
+<meta name="description" content="Reserva tours, posadas, experiencias y alquiler de vehículos en los Andes venezolanos. Proveedores locales verificados en San Cristóbal, La Grita, Lobatera y todo el estado Táchira. Pago protegido y confirmación por WhatsApp.">
 <link rel="canonical" href="https://tachiragoo.com/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-<meta name="author" content="Táchira GOO!!!">
+<meta name="author" content="Andes GOO!">
 <meta name="theme-color" content="#0052CC">
 <meta http-equiv="content-language" content="es-VE">
 <link rel="alternate" hreflang="es-ve" href="https://tachiragoo.com/">
@@ -27,18 +27,18 @@
 
 <!-- Lo que se ve al pegar el enlace en WhatsApp, Instagram o Facebook. -->
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Táchira GOO!!!">
+<meta property="og:site_name" content="Andes GOO!">
 <meta property="og:locale" content="es_VE">
-<meta property="og:title" content="Qué hacer en Táchira: tours, posadas y alquiler de vehículos">
-<meta property="og:description" content="Reserva con proveedores locales verificados del estado Táchira. Tours al páramo, posadas de montaña, experiencias y vehículos. Pago protegido.">
+<meta property="og:title" content="Qué hacer en Táchira y Mérida: tours, posadas y alquiler de vehículos">
+<meta property="og:description" content="Reserva con proveedores locales verificados de los Andes venezolanos. Tours al páramo, posadas de montaña, experiencias y vehículos. Pago protegido.">
 <meta property="og:url" content="https://tachiragoo.com/">
 <meta property="og:image" content="https://tachiragoo.com/assets/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Táchira GOO!!! — qué hacer, dónde dormir y cómo moverte por el estado Táchira">
+<meta property="og:image:alt" content="Andes GOO! — qué hacer, dónde dormir y cómo moverte por los Andes venezolanos">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Qué hacer en Táchira: tours, posadas y alquiler de vehículos">
-<meta name="twitter:description" content="Reserva con proveedores locales verificados del estado Táchira.">
+<meta name="twitter:title" content="Qué hacer en Táchira y Mérida: tours, posadas y alquiler de vehículos">
+<meta name="twitter:description" content="Reserva con proveedores locales verificados de los Andes venezolanos.">
 <meta name="twitter:image" content="https://tachiragoo.com/assets/og.jpg">
 
 <link rel="preconnect" href="https://vkgxvckooykxfulclodj.supabase.co" crossorigin>
@@ -354,6 +354,8 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
   text-transform:uppercase;color:#FFD9B3;background:rgba(255,138,51,.18);
   border:1px solid rgba(255,138,51,.42);border-radius:999px;padding:3px 9px;margin-top:9px}
 .tg-estado.on{background:rgba(76,154,255,.2);border-color:#7FB2FF}
+.tg-estado.edo-merida:hover{border-color:rgba(130,232,200,.6)}
+.tg-estado.on.edo-merida{background:rgba(46,196,150,.2);border-color:#6FE0BA}
 .tg-estados.chico{grid-template-columns:auto auto;justify-content:start;gap:8px;margin-bottom:16px}
 .tg-estados.chico .tg-estado{padding:8px 16px;border-radius:999px}
 .tg-estados.chico .tg-estado b{font-size:14px;font-weight:700}
@@ -384,18 +386,31 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 
 .tg-mapa-lienzo{position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(120,170,255,.2);
   box-shadow:0 24px 70px rgba(0,0,0,.5),inset 0 0 90px rgba(31,111,229,.1)}
+.tg-mapa-lienzo.edo-merida{border-color:rgba(120,224,190,.22);
+  box-shadow:0 24px 70px rgba(0,0,0,.5),inset 0 0 90px rgba(28,150,116,.12)}
 .tg-svg{display:block;width:100%;height:auto;max-height:70vh;touch-action:manipulation}
 
-.tg-mun{fill:rgba(140,185,255,.05);stroke:rgba(130,175,255,.3);stroke-width:1.1;vector-effect:non-scaling-stroke;cursor:pointer;
+/* Dos estados pegados con el mismo azul se leen como un solo territorio.
+   El dibujo es idéntico —mismo trazo, mismas opacidades—; lo único que
+   cambia por estado es el tono, y vive en estas variables. */
+.tg-mun{--mf:140,185,255;--mv:76,154,255;--ms:130,175,255;--msv:150,195,255;--msa:170,205,255;
+  --ma:.05;--msl:.3;
+  fill:rgba(var(--mf),var(--ma));stroke:rgba(var(--ms),var(--msl));stroke-width:1.1;vector-effect:non-scaling-stroke;cursor:pointer;
   transition:fill .22s,stroke .22s}
-.tg-mun.tiene{fill:rgba(76,154,255,.12);stroke:rgba(150,195,255,.5)}
-.tg-mun:hover{fill:rgba(140,185,255,.2)}
+/* Mérida lleva más fuerza que el azul: con la misma opacidad los dos tonos
+   se confunden de lejos, que es justo lo que había que evitar. */
+.tg-mun.edo-merida{--mf:90,222,180;--mv:46,206,156;--ms:86,214,174;--msv:120,230,192;--msa:150,240,206;
+  --ma:.09;--msl:.46}
+.tg-mun.tiene{fill:rgba(var(--mv),.12);stroke:rgba(var(--msv),.5)}
+.tg-mun:hover{fill:rgba(var(--mf),calc(var(--ma) + .15))}
 .tg-mun.elegido{stroke-width:2.2}
 /* El estado que no está elegido se apaga: se sigue viendo, no estorba. */
-.tg-mun.lejos{fill:rgba(140,185,255,.03);stroke:rgba(130,175,255,.16)}
-.tg-mun.vecino{fill:rgba(140,185,255,.17);stroke:rgba(170,205,255,.6)}
-.tg-edo-rotulo{fill:rgba(255,255,255,.3);font-weight:800;text-anchor:middle;pointer-events:none}
+.tg-mun.lejos{fill:rgba(var(--mf),calc(var(--ma) * .6));stroke:rgba(var(--ms),calc(var(--msl) * .52))}
+.tg-mun.vecino{fill:rgba(var(--mf),.17);stroke:rgba(var(--msa),.6)}
+.tg-edo-rotulo{fill:rgba(214,230,255,.32);font-weight:800;text-anchor:middle;pointer-events:none}
+.tg-edo-rotulo.edo-merida{fill:rgba(150,240,208,.42)}
 .tg-luz.lejos{opacity:.3}
+.tg-luz.edo-merida{fill:rgba(170,246,216,.6)}
 .tg-rio{fill:none;stroke:rgba(104,186,255,.4);stroke-width:1.15;stroke-linecap:round;
   vector-effect:non-scaling-stroke;pointer-events:none}
 .tg-pueblo{fill:rgba(205,225,255,.5);pointer-events:none}
@@ -862,7 +877,7 @@ function getFeaturedItem(provider) {
    ========================================================================== */
 
 /* Punto 7: marca visual del logo — silueta andina (tres picos) + acento floral,  
-   manteniendo el nombre "Táchira GOO!!!" intacto. */  
+   manteniendo el nombre "Andes GOO!" intacto. */  
 function TachiraMark({  
   size = 30  
 }) {  
@@ -991,7 +1006,7 @@ function JoinProviderModal({
     className: "flex items-start justify-between mb-1 gap-3"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "text-lg font-bold text-slate-900"
-  }, "Registra tu negocio en Táchira GOO!!!"), /*#__PURE__*/React.createElement("button", {
+  }, "Registra tu negocio en Andes GOO!"), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     "aria-label": "Cerrar"
   }, /*#__PURE__*/React.createElement(X, {
@@ -1123,9 +1138,9 @@ function Navbar({
     className: "flex items-center gap-1.5"  
   }, /*#__PURE__*/React.createElement("span", {  
     className: "text-xl sm:text-2xl font-black tracking-tight text-[#0052CC]"  
-  }, "Táchira"), /*#__PURE__*/React.createElement("span", {  
+  }, "Andes"), /*#__PURE__*/React.createElement("span", {  
     className: "text-xl sm:text-2xl font-black tracking-tight text-[#FF6B00] italic -rotate-2 inline-block"  
-  }, "GOO!!!"))), /*#__PURE__*/React.createElement("nav", {  
+  }, "GOO!"))), /*#__PURE__*/React.createElement("nav", {  
     className: "hidden md:flex items-center gap-1 ml-4 relative z-30"  
   }, menus.map(menu => {  
     const {  
@@ -1633,7 +1648,7 @@ function FlightQuoteModal({
   const resumen = () => {
     const ida = datos.tripType === "ida" ? "Solo ida" : "Ida y vuelta";
     const vuelta = datos.fechaVuelta ? `\nRegreso: ${datos.fechaVuelta}` : "";
-    return `Hola, quiero cotizar un vuelo desde Táchira GOO!!!\n\n` + `Tipo: ${ida}\n` + `Origen: ${datos.origen}\n` + `Destino: ${datos.destino}\n` + `Salida: ${datos.fechaIda}${vuelta}\n` + `Pasajeros: ${datos.pasajeros}\n\n` + `Mi nombre: ${nombre}\n` + `Mi teléfono: ${telefono}` + (email ? `\nMi correo: ${email}` : "") + (notas ? `\n\nNotas: ${notas}` : "");
+    return `Hola, quiero cotizar un vuelo desde Andes GOO!\n\n` + `Tipo: ${ida}\n` + `Origen: ${datos.origen}\n` + `Destino: ${datos.destino}\n` + `Salida: ${datos.fechaIda}${vuelta}\n` + `Pasajeros: ${datos.pasajeros}\n\n` + `Mi nombre: ${nombre}\n` + `Mi teléfono: ${telefono}` + (email ? `\nMi correo: ${email}` : "") + (notas ? `\n\nNotas: ${notas}` : "");
   };
 
   const enviar = async () => {
@@ -2178,7 +2193,7 @@ function ReservaHotelModal({ hotel, dato, checkIn, checkOut, noches, huespedes, 
       /* El recargo se muestra aparte. Un total que no cuadra con la tarifa
          anunciada es lo que hace que la gente abandone el pago. */
       servicio > 0 ? /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1 text-slate-600" },
-        /*#__PURE__*/React.createElement("span", null, "Servicio Táchira GOO"),
+        /*#__PURE__*/React.createElement("span", null, "Servicio Andes GOO"),
         /*#__PURE__*/React.createElement("span", null, "$", servicio.toFixed(2))) : null,
       /*#__PURE__*/React.createElement("div", { className:"flex justify-between py-1 font-semibold text-slate-900" },
         /*#__PURE__*/React.createElement("span", null, "Total"),
@@ -2507,7 +2522,7 @@ function ReservaVehiculoModal({ vehiculo, desdeInicial, hastaInicial, conChofer 
               React.createElement("span", { className:"text-slate-600" }, dias.length, " ", dias.length===1?"día":"días"),
               React.createElement("span", null, "$", tarifa.toFixed(2))),
             servicio > 0 && React.createElement("div", { className:"flex justify-between py-1" },
-              React.createElement("span", { className:"text-slate-600" }, "Servicio Táchira GOO"),
+              React.createElement("span", { className:"text-slate-600" }, "Servicio Andes GOO"),
               React.createElement("span", null, "$", servicio.toFixed(2))),
             React.createElement("div", { className:"flex justify-between py-1 font-semibold text-slate-900" },
               React.createElement("span", null, "Total"),
@@ -2887,7 +2902,7 @@ function TourQuotePage({ tipo, onClose }) {
 
   const mensaje = () => {
     const etiqueta = nacional ? "tour nacional" : "tour internacional";
-    return `Hola, quiero cotizar un ${etiqueta} desde Táchira GOO!!!\n\n` +
+    return `Hola, quiero cotizar un ${etiqueta} desde Andes GOO!\n\n` +
       `Destino: ${destinoFinal}\n` +
       `Salida: ${fechaIda}\n` +
       (fechaVuelta ? `Regreso: ${fechaVuelta}\n` : "") +
@@ -3689,7 +3704,7 @@ function EliteProvidersSection({
     className: "text-xl font-bold text-slate-900"  
   }, "Proveedores Élite verificados")), /*#__PURE__*/React.createElement("p", {  
     className: "text-sm text-slate-500 mb-4"  
-  }, "Operadores turísticos con trayectoria comprobada en Táchira. Reserva con la confianza de Táchira GOO!!!"), /*#__PURE__*/React.createElement("div", {  
+  }, "Operadores turísticos con trayectoria comprobada en Táchira. Reserva con la confianza de Andes GOO!"), /*#__PURE__*/React.createElement("div", {  
     className: "flex gap-4 overflow-x-auto pb-2 -mx-1 px-1"  
   }, ELITE_PROVIDERS.map(p => /*#__PURE__*/React.createElement(ProviderCard, {  
     key: p.id,  
@@ -3766,7 +3781,7 @@ function FeaturedToursSection({
   return /*#__PURE__*/React.createElement("section", {  
     className: "max-w-6xl mx-auto px-4 py-8 border-b border-slate-100"  
   }, /*#__PURE__*/React.createElement(SectionEyebrow, {  
-    text: "Selección de Táchira GOO!!!",  
+    text: "Selección de Andes GOO!",  
     acento: "#0052CC"  
   }), /*#__PURE__*/React.createElement("h2", {  
     className: "text-xl font-bold text-slate-900 mb-4"  
@@ -3815,7 +3830,7 @@ function ProductsGridSection({
     acento: "#0052CC"  
   }), /*#__PURE__*/React.createElement("h2", {  
     className: "text-xl font-bold text-slate-900 mb-3"  
-  }, "Explora todo lo que Táchira GOO!!! tiene para ti"), /*#__PURE__*/React.createElement("div", {  
+  }, "Explora todo lo que Andes GOO! tiene para ti"), /*#__PURE__*/React.createElement("div", {  
     className: "flex flex-wrap items-center gap-3 mb-5"  
   }, /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-2"  
@@ -3907,6 +3922,11 @@ const ESTADOS_MAPA = [
     frase: "23 municipios. Estamos abriendo: aún no hay negocios publicados.", abierto: false }
 ];
 const ESTADO_POR_DEFECTO = "tachira";
+
+/* Táchira en azul, Mérida en verde de páramo: el mismo dibujo, otro tono.
+   Pegados y del mismo color se leían como un solo territorio. */
+const COLOR_ESTADO = { tachira: "#4C9AFF", merida: "#2EC496" };
+const claseEstado = id => "edo-" + id;
 
 const MAPA_PATHS = ESTADOS_MAPA.flatMap(e => e.geo.map(m => ({
   n: m.n, cap: m.cap, estado: e.id,
@@ -4214,7 +4234,7 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
           ESTADOS_MAPA.map(e => /*#__PURE__*/React.createElement("button", {
             key: e.id,
             onClick: () => elegirEstado(estadoSel === e.id ? null : e.id),
-            className: "tg-estado" + (estadoSel === e.id ? " on" : ""),
+            className: "tg-estado " + claseEstado(e.id) + (estadoSel === e.id ? " on" : ""),
             "aria-pressed": estadoSel === e.id
           },
             /*#__PURE__*/React.createElement("b", null, e.nombre),
@@ -4252,7 +4272,8 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
              /*#__PURE__*/React.createElement("b", null, p.nombre),
              p.pie && /*#__PURE__*/React.createElement("span", null, p.pie))))),
 
-      /*#__PURE__*/React.createElement("div", { className: "tg-mapa-lienzo" },
+      /*#__PURE__*/React.createElement("div", {
+        className: "tg-mapa-lienzo" + (estadoSel ? " " + claseEstado(estadoSel) : "") },
         /*#__PURE__*/React.createElement("svg", {
           ref: svgRef, viewBox: vista.join(" "), className: "tg-svg",
           role: "img", "aria-label": "Mapa de los estados Táchira y Mérida"
@@ -4286,14 +4307,19 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
                es lo que se va a elegir al tocar, así que es lo que se enseña. */
             const estadoEncima = !estadoSel && encima &&
               (MAPA_PATHS.find(p => p.clave === encima) || {}).estado === m.estado;
+            const tinte = capa ? color : COLOR_ESTADO[m.estado];
             return /*#__PURE__*/React.createElement("path", {
               key: m.clave, d: dibujoDe(m, detalle),
               onClick: () => elegir(m),
               onMouseEnter: () => setEncima(m.clave),
               onMouseLeave: () => setEncima(null),
-              className: "tg-mun" + (elegido ? " elegido" : "") + (tiene ? " tiene" : "")
+              className: "tg-mun " + claseEstado(m.estado) + (elegido ? " elegido" : "") + (tiene ? " tiene" : "")
                 + (apagado ? " lejos" : "") + (estadoEncima ? " vecino" : ""),
-              style: elegido ? { stroke: color, fill: color + "26" } : (senalado ? { stroke: "#8FB8FF" } : null)
+              /* Con una capa encendida manda el color de la capa; sin capa,
+                 el del estado —si no, al tocar un municipio de Mérida se
+                 ponía azul y se perdía la distinción. */
+              style: elegido ? { stroke: tinte, fill: tinte + "26" }
+                     : (senalado ? { stroke: m.estado === "merida" ? "#9BE8CE" : "#8FB8FF" } : null)
             });
           }),
 
@@ -4322,14 +4348,15 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
           /* Las capitales encendidas: son las luces del mapa. */
           MAPA_PATHS.map(m => /*#__PURE__*/React.createElement("circle", {
             key: "luz" + m.clave, cx: m.cx, cy: m.cy, r: px(conProductos.has(m.clave) ? 4.2 : 2.6),
-            className: "tg-luz" + (conProductos.has(m.clave) ? " viva" : "")
+            className: "tg-luz " + claseEstado(m.estado) + (conProductos.has(m.clave) ? " viva" : "")
               + (estadoSel && estadoSel !== m.estado ? " lejos" : ""),
             filter: "url(#mg-glow-suave)"
           })),
 
           !estadoSel && ESTADOS_MAPA.map(e => /*#__PURE__*/React.createElement("text", {
             key: "edo" + e.id, x: CENTRO_ESTADO[e.id].x, y: CENTRO_ESTADO[e.id].y,
-            className: "tg-edo-rotulo", style: { fontSize: px(26).toFixed(1) + "px", letterSpacing: px(3) }
+            className: "tg-edo-rotulo " + claseEstado(e.id),
+            style: { fontSize: px(26).toFixed(1) + "px", letterSpacing: px(3) }
           }, e.nombre.toUpperCase())),
 
           (munSel || encima) && (() => {
@@ -4850,11 +4877,11 @@ function DetailScreenTour({
   }, /*#__PURE__*/React.createElement("button", {  
     onClick: onBack,  
     className: "hover:text-[#0052CC]"  
-  }, "Táchira"), /*#__PURE__*/React.createElement(ChevronRight, {  
+  }, "Andes"), /*#__PURE__*/React.createElement(ChevronRight, {  
     size: 14  
   }), /*#__PURE__*/React.createElement("span", {  
     className: "hover:text-[#0052CC] cursor-pointer"  
-  }, tour.municipio || "Táchira"), /*#__PURE__*/React.createElement(ChevronRight, {  
+  }, tour.municipio || "Andes"), /*#__PURE__*/React.createElement(ChevronRight, {  
     size: 14  
   }), /*#__PURE__*/React.createElement("span", {  
     className: "text-slate-700 font-medium"  
@@ -4955,7 +4982,7 @@ function DetailScreenTour({
   }, money(total, currency))),
   servicio > 0 ? /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] text-slate-500 mt-1.5"
-  }, "Incluye $", servicio.toFixed(2), " de servicio Táchira GOO.") : null,
+  }, "Incluye $", servicio.toFixed(2), " de servicio Andes GOO.") : null,
   /*#__PURE__*/React.createElement("button", {  
     onClick: handleAdd,
     className: "w-full mt-4 bg-[#FF6B00] hover:bg-[#EA580C] text-white font-bold py-3 rounded-lg transition-colors"
@@ -5022,7 +5049,7 @@ function AlojamientoDetailScreen({
   }, /*#__PURE__*/React.createElement("button", {  
     onClick: onBack,  
     className: "hover:text-[#0052CC]"  
-  }, "Táchira"), /*#__PURE__*/React.createElement(ChevronRight, {  
+  }, "Andes"), /*#__PURE__*/React.createElement(ChevronRight, {  
     size: 14  
   }), /*#__PURE__*/React.createElement("span", {  
     className: "hover:text-[#0052CC] cursor-pointer"  
@@ -5204,7 +5231,7 @@ function ProviderCoverBanner({
     className: "absolute top-4 left-4 z-10 flex items-center gap-1.5 text-xs font-semibold text-white bg-black/30 hover:bg-black/50 backdrop-blur px-3 py-1.5 rounded-full transition-colors"  
   }, /*#__PURE__*/React.createElement(ArrowLeft, {  
     size: 13  
-  }), " Volver a Táchira GOO!!!"), /*#__PURE__*/React.createElement("div", {  
+  }), " Volver a Andes GOO!"), /*#__PURE__*/React.createElement("div", {  
     className: "absolute bottom-0 left-0 right-0"  
   }, /*#__PURE__*/React.createElement("div", {  
     className: "max-w-6xl mx-auto px-4 pb-5 flex items-end gap-4"  
@@ -5223,7 +5250,7 @@ function ProviderCoverBanner({
     className: "inline-flex items-center gap-1.5 bg-white text-[#0052CC] text-[11px] font-bold px-2.5 py-1 rounded-full shadow"  
   }, /*#__PURE__*/React.createElement(ShieldCheck, {  
     size: 12  
-  }), " Verificado por Táchira GOO!!!"),
+  }), " Verificado por Andes GOO!"),
   /* "Excelencia" es una afirmación sobre el servicio. Solo se muestra si hay
      reseñas reales que la sostengan; puesta a todo el mundo no significa nada
      y le quita valor a quien sí se la ganó. */
@@ -5701,7 +5728,7 @@ function ProviderClosingCTA({
     className: "text-3xl md:text-4xl font-extrabold text-white"  
   }, "¿Listo para vivir Táchira como nunca antes?"), /*#__PURE__*/React.createElement("p", {  
     className: "text-white/80 mt-3"  
-  }, "Reserva con ", provider.nombre, ", verificado por Táchira GOO!!!"), /*#__PURE__*/React.createElement("button", {  
+  }, "Reserva con ", provider.nombre, ", verificado por Andes GOO!"), /*#__PURE__*/React.createElement("button", {  
     onClick: onReservar,  
     className: "mt-6 bg-[#FF6B00] hover:bg-[#EA580C] text-white font-bold px-8 py-3.5 rounded-lg transition-colors"  
   }, "Reservar ahora")));  
@@ -5761,7 +5788,7 @@ function ChatModal({
 /* Ensamblaje del micrositio completo */  
 /* ==========================================================================
    MICROSITIO — la página del negocio
-   Manda su marca, su tipografía y su color. Táchira GOO queda en una barra
+   Manda su marca, su tipografía y su color. Andes GOO queda en una barra
    discreta arriba, con la flecha de vuelta al inicio: el viajero tiene que
    saber dónde está parado sin que la plataforma le tape el negocio.
    ========================================================================== */
@@ -5778,13 +5805,13 @@ function MsBarraPlataforma({ t, onBack }) {
       onClick: onBack,
       style: { display: "flex", alignItems: "center", gap: 11, background: "none", border: "none",
                color: "#fff", cursor: "pointer", padding: "10px 0", fontFamily: t.cuerpo },
-      "aria-label": "Volver al inicio de Táchira GOO!!!"
+      "aria-label": "Volver al inicio de Andes GOO!"
     },
       React.createElement(ArrowLeft, { size: 19, style: { opacity: 0.8 } }),
       React.createElement(TachiraMark, { size: 30 }),
       React.createElement("span", {
         style: { fontSize: 21, fontWeight: 800, letterSpacing: "-0.02em", whiteSpace: "nowrap" }
-      }, "Táchira ", React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!!!"))),
+      }, "Andes ", React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!"))),
     React.createElement("span", {
       style: { fontSize: 11.5, opacity: 0.72, fontFamily: t.cuerpo, textAlign: "right", lineHeight: 1.35 }
     }, "Reservas protegidas", React.createElement("br"), "por la plataforma")));
@@ -6291,7 +6318,7 @@ function MsPie({ p, t, onBack, onOpenLegal }) {
           onClick: onBack,
           style: { background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 0,
                    fontFamily: t.cuerpo, fontSize: 19, fontWeight: 800 }
-        }, "Táchira ", React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!!!")),
+        }, "Andes ", React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!")),
         React.createElement("div", {
           style: { display: "flex", gap: 16, marginTop: 14, fontFamily: t.cuerpo, fontSize: 12.5 }
         }, [["terminos", "Términos"], ["privacidad", "Privacidad"], ["cancelacion", "Cancelación"]]
@@ -6303,7 +6330,7 @@ function MsPie({ p, t, onBack, onOpenLegal }) {
     React.createElement("p", {
       style: { fontFamily: t.cuerpo, fontSize: 11.5, opacity: 0.5, marginTop: 30,
                paddingTop: 18, borderTop: "1px solid rgba(255,255,255,.14)" }
-    }, "© 2026 Táchira GOO!!! · ", p.nombre, " es un negocio verificado de ", p.ubicacion, ", estado Táchira.")));
+    }, "© 2026 Andes GOO! · ", p.nombre, " es un negocio verificado de ", p.ubicacion, ", estado Táchira.")));
 }
 
 /* ===================================================== MICROSITIO COMPLETO */
@@ -6523,7 +6550,7 @@ function SuccessModal({
       const operadoPor = item.providerNombre ? `\n   Operado por: ${item.providerNombre}` : "";  
       return `${i + 1}. ${item.titulo}\n   Tipo: ${item.tipo === "tour" ? "Tour / Experiencia" : "Alojamiento"}\n   ${detalle}${operadoPor}\n   Subtotal: ${money(item.total, currency)}`;  
     }).join("\n\n");  
-    const content = `TÁCHIRA GOO!!! — VOUCHER DE RESERVA (uso offline)  
+    const content = `ANDES GOO! — VOUCHER DE RESERVA (uso offline)  
 ${separador}  
 Código de reserva : ${bookingCode}  
 Titular            : ${form.nombre || "—"}  
@@ -6539,7 +6566,7 @@ ${separador}
 Presenta este voucher (impreso o en tu celular) el día de cada  
 actividad o check-in. Válido incluso sin señal de internet.
 
-Gracias por reservar con Táchira GOO!!!  
+Gracias por reservar con Andes GOO!  
 ${separador}`;  
     const blob = new Blob([content], {  
       type: "text/plain"  
@@ -6806,7 +6833,7 @@ function CheckoutScreen({
 const TEMAS = {
   clasico: {
     nombre: "Clásico",
-    resumen: "El azul y naranja de Táchira GOO. Para quien no quiera decidir.",
+    resumen: "El azul y naranja de Andes GOO. Para quien no quiera decidir.",
     muestra: ["#0052CC", "#FF6B00", "#F8FAFC"],
     titulo: "'Inter', system-ui, -apple-system, sans-serif",
     cuerpo: "'Inter', system-ui, -apple-system, sans-serif",
@@ -7059,7 +7086,7 @@ function VoucherDoc({ r }) {
                display: "flex", justifyContent: "space-between", alignItems: "center" } },
       React.createElement("div", null,
         React.createElement("p", { style: { fontSize: 19, fontWeight: 800, letterSpacing: "-0.02em" } },
-          "Táchira ", React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!!!")),
+          "Andes ", React.createElement("span", { style: { color: "#FF6B00" } }, "GOO!")),
         React.createElement("p", { style: { fontSize: 11, opacity: 0.85, marginTop: 2 } },
           "Comprobante de reserva")),
       React.createElement("div", { style: { textAlign: "right" } },
@@ -7220,7 +7247,7 @@ function ChatPanel({ codigo, verificacion }) {
               : "bg-white border border-slate-200 text-slate-700"}` },
             m.autor !== "cliente" ? React.createElement("p", {
               className: "text-[10px] font-bold opacity-70 mb-0.5" },
-              m.autor === "admin" ? "Táchira GOO!!!" : (m.autor_nombre || "Proveedor")) : null,
+              m.autor === "admin" ? "Andes GOO!" : (m.autor_nombre || "Proveedor")) : null,
             React.createElement("p", { className: "whitespace-pre-wrap leading-relaxed" }, m.cuerpo),
             React.createElement("p", { className: `text-[10px] mt-1 ${m.autor === "cliente" ? "text-white/70" : "text-slate-400"}` },
               new Date(m.created_at).toLocaleString("es-VE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }))))),
@@ -7414,20 +7441,20 @@ const LEGAL = {
     titulo: "Términos y condiciones",
     actualizado: "12 de septiembre de 2026",
     secciones: [
-      ["Qué es Táchira GOO!!!",
-       "Táchira GOO!!! conecta viajeros con proveedores turísticos del estado Táchira: posadas, operadores de tours, actividades y dueños de vehículos en alquiler. Actuamos como intermediario tecnológico y no prestamos directamente ninguno de los servicios publicados."],
+      ["Qué es Andes GOO!",
+       "Andes GOO! conecta viajeros con proveedores turísticos de los Andes venezolanos —hoy el estado Táchira, y Mérida en apertura—: posadas, operadores de tours, actividades y dueños de vehículos en alquiler. Actuamos como intermediario tecnológico y no prestamos directamente ninguno de los servicios publicados."],
       ["Quién presta el servicio",
        "Cada servicio lo presta y ejecuta el proveedor que lo publica, bajo su propia responsabilidad: calidad, seguridad, permisos y cumplimiento de lo ofrecido. Verificamos a los proveedores antes de publicarlos, pero esa verificación no nos convierte en prestadores del servicio."],
       ["Reservas",
        "Una solicitud de reserva no es una reserva confirmada. El proveedor debe confirmarla. Hasta ese momento no existe contrato entre viajero y proveedor, y ninguna de las partes queda obligada."],
       ["Precios y comisión",
-       "Los precios los fija cada proveedor y se muestran tal como él los publica. Táchira GOO!!! cobra una comisión sobre las transacciones completadas, cuyo porcentaje se acuerda con cada proveedor al incorporarse a la plataforma."],
+       "Los precios los fija cada proveedor y se muestran tal como él los publica. Andes GOO! cobra una comisión sobre las transacciones completadas, cuyo porcentaje se acuerda con cada proveedor al incorporarse a la plataforma."],
       ["Cancelaciones y reembolsos",
        "Cada publicación indica su condición: sin reembolso, reembolsable parcialmente o 100% reembolsable. Esa condición es la que aplica y se muestra al viajero antes de reservar."],
       ["Alquiler de vehículos",
        "El alquiler se pacta entre el dueño del vehículo y el arrendatario. Todo vehículo publicado superó una revisión documental y una revisión física, pero esa revisión no sustituye al seguro ni traslada a la plataforma la responsabilidad por daños, multas o accidentes ocurridos durante el alquiler."],
       ["Cotizaciones de vuelos y tours",
-       "Los vuelos y los tours fuera del Táchira no se venden en la plataforma: se recoge la solicitud y se traslada a una agencia de viajes aliada, que prepara la cotización y contrata directamente con el viajero."],
+       "Los vuelos y los tours fuera de los Andes no se venden en la plataforma: se recoge la solicitud y se traslada a una agencia de viajes aliada, que prepara la cotización y contrata directamente con el viajero."],
       ["Conducta",
        "No se permite publicar información falsa, suplantar a otra persona o negocio, ni acordar servicios por fuera para evadir la comisión. Podemos suspender cuentas que incumplan."],
       ["Cambios",
@@ -7445,7 +7472,7 @@ const LEGAL = {
       ["Con quién los compartimos",
        "Cuando reservas, el proveedor recibe los datos necesarios para atenderte. Cuando pides una cotización de vuelo o de tour, tus datos se envían a la agencia de viajes aliada que la prepara. Fuera de eso no compartimos información personal con terceros, salvo requerimiento legal."],
       ["Documentos de identidad y de vehículos",
-       "Los documentos que suben proveedores y dueños de vehículos se guardan en almacenamiento privado y solo son accesibles para su titular y para el equipo de verificación de Táchira GOO!!!. Nunca se muestran a los viajeros ni se publican."],
+       "Los documentos que suben proveedores y dueños de vehículos se guardan en almacenamiento privado y solo son accesibles para su titular y para el equipo de verificación de Andes GOO! Nunca se muestran a los viajeros ni se publican."],
       ["Cuánto tiempo los guardamos",
        "Mientras la cuenta esté activa, y después durante el tiempo necesario para atender obligaciones legales o resolver disputas."],
       ["Tus derechos",
@@ -7518,27 +7545,26 @@ function SiteFooter({ onOpenLegal, onCotizar }) {
   }, /*#__PURE__*/React.createElement("div", {
     className: "max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row md:items-start justify-between gap-5"
   }, /*#__PURE__*/React.createElement("div", null,
-    /*#__PURE__*/React.createElement("p", { className: "font-bold text-slate-900" }, "Táchira ",
-      /*#__PURE__*/React.createElement("span", { className: "text-[#FF6B00]" }, "GOO!!!")),
+    /*#__PURE__*/React.createElement("p", { className: "font-bold text-slate-900" }, "Andes ",      /*#__PURE__*/React.createElement("span", { className: "text-[#FF6B00]" }, "GOO!")),
     /*#__PURE__*/React.createElement("p", { className: "text-xs text-slate-500 mt-1 max-w-sm leading-relaxed" },
-      "Conectamos viajeros con proveedores turísticos verificados del estado Táchira. Los servicios los presta cada proveedor.")),
+      "Conectamos viajeros con proveedores turísticos verificados de los Andes venezolanos. Los servicios los presta cada proveedor.")),
     /*#__PURE__*/React.createElement("nav", {
       className: "flex flex-wrap gap-x-6 gap-y-2",
       "aria-label": "Avisos legales"
     }, [enlace("terminos", "Términos y condiciones"),
         enlace("privacidad", "Política de privacidad"),
         enlace("cancelacion", "Política de cancelación"),
-        /* Vuelos y tours fuera del Táchira no son una categoría de la
+        /* Vuelos y tours fuera de los Andes no son una categoría de la
            plataforma: los cotiza la agencia aliada. Aquí abajo queda a mano
            para quien los busque, sin competir con los tres pilares. */
         /*#__PURE__*/React.createElement("button", {
           key: "cotizar",
           onClick: () => onCotizar && onCotizar("tour_nacional"),
           className: "text-sm text-slate-500 hover:text-[#0052CC] transition-colors"
-        }, "Vuelos y viajes fuera del Táchira")])),
+        }, "Vuelos y viajes fuera de los Andes")])),
     /*#__PURE__*/React.createElement("div", { className: "border-t border-slate-200" },
       /*#__PURE__*/React.createElement("p", { className: "max-w-6xl mx-auto px-4 py-4 text-xs text-slate-400" },
-        "© ", new Date().getFullYear(), " Táchira GOO!!!")));
+        "© ", new Date().getFullYear(), " Andes GOO!")));
 }
 
 function NoEncontrado({ ruta, onInicio }) {
@@ -7554,7 +7580,7 @@ function NoEncontrado({ ruta, onInicio }) {
       className: "text-sm text-slate-600 leading-relaxed mb-6"
     }, "La dirección ", /*#__PURE__*/React.createElement("span", {
       className: "font-mono text-slate-800"
-    }, "/", ruta), " no corresponde a ningún negocio publicado en Táchira GOO!!!. Puede que el enlace esté mal escrito o que el negocio ya no esté activo."),
+    }, "/", ruta), " no corresponde a ningún negocio publicado en Andes GOO! Puede que el enlace esté mal escrito o que el negocio ya no esté activo."),
     /*#__PURE__*/React.createElement("button", {
       onClick: onInicio,
       className: "bg-[#0052CC] hover:bg-[#003D99] text-white font-bold px-6 py-3 rounded-lg transition-colors"

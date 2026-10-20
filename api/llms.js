@@ -5,15 +5,17 @@ const { catalogo } = require('./_datos.js');
 const SITIO = 'https://tachiragoo.com';
 
 module.exports = async function handler(req, res) {
-  let cuerpo = `# Táchira GOO!!!
+  let cuerpo = `# Andes GOO!
 
-> Plataforma de reservas de turismo del estado Táchira, Venezuela. Conecta viajeros
+> Plataforma de reservas de turismo de los Andes venezolanos. Conecta viajeros
 > con proveedores locales verificados: tours, posadas y hoteles, experiencias y
 > alquiler de vehículos. El pago queda protegido por la plataforma hasta que se
 > confirma el servicio.
 
-Cobertura: estado Táchira, Venezuela. Municipios con actividad: San Cristóbal,
-La Grita, Lobatera, Cordero, Rubio, Michelena.
+Cobertura: estados Táchira y Mérida, Venezuela. Todo lo publicado hoy está en el
+estado Táchira; Mérida está abriendo y aún no tiene negocios publicados.
+Municipios con actividad: San Cristóbal, La Grita, Lobatera, Cordero, Rubio,
+Michelena.
 Idioma: español (es-VE). Monedas mostradas: USD, COP y VES.
 Medios de pago: Pago Móvil, Zelle, Nequi y USDT.
 

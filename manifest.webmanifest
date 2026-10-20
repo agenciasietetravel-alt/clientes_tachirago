@@ -1,7 +1,7 @@
 {
-  "name": "Táchira GOO!!!",
-  "short_name": "Táchira GOO",
-  "description": "Tours, posadas, experiencias y alquiler de vehículos en el estado Táchira.",
+  "name": "Andes GOO!",
+  "short_name": "Andes GOO",
+  "description": "Tours, posadas, experiencias y alquiler de vehículos en los Andes venezolanos.",
   "lang": "es-VE",
   "start_url": "/",
   "display": "standalone",

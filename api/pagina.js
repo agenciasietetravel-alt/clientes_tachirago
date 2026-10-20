@@ -90,7 +90,7 @@ function paginaInicio(d) {
   const tours = d.listados.filter(l => l.category !== 'alojamiento');
   const municipios = [...new Set(d.listados.map(l => l.municipio).filter(Boolean))];
 
-  const titulo = 'Qué hacer en Táchira: tours, posadas y alquiler de vehículos | Táchira GOO!!!';
+  const titulo = 'Qué hacer en Táchira y Mérida: tours, posadas y alquiler de vehículos | Andes GOO!';
   const descripcion = d.listados.length
     ? linea(`Reserva ${plural(d.listados.length, 'experiencia', 'experiencias')}, ${
         plural(d.habitaciones.length, 'habitación', 'habitaciones')} y ${
@@ -103,7 +103,7 @@ function paginaInicio(d) {
       {
         '@type': 'TravelAgency',
         '@id': `${SITIO}/#organizacion`,
-        name: 'Táchira GOO!!!',
+        name: 'Andes GOO!',
         url: SITIO,
         logo: `${SITIO}/assets/favicon-512.png`,
         image: `${SITIO}/assets/og.jpg`,
@@ -120,7 +120,7 @@ function paginaInicio(d) {
         '@type': 'WebSite',
         '@id': `${SITIO}/#sitio`,
         url: SITIO,
-        name: 'Táchira GOO!!!',
+        name: 'Andes GOO!',
         inLanguage: 'es-VE',
         publisher: { '@id': `${SITIO}/#organizacion` }
       },
@@ -128,7 +128,7 @@ function paginaInicio(d) {
         '@type': 'FAQPage',
         '@id': `${SITIO}/#preguntas`,
         mainEntity: [
-          ['¿Hace falta crear una cuenta para reservar en Táchira GOO!!!?',
+          ['¿Hace falta crear una cuenta para reservar?',
            'No. Se reserva dejando nombre, cédula o pasaporte, teléfono y correo. Al confirmar recibes un código de reserva con el que puedes consultarla y gestionarla después, sin registrarte.'],
           ['¿Cómo se paga?',
            'Por Pago Móvil, Zelle, Nequi, USDT o tarjeta, según los métodos habilitados. Adjuntas el comprobante y la plataforma verifica el pago antes de confirmar la reserva.'],
@@ -137,7 +137,7 @@ function paginaInicio(d) {
           ['¿Qué pasa si necesito cancelar?',
            'Cada publicación indica su condición antes de reservar: 100% reembolsable, parcialmente reembolsable o sin reembolso. Las condiciones reembolsables aplican cancelando con al menos 48 horas de antelación.'],
           ['¿Quién presta el servicio?',
-           'Cada servicio lo presta el proveedor que lo publica. Táchira GOO!!! verifica a los proveedores antes de publicarlos y custodia el pago hasta que se confirma el servicio.'],
+           'Cada servicio lo presta el proveedor que lo publica. Andes GOO! verifica a los proveedores antes de publicarlos y custodia el pago hasta que se confirma el servicio.'],
           ['¿Qué municipios del Táchira cubre?',
            'La plataforma cubre todo el estado Táchira, con actividad concentrada en San Cristóbal, La Grita, Lobatera, Cordero, Rubio y Michelena.']
         ].map(([q, a]) => ({
@@ -165,9 +165,9 @@ function paginaInicio(d) {
   };
 
   const contenido = `
-<h1>Qué hacer en el estado Táchira</h1>
-<p>Táchira GOO!!! reúne en un solo lugar los tours, posadas, experiencias y vehículos de alquiler
-del estado Táchira, Venezuela. Cada negocio publicado pasó una verificación antes de aparecer aquí,
+<h1>Qué hacer en los Andes venezolanos</h1>
+<p>Andes GOO! reúne en un solo lugar los tours, posadas, experiencias y vehículos de alquiler
+de los Andes venezolanos. Todo lo publicado hoy está en el estado Táchira; Mérida está abriendo. Cada negocio publicado pasó una verificación antes de aparecer aquí,
 y el pago queda protegido por la plataforma hasta que se confirma el servicio.</p>
 <p>Cubrimos ${esc(MUNICIPIOS_CLAVE)}.</p>
 ${municipios.length ? `<h2>Municipios con oferta publicada</h2><ul>${
@@ -207,7 +207,7 @@ function paginaNegocio(n, d) {
     ...vehiculos.map(v => Number(v.price_per_day))
   ].filter(x => Number.isFinite(x) && x > 0);
 
-  const titulo = `${n.business_name} — ${n.municipio}, Táchira | Reserva en Táchira GOO!!!`;
+  const titulo = `${n.business_name} — ${n.municipio}, Táchira | Reserva en Andes GOO!`;
   const descripcion = linea(n.about || n.historia ||
     `${n.business_name} en ${n.municipio}, estado Táchira. Reserva directo con pago protegido.`);
 
@@ -216,7 +216,7 @@ function paginaNegocio(n, d) {
     '@graph': [{
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Táchira GOO!!!', item: SITIO },
+      { '@type': 'ListItem', position: 1, name: 'Andes GOO!', item: SITIO },
       { '@type': 'ListItem', position: 2, name: n.municipio, item: `${SITIO}/` },
       { '@type': 'ListItem', position: 3, name: n.business_name, item: `${SITIO}/${n.slug}` }
     ]
@@ -239,7 +239,7 @@ function paginaNegocio(n, d) {
     geo: (n.lat && n.lng) ? { '@type': 'GeoCoordinates', latitude: n.lat, longitude: n.lng } : undefined,
     priceRange: precios.length ? `$${Math.min(...precios).toFixed(0)}–$${Math.max(...precios).toFixed(0)} USD` : undefined,
     currenciesAccepted: 'USD, VES, COP',
-    parentOrganization: { '@type': 'TravelAgency', name: 'Táchira GOO!!!', url: SITIO },
+    parentOrganization: { '@type': 'TravelAgency', name: 'Andes GOO!', url: SITIO },
     makesOffer: [
       ...suyos.map(l => ({
         '@type': 'Offer', name: l.title, description: linea(l.description, 300),
@@ -259,7 +259,7 @@ function paginaNegocio(n, d) {
   };
 
   const contenido = `
-<nav><a href="/">Táchira GOO!!!</a> › ${esc(n.business_name)}</nav>
+<nav><a href="/">Andes GOO!</a> › ${esc(n.business_name)}</nav>
 <h1>${esc(n.business_name)}</h1>
 <p>${esc(n.lema || n.cover_tagline || '')}</p>
 <p>${esc(n.municipio)}, estado Táchira, Venezuela.${
@@ -282,7 +282,7 @@ ${(() => {
         `<li><a href="/${esc(o.slug)}">${esc(o.business_name)}</a> — ${esc(o.municipio)}</li>`).join('')}</ul>`
     : '';
 })()}
-<p>Reservas gestionadas por <a href="/">Táchira GOO!!!</a> con pago protegido.</p>`;
+<p>Reservas gestionadas por <a href="/">Andes GOO!</a> con pago protegido.</p>`;
 
   return {
     titulo, descripcion, url: `${SITIO}/${n.slug}`,
@@ -315,12 +315,12 @@ module.exports = async function handler(req, res) {
       } else {
         estado = 404;
         pagina = {
-          titulo: 'Página no encontrada | Táchira GOO!!!',
-          descripcion: 'Esa dirección no corresponde a ningún negocio publicado en Táchira GOO!!!',
+          titulo: 'Página no encontrada | Andes GOO!',
+          descripcion: 'Esa dirección no corresponde a ningún negocio publicado en Andes GOO!',
           url: `${SITIO}${ruta}`, noindex: true,
           contenido: `<h1>No encontramos esa página</h1>
 <p>La dirección <strong>${esc(ruta)}</strong> no corresponde a ningún negocio publicado.</p>
-<p><a href="/">Volver al inicio de Táchira GOO!!!</a></p>`
+<p><a href="/">Volver al inicio de Andes GOO!</a></p>`
         };
       }
     }
