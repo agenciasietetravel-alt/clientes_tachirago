@@ -333,6 +333,34 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
    Vive de noche: el estado iluminado sobre azul profundo, cada capital
    encendida y los puntos que tenemos brillando más que el resto.
    ------------------------------------------------------------------------ */
+/* El titular. ANDES es la palabra que manda: va en grande, con el degradado
+   en movimiento recortado sobre la letra. El relleno transparente se lleva
+   por delante cualquier text-shadow, así que el despegue de la foto lo hace
+   un drop-shadow sobre la forma de las letras. */
+.tg-h1{display:flex;flex-direction:column;align-items:center}
+.tg-h1-lead{font-size:clamp(17px,2.55vw,27px);font-weight:600;line-height:1.24;
+  letter-spacing:-.012em;color:rgba(255,255,255,.93);text-wrap:balance;
+  text-shadow:0 1px 6px rgba(2,10,24,.95),0 2px 18px rgba(2,10,24,.7)}
+.tg-andes{display:block;margin-top:4px;font-size:clamp(50px,11vw,116px);font-weight:900;
+  line-height:.93;letter-spacing:-.035em;
+  background-image:linear-gradient(100deg,#FF6B00,#FFC14D,#5BE49B,#4C9AFF,#B48CFF,#FF6B00);
+  background-size:320% 100%;-webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 9px rgba(2,10,24,.62)) drop-shadow(0 6px 26px rgba(2,10,24,.42));
+  animation:tgAndes 11s linear infinite}
+@keyframes tgAndes{from{background-position:0% 50%}to{background-position:320% 50%}}
+.tg-andes-sub{display:block;margin-top:7px;padding-left:.36em;
+  font-size:clamp(12.5px,2.05vw,22px);font-weight:700;letter-spacing:.36em;
+  color:rgba(255,255,255,.9);text-shadow:0 1px 6px rgba(2,10,24,.95)}
+@media(prefers-reduced-motion:reduce){
+  .tg-andes{animation:none;background-position:14% 50%}
+}
+/* Si el navegador no sabe recortar el fondo contra la letra, el relleno
+   transparente dejaría la palabra invisible. Vuelve al naranja de siempre. */
+@supports not ((-webkit-background-clip:text) or (background-clip:text)){
+  .tg-andes{background-image:none;color:#FF8A2B;-webkit-text-fill-color:#FF8A2B;animation:none}
+}
+
 /* La franja de confianza. Los separadores son del estilo, no del marcado:
    en el móvil cada punto cae en su línea y un «·» suelto al principio de
    una línea se lee como un error. */
@@ -2287,12 +2315,20 @@ function tarifaVehiculo(v, conChofer) {
 function ofreceModalidad(v, conChofer) {
   return conChofer ? !!v.ofrece_con_chofer : v.ofrece_sin_chofer !== false;
 }
-/* "Con chofer" se retiro de cara al publico: no es un alquiler por dia sino
-   una carrera con monto base mas kilometro, y eso vive en el modulo de
-   traslados. Vuelve a aparecer solo, en los tres sitios que la ofrecen, al
-   devolver su entrada a esta lista. */
+/* Las dos maneras de moverse. Lo que se cobra en las dos es una tarifa por
+   día —el traslado trae kilómetros incluidos y cobra el exceso—, que es
+   justo lo que el dueño del vehículo carga en su panel. No es una carrera
+   de taxi punto a punto: eso sería otro producto, con otra tarifa, y no
+   existe todavía. Así que esta pantalla dice lo que de verdad se vende. */
 const MODALIDADES_MOVILIDAD = [
-  { id: "sin", conChofer: false, label: "Yo conduzco", sub: "Rent a car" }
+  { id: "sin", conChofer: false,
+    label: "Yo conduzco", sub: "Alquiler de vehículo",
+    que: "Te entregan el vehículo y lo manejas tú los días que lo tengas.",
+    pide: ["Licencia vigente", "Depósito reembolsable", "Kilómetros libres"] },
+  { id: "con", conChofer: true,
+    label: "Que me lleven", sub: "Traslado con chofer",
+    que: "Un conductor del negocio te recoge y te lleva. Tú no manejas.",
+    pide: ["Sin licencia", "Sin depósito", "Kilómetros incluidos por día"] }
 ];
 const ELIGE_MODALIDAD = MODALIDADES_MOVILIDAD.length > 1;
 
@@ -2351,7 +2387,13 @@ function VehiculoCard({ v, onReservar, conChofer, dias = 0 }) {
         /*#__PURE__*/React.createElement("span", {
           className: "text-[11px] text-slate-400 text-right leading-tight shrink-0"
         }, conChofer
-             ? "Sin depósito"
+             ? (v.km_incluidos
+                 ? ["Sin depósito", /*#__PURE__*/React.createElement("br", { key: "b" }),
+                    v.km_incluidos + " km/día incluidos",
+                    Number(v.precio_km_extra) > 0
+                      ? [/*#__PURE__*/React.createElement("br", { key: "b2" }),
+                         "Extra $" + v.precio_km_extra + "/km"] : null]
+                 : "Sin depósito")
              : (Number(v.deposit) > 0 ? ["Depósito $" + v.deposit, /*#__PURE__*/React.createElement("br", { key: "b" }),
                                          "Mín. " + v.min_days + (v.min_days === 1 ? " día" : " días")]
                                       : "Mín. " + v.min_days + (v.min_days === 1 ? " día" : " días")))),
@@ -2607,9 +2649,14 @@ function PasoMovilidad({ n, titulo, listo }) {
     }, titulo));
 }
 
-function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferInicial = false, onClose }) {
+function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferInicial = null, onClose }) {
   useCerrarConAtras(onClose);
-  const [conChofer, setConChofer] = useState(!!conChoferInicial);
+  /* null = todavía no eligió. Con dos maneras de moverse, abrir ya metido en
+     una de ellas escondía la otra: el viajero que quiere que lo lleven veía
+     una pantalla de alquiler y se iba. */
+  const [conChofer, setConChofer] = useState(
+    conChoferInicial === null ? (ELIGE_MODALIDAD ? null : false) : !!conChoferInicial);
+  const elegida = conChofer !== null;
   const [municipio, setMunicipio] = useState(municipioInicial || "");
   const [desde, setDesde] = useState(desdeInicial || "");
   const [hasta, setHasta] = useState(hastaInicial || "");
@@ -2678,23 +2725,32 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
         }, "Movilidad"),
         /*#__PURE__*/React.createElement("h2", {
           className: "text-[17px] font-bold text-slate-900 leading-tight truncate"
-        }, conChofer ? "Traslados con chofer" : "Alquiler de vehículos")))),
+        }, !elegida ? "¿Cómo quieres moverte?"
+                    : (conChofer ? "Traslado con chofer" : "Alquiler de vehículos"))))),
 
     /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-5 py-9" },
 
-      /* ----- Paso 1: quién maneja ----- */
-      ELIGE_MODALIDAD && /*#__PURE__*/React.createElement(PasoMovilidad, { n: 1, titulo: "¿Quién maneja?", listo: true }),
-      ELIGE_MODALIDAD && /*#__PURE__*/React.createElement("div", { className: "grid sm:grid-cols-2 gap-3 mb-9" },
-        MODALIDADES_MOVILIDAD.map(m => {
+      /* ----- Paso 1: cómo quiere moverse ----- */
+      ELIGE_MODALIDAD && /*#__PURE__*/React.createElement(PasoMovilidad, {
+        n: 1, titulo: "¿Cómo quieres moverte?", listo: elegida }),
+      ELIGE_MODALIDAD && /*#__PURE__*/React.createElement("p", {
+        className: "text-[13px] text-slate-500 -mt-1.5 mb-4 max-w-xl leading-relaxed"
+      }, "Son dos servicios distintos, con flota y precio propios. Elige uno y seguimos."),
+      ELIGE_MODALIDAD && /*#__PURE__*/React.createElement("div", {
+        className: "grid sm:grid-cols-2 gap-3 mb-9"
+      }, MODALIDADES_MOVILIDAD.map(m => {
           const activo = conChofer === m.conChofer;
           const cuantos = VEHICULOS.filter(v => ofreceModalidad(v, m.conChofer));
           const minimo = cuantos.length
             ? Math.min(...cuantos.map(v => tarifaVehiculo(v, m.conChofer))) : null;
           return /*#__PURE__*/React.createElement("button", {
             key: m.id,
-            onClick: () => { setConChofer(m.conChofer); setMunicipio(""); setDisponibles(null); },
+            onClick: () => {
+              setConChofer(activo && elegida ? null : m.conChofer);
+              setMunicipio(""); setDisponibles(null);
+            },
             "aria-pressed": activo,
-            className: "text-left p-5 rounded-2xl border-2 transition-all",
+            className: "text-left p-5 rounded-2xl border-2 transition-all flex flex-col",
             style: {
               borderColor: activo ? "#0052CC" : "#E7E4DE",
               background: "#fff",
@@ -2712,22 +2768,42 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
                 className: "text-[10px] font-bold uppercase px-2 py-1 rounded-full",
                 style: { letterSpacing: ".1em", background: "#EAF2FF", color: "#0052CC" }
               }, "Elegido") : null),
+
             /*#__PURE__*/React.createElement("p", {
-              className: "font-bold text-slate-900 mt-3.5 text-[15px]"
-            }, m.label),
+              className: "text-[10px] font-bold uppercase text-slate-400 mt-3.5",
+              style: { letterSpacing: ".14em" } }, m.sub),
             /*#__PURE__*/React.createElement("p", {
-              className: "text-[13px] text-slate-500 mt-1 leading-relaxed"
-            }, m.conChofer
-                 ? "Un conductor del negocio te lleva. Sin depósito y sin licencia."
-                 : "Tú conduces. Se pide depósito reembolsable y licencia vigente."),
+              className: "font-bold text-slate-900 mt-1 text-[17px]" }, m.label),
             /*#__PURE__*/React.createElement("p", {
-              className: "text-[13px] mt-3 tg-cifras",
-              style: { color: cuantos.length ? "#0C1320" : "#94A3B8" }
+              className: "text-[13px] text-slate-500 mt-1.5 leading-relaxed" }, m.que),
+
+            /* Lo que hace falta para cada una. Es lo que de verdad decide:
+               quien no tiene licencia encima no puede alquilar. */
+            /*#__PURE__*/React.createElement("ul", {
+              className: "mt-3.5 flex flex-col gap-1.5"
+            }, m.pide.map(t => /*#__PURE__*/React.createElement("li", {
+              key: t, className: "flex items-start gap-2 text-[12.5px] text-slate-600"
+            }, /*#__PURE__*/React.createElement("span", {
+              "aria-hidden": "true",
+              className: "mt-[7px] w-1.5 h-1.5 rounded-full shrink-0",
+              style: { background: activo ? "#0052CC" : "#CBD5E1" } }), t))),
+
+            /*#__PURE__*/React.createElement("div", { className: "flex-1" }),
+            /*#__PURE__*/React.createElement("p", {
+              className: "text-[13px] mt-4 pt-3.5 border-t tg-cifras",
+              style: { borderColor: "#F0EEE9", color: cuantos.length ? "#0C1320" : "#94A3B8" }
             }, cuantos.length
                  ? ["Desde ", /*#__PURE__*/React.createElement("b", { key: "p" }, "$" + minimo), " / día · ",
                     cuantos.length, cuantos.length === 1 ? " vehículo" : " vehículos"]
-                 : "Sin vehículos por ahora"));
+                 : "Sin vehículos por ahora"),
+            /*#__PURE__*/React.createElement("span", {
+              className: "text-[12.5px] font-bold mt-2",
+              style: { color: activo ? "#0052CC" : "#64748B" }
+            }, activo ? "Elegido · sigue abajo" : "Elegir →"));
         })),
+
+      /* ----- Pasos 2 y 3: solo existen cuando ya eligió cómo moverse ----- */
+      elegida && /*#__PURE__*/React.createElement(React.Fragment, null,
 
       /* ----- Paso 2: cuándo y dónde ----- */
       /*#__PURE__*/React.createElement(PasoMovilidad, { n: ELIGE_MODALIDAD ? 2 : 1, titulo: "¿Cuándo lo necesitas?", listo: rango }),
@@ -2807,7 +2883,7 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
               lista.map(v => /*#__PURE__*/React.createElement(VehiculoCard, {
                 key: v.id, v: v, conChofer: conChofer, dias: rango ? diasEntre(desde, hasta).length : 0,
                 onReservar: setReservando
-              }))),
+              })))),
 
       reservando && /*#__PURE__*/React.createElement(ReservaVehiculoModal, {
         vehiculo: reservando, desdeInicial: desde, hastaInicial: hasta, conChofer: conChofer,
@@ -3190,8 +3266,9 @@ function SearchRentacarForm({
   const [fechaIda, setFechaIda] = useState("");
   const [fechaVuelta, setFechaVuelta] = useState("");
   /* Lo primero que hay que saber en Movilidad es quién maneja: cambia la
-     flota, el precio y si se pide depósito. */
-  const [conChofer, setConChofer] = useState(false);
+     flota, el precio y si se pide depósito. Sin elegir (null), la pantalla
+     grande abre en la pregunta y no dentro de una de las dos. */
+  const [conChofer, setConChofer] = useState(ELIGE_MODALIDAD ? null : false);
   return /*#__PURE__*/React.createElement("div", {
     className: "w-full"
   }, ELIGE_MODALIDAD ? /*#__PURE__*/React.createElement("div", {
@@ -3201,7 +3278,9 @@ function SearchRentacarForm({
     onClick: () => setConChofer(m.conChofer),
     "aria-pressed": conChofer === m.conChofer,
     className: `text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${conChofer === m.conChofer ? "bg-[#0052CC] border-[#0052CC] text-white" : "border-slate-200 text-slate-600 hover:border-[#0052CC]"}`
-  }, m.label))) : null, /*#__PURE__*/React.createElement("div", {
+  }, m.label, " · ", /*#__PURE__*/React.createElement("span", {
+    key: "s", style: { fontWeight: 500, opacity: .78 } }, m.sub)))) : null,
+    /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col md:flex-row md:items-center gap-2 w-full"
   }, /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-2 flex-1 min-w-0 border border-slate-200 rounded-full px-4 py-2.5"  
@@ -3322,7 +3401,9 @@ function SearchTabsBox({
   const handleRentacar = (lugar, desde, hasta, conChofer) => {
     setCategory("rentacar");
     // Los vehiculos no viven en el catalogo de tours: tienen su propia seccion.
-    setRentacarAbierto({ municipio: lugar || "", desde: desde || "", hasta: hasta || "", conChofer: !!conChofer });
+    /* Sin coacción a booleano: null significa «todavía no eligió», y la
+       pantalla grande tiene que poder distinguirlo de «yo conduzco». */
+    setRentacarAbierto({ municipio: lugar || "", desde: desde || "", hasta: hasta || "", conChofer: conChofer });
   };  
   const handleTours = () => {  
     scrollToCatalogo();  
@@ -3411,14 +3492,12 @@ function Hero({
   }, /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] sm:text-xs font-semibold uppercase mb-5",
     style: { letterSpacing: ".22em", color: "rgba(255,255,255,.92)", textShadow: "0 1px 6px rgba(2,10,24,.95), 0 2px 16px rgba(2,10,24,.7)" }
-  }, "Mérida · Táchira · Trujillo"), /*#__PURE__*/React.createElement("h1", {
-    /* El titular creció: tres pilares y una región entera no caben en el
-       cuerpo con el que cabía «actividades en TÁCHIRA». */
-    className: "text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight",
-    style: { letterSpacing: "-.025em", textShadow: "0 2px 10px rgba(2,10,24,.85), 0 4px 34px rgba(2,10,24,.6)" }
-  }, "Reserva experiencias, transporte y alojamiento en los ", /*#__PURE__*/React.createElement("span", {
-    style: { color: "#FF8A2B", textShadow: "0 1px 3px rgba(2,10,24,.9), 0 3px 18px rgba(2,10,24,.75)" }
-  }, "ANDES VENEZOLANOS")), /*#__PURE__*/React.createElement("p", {
+  }, "Mérida · Táchira · Trujillo"), /*#__PURE__*/React.createElement("h1", { className: "tg-h1" },
+    /*#__PURE__*/React.createElement("span", { className: "tg-h1-lead" },
+      "Reserva experiencias, transporte y alojamiento en los"),
+    /*#__PURE__*/React.createElement("span", { className: "tg-andes" }, "ANDES"),
+    /*#__PURE__*/React.createElement("span", { className: "tg-andes-sub" }, "VENEZOLANOS")),
+    /*#__PURE__*/React.createElement("p", {
     className: "mt-4 text-base md:text-lg mx-auto",
     style: { maxWidth: "54ch", color: "rgba(255,255,255,.94)", textShadow: "0 1px 6px rgba(2,10,24,.95), 0 2px 18px rgba(2,10,24,.7)" }
   }, "Todo en un solo lugar, con cada reserva respaldada por un comprobante verificado por la plataforma."), /*#__PURE__*/React.createElement(SearchTabsBox, {  
