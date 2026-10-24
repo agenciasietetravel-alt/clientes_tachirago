@@ -71,9 +71,8 @@ function inyectar(html, { jsonld, contenido }) {
     /* La carcasa va con su propia hoja de estilo: mientras React no monta,
        esto es lo único que el visitante ve. */
     const carcasa = `<div class="ssr">
-  <header class="ssr__barra"><span>Táchira <i>GOO!!!</i></span></header>
+  <header class="ssr__barra"><span>Andes <i>GOO!</i></span></header>
   <div class="ssr__cuerpo">
-    <div class="ssr__cargando"><span class="ssr__punto"></span>Cargando el buscador y las fotos…</div>
     ${contenido}
   </div>
 </div>`;
