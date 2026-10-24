@@ -469,6 +469,61 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
   box-shadow:none;cursor:not-allowed}
 @media(prefers-reduced-motion:reduce){.tg-zona-ir{transition:none}.tg-zona-ir:hover{transform:none}}
 
+/* ==========================================================================
+   MOVILIDAD
+   ========================================================================== */
+.tg-comofunciona{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.tg-comofunciona li{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;
+  line-height:1.5;color:#475569}
+.tg-comofunciona b{flex-shrink:0;width:19px;height:19px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;
+  background:#EDEAE4;color:#64748B;margin-top:.5px}
+
+.tg-cotiza{border-radius:18px;border:1px solid #E7E4DE;background:#fff;padding:18px;
+  box-shadow:0 1px 2px rgba(12,19,32,.04)}
+.tg-cotiza-campos{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end}
+@media(max-width:620px){
+  .tg-cotiza-campos{grid-template-columns:1fr;gap:8px}
+  .tg-cotiza-voltea{justify-self:start}
+}
+.tg-sitio{position:relative;min-width:0}
+.tg-sitio label{display:block;font-size:10px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:#94A3B8;margin-bottom:5px}
+.tg-sitio input{width:100%;box-sizing:border-box;padding:11px 13px;border-radius:11px;
+  border:1.5px solid #E7E4DE;background:#F7F5F1;font-size:14px;font-weight:600;
+  color:#0C1320;outline:none}
+.tg-sitio input:focus{border-color:#0052CC;background:#fff}
+.tg-sitio input::placeholder{font-weight:500;color:#94A3B8}
+.tg-sitio-lista{position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:6;
+  list-style:none;margin:0;padding:5px;background:#fff;border:1px solid #E7E4DE;
+  border-radius:12px;max-height:260px;overflow-y:auto;box-shadow:0 18px 44px rgba(12,19,32,.2)}
+.tg-sitio-lista button{width:100%;text-align:left;display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:8px;border:none;background:none;cursor:pointer;
+  font-size:13.5px;font-weight:600;color:#0C1320}
+.tg-sitio-lista button:hover,.tg-sitio-lista button[aria-selected="true"]{background:#EAF2FF}
+.tg-sitio-lista em{font-style:normal;font-size:11.5px;font-weight:500;color:#94A3B8;
+  margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48%}
+.tg-sitio-lista p{margin:0;padding:10px;font-size:13px;color:#94A3B8}
+.tg-sitio-ico{width:16px;display:flex;justify-content:center;color:#94A3B8;flex-shrink:0}
+
+.tg-cotiza-voltea{width:38px;height:38px;border-radius:50%;border:1.5px solid #E7E4DE;
+  background:#fff;color:#0052CC;font-size:17px;cursor:pointer;line-height:1}
+.tg-cotiza-voltea:hover{background:#EAF2FF}
+.tg-cotiza-voltea:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(0,82,204,.35)}
+
+.tg-cotiza-cuenta{margin-top:18px;padding-top:16px;border-top:1px solid #F0EEE9}
+.tg-cotiza-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.tg-cotiza-total span{font-size:13px;font-weight:700;color:#475569}
+.tg-cotiza-total b{font-size:28px;font-weight:800;color:#0C1320;letter-spacing:-.02em}
+.tg-cotiza-desglose{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tg-cotiza-desglose li{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:#64748B}
+.tg-cotiza-desglose b{font-weight:700;color:#0C1320}
+.tg-cotiza-nota{margin:14px 0 0;font-size:11.5px;line-height:1.6;color:#94A3B8}
+.tg-cotiza-vacio{margin:16px 0 0;font-size:13px;color:#94A3B8}
+
+/* El escudo de fondo: marca la pantalla sin estorbar lo que se lee. */
+.tg-escudo-fondo{position:absolute;pointer-events:none;opacity:.045;z-index:0}
+
 /* La franja de confianza. Los separadores son del estilo, no del marcado:
    en el móvil cada punto cae en su línea y un «·» suelto al principio de
    una línea se lee como un error. */
@@ -2444,6 +2499,10 @@ const ATRACCIONES = [];
 /* El orden del catálogo lo decide el servidor: quién paga membresía, cuánto
    ha vendido y cómo lo califican. Aquí solo se guarda lo que devuelve. */
 const RANKING = {};
+/* De dónde a dónde se puede pedir un traslado: las capitales de los 72
+   municipios —con su coordenada real, la del pueblo, no la del polígono—
+   más los aeropuertos y terminales. Todo sale de la base. */
+const SITIOS_TRASLADO = [];
 const ATRACCION_PIE = { aeropuerto:'Aeropuerto', terminal:'Terminal de pasajeros',
                         atractivo:'Atractivo natural', centro:'Centro histórico' };
 
@@ -2471,6 +2530,53 @@ function tarifaVehiculo(v, conChofer) {
 function ofreceModalidad(v, conChofer) {
   return conChofer ? !!v.ofrece_con_chofer : v.ofrece_sin_chofer !== false;
 }
+/* ==========================================================================
+   CONFIGURACIÓN DEL TRASLADO (SERVICIO TIPO TAXI)
+   --------------------------------------------------------------------------
+   OJO: estas tarifas son VALORES DE EJEMPLO. No son precios reales de
+   ningún proveedor. Están aquí, juntas y con nombre, para que cambiarlas
+   sea cambiar un número y no buscar por toda la aplicación; y para que el
+   día que el dueño del vehículo cargue las suyas en su panel, lo único que
+   haya que hacer sea leerlas de la base en vez de esta constante.
+
+   El traslado NO se cobra por día: se cobra por trayecto. El precio es una
+   tarifa base más un valor por kilómetro recorrido.
+   ========================================================================== */
+const TRASLADO_TARIFAS = {
+  ejemplo: true,                 // <- quítalo cuando vengan de la base
+  moneda: "USD",
+  base: 6,                       // lo que cuesta subirse, antes del primer km
+  porKm: 0.85,                   // cada kilómetro de recorrido
+  minimo: 10,                    // ningún trayecto cobra menos que esto
+  /* De la línea recta a la carretera. En los Andes la vía nunca va derecha:
+     sube, baja y rodea. Este factor convierte la distancia en línea recta
+     —la única que se puede calcular sin un servicio de rutas— en una
+     estimación de kilómetros de carretera. */
+  factorRuta: 1.6
+};
+
+/* Distancia en línea recta entre dos puntos, en kilómetros. */
+function kmEntre(a, b) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+  const la1 = a.lat * rad, la2 = b.lat * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+/* Lo que cuesta un trayecto: base + kilómetros, con un mínimo. */
+function cotizarTraslado(origen, destino, tarifas) {
+  const t = tarifas || TRASLADO_TARIFAS;
+  if (!origen || !destino) return null;
+  const recta = kmEntre(origen, destino);
+  const km = Math.max(1, Math.round(recta * t.factorRuta));
+  const bruto = t.base + km * t.porKm;
+  const total = Math.max(t.minimo, Math.round(bruto * 100) / 100);
+  return { km: km, recta: Math.round(recta), base: t.base, porKm: t.porKm,
+           kmCosto: Math.round(km * t.porKm * 100) / 100,
+           minimoAplicado: bruto < t.minimo, total: total };
+}
+
 /* Las dos maneras de moverse. Lo que se cobra en las dos es una tarifa por
    día —el traslado trae kilómetros incluidos y cobra el exceso—, que es
    justo lo que el dueño del vehículo carga en su panel. No es una carrera
@@ -2480,11 +2586,17 @@ const MODALIDADES_MOVILIDAD = [
   { id: "sin", conChofer: false,
     label: "Yo conduzco", sub: "Alquiler de vehículo",
     que: "Te entregan el vehículo y lo manejas tú los días que lo tengas.",
-    pide: ["Licencia vigente", "Depósito reembolsable", "Kilómetros libres"] },
+    pide: ["Licencia vigente", "Depósito reembolsable", "Kilómetros libres"],
+    pasos: ["Eliges las fechas y ves qué está libre de verdad",
+            "Reservas y dejas el depósito, que se devuelve",
+            "Recoges el vehículo donde se acordó y lo manejas tú"] },
   { id: "con", conChofer: true,
-    label: "Que me lleven", sub: "Traslado con chofer",
-    que: "Un conductor del negocio te recoge y te lleva. Tú no manejas.",
-    pide: ["Sin licencia", "Sin depósito", "Kilómetros incluidos por día"] }
+    label: "Que me lleven", sub: "Traslado puerta a puerta",
+    que: "Dinos de dónde a dónde y un conductor te lleva. Tú no manejas.",
+    pide: ["Sin licencia", "Sin depósito", "Se paga por trayecto, no por día"],
+    pasos: ["Dices de dónde sales y a dónde vas",
+            "Te decimos el precio del trayecto completo",
+            "Un conductor verificado te recoge a la hora acordada"] }
 ];
 const ELIGE_MODALIDAD = MODALIDADES_MOVILIDAD.length > 1;
 
@@ -2805,6 +2917,311 @@ function PasoMovilidad({ n, titulo, listo }) {
     }, titulo));
 }
 
+/* ==========================================================================
+   COTIZADOR DE TRASLADO
+   Un traslado no es un alquiler por día: es una carrera de un sitio a otro.
+   Se pide de dónde a dónde, se estima el recorrido y se dice lo que cuesta
+   ese trayecto, con el desglose a la vista. La distancia se calcula en
+   línea recta entre dos coordenadas reales y se corrige con un factor de
+   carretera: es una estimación y la pantalla lo dice.
+   ========================================================================== */
+function CampoSitio({ id, etiqueta, valor, onElegir, excluir }) {
+  const [texto, setTexto] = useState("");
+  const [abierto, setAbierto] = useState(false);
+  const [marcada, setMarcada] = useState(0);
+
+  const lista = useMemo(() => {
+    const q = sinTildes(texto).trim();
+    const base = SITIOS_TRASLADO.filter(x => !excluir || x.id !== excluir);
+    if (!q) return base.slice(0, 8);
+    return base.filter(x => sinTildes(x.nombre).includes(q) || sinTildes(x.pie).includes(q)).slice(0, 10);
+  }, [texto, excluir]);
+
+  useEffect(() => { setMarcada(0); }, [texto]);
+
+  const tomar = x => { onElegir(x); setTexto(""); setAbierto(false); };
+
+  return /*#__PURE__*/React.createElement("div", { className: "tg-sitio" },
+    /*#__PURE__*/React.createElement("label", { htmlFor: id }, etiqueta),
+    /*#__PURE__*/React.createElement("input", {
+      id: id, type: "text",
+      value: abierto ? texto : (valor ? valor.nombre : texto),
+      onChange: e => { setTexto(e.target.value); setAbierto(true); },
+      onFocus: () => { setTexto(""); setAbierto(true); },
+      onBlur: () => setTimeout(() => setAbierto(false), 160),
+      onKeyDown: ev => {
+        if (!abierto || !lista.length) return;
+        if (ev.key === "ArrowDown") { ev.preventDefault(); setMarcada(m => (m + 1) % lista.length); }
+        else if (ev.key === "ArrowUp") { ev.preventDefault(); setMarcada(m => (m - 1 + lista.length) % lista.length); }
+        else if (ev.key === "Enter") { ev.preventDefault(); tomar(lista[marcada]); }
+        else if (ev.key === "Escape") setAbierto(false);
+      },
+      placeholder: "Pueblo, aeropuerto o terminal",
+      role: "combobox", "aria-expanded": abierto, "aria-autocomplete": "list"
+    }),
+    abierto && /*#__PURE__*/React.createElement("ul", { className: "tg-sitio-lista", role: "listbox" },
+      lista.length
+        ? lista.map((x, i) => /*#__PURE__*/React.createElement("li", { key: x.id, role: "option",
+            "aria-selected": i === marcada },
+            /*#__PURE__*/React.createElement("button", {
+              type: "button", "aria-selected": i === marcada,
+              onMouseDown: ev => { ev.preventDefault(); tomar(x); }
+            },
+              /*#__PURE__*/React.createElement("span", { className: "tg-sitio-ico", "aria-hidden": "true" },
+                x.tipo === "aeropuerto" || x.tipo === "terminal"
+                  ? /*#__PURE__*/React.createElement("svg", { width: 13, height: 13, viewBox: "0 0 24 24" },
+                      /*#__PURE__*/React.createElement("path", {
+                        d: x.tipo === "aeropuerto" ? ICONO_AVION : ICONO_BUS,
+                        fill: MAPA_SIEMPRE[x.tipo].color }))
+                  : "·"),
+              x.nombre, /*#__PURE__*/React.createElement("em", null, x.pie))))
+        : /*#__PURE__*/React.createElement("p", null, "Nada con ese nombre.")));
+}
+
+/* Pedir un traslado. No pasa por el motor de reservas de vehículos porque
+   ese cobra por día: entra como una solicitud con su trayecto y su precio
+   estimado, y el negocio confirma. Cuando el traslado tenga su propio
+   producto y su propio cobro, esto se cambia por una reserva de verdad. */
+function PedirTraslado({ vehiculo, cuenta, origen, destino, onClose }) {
+  const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [email, setEmail] = useState("");
+  const [fecha, setFecha] = useState(fechaISO(new Date()));
+  const [hora, setHora] = useState("08:00");
+  const [pasajeros, setPasajeros] = useState(2);
+  const [notas, setNotas] = useState("");
+  const [estado, setEstado] = useState({ enviando: false, error: "", listo: false });
+
+  useEffect(() => {
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const enviar = async () => {
+    if (!nombre.trim() || !telefono.trim()) {
+      setEstado({ enviando: false, error: "Necesitamos tu nombre y tu teléfono para poder confirmarte.", listo: false });
+      return;
+    }
+    setEstado({ enviando: true, error: "", listo: false });
+    const detalle = [
+      "Traslado " + origen.nombre + " → " + destino.nombre,
+      "Vehículo pedido: " + vehiculo.title + " (" + vehiculo.municipio + ")",
+      "Hora de recogida: " + hora,
+      "Estimado: " + cuenta.km + " km · base " + money(cuenta.base, TRASLADO_TARIFAS.moneda) +
+        " + " + money(cuenta.porKm, TRASLADO_TARIFAS.moneda) + "/km = " +
+        money(cuenta.total, TRASLADO_TARIFAS.moneda),
+      TRASLADO_TARIFAS.ejemplo ? "(tarifas de ejemplo, pendientes de las del proveedor)" : null,
+      notas.trim() || null
+    ].filter(Boolean).join("\n");
+
+    /* Sin .select(): quien no ha iniciado sesión puede escribir en esta
+       tabla pero no leerla, y pedir la fila de vuelta tumbaba el insert
+       entero. Tampoco hay código que enseñar —no lo podría consultar— así
+       que lo que se promete es la llamada del negocio, que sí ocurre. */
+    const { error } = await window.__tgSupabase.from("travel_quotes").insert({
+      tipo: "traslado",
+      nombre: nombre.trim(), telefono: telefono.trim(), email: email.trim() || null,
+      origen: origen.nombre, destino: destino.nombre,
+      trip_type: "ida", fecha_ida: fecha, pasajeros: Number(pasajeros) || 1,
+      notas: detalle, whatsapp_abierto: false
+    });
+
+    if (error) {
+      setEstado({ enviando: false, error: "No se pudo enviar: " + error.message, listo: false });
+      return;
+    }
+    setEstado({ enviando: false, error: "", listo: true });
+  };
+
+  const campo = (etiqueta, valor, set, tipo, extra) => /*#__PURE__*/React.createElement("label",
+    { className: "block" },
+    /*#__PURE__*/React.createElement("span", {
+      className: "block text-xs font-semibold text-slate-600 mb-1" }, etiqueta),
+    /*#__PURE__*/React.createElement("input", Object.assign({
+      type: tipo || "text", value: valor, onChange: e => set(e.target.value),
+      disabled: estado.enviando,
+      className: "w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-[#0052CC]"
+    }, extra || {})));
+
+  return enCapa(/*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-[130] flex items-end sm:items-center justify-center p-0 sm:p-4",
+    style: { background: "rgba(5,13,30,.6)" }, onClick: onClose, role: "dialog", "aria-modal": "true"
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: e => e.stopPropagation(),
+    className: "bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto"
+  },
+    /*#__PURE__*/React.createElement("div", {
+      className: "px-5 py-4 border-b border-slate-100 flex items-start gap-3"
+    },
+      /*#__PURE__*/React.createElement(EscudoAndes, { size: 34 }),
+      /*#__PURE__*/React.createElement("div", { className: "min-w-0" },
+        /*#__PURE__*/React.createElement("h3", {
+          className: "font-bold text-slate-900 text-[16px] leading-tight" }, "Pedir el traslado"),
+        /*#__PURE__*/React.createElement("p", { className: "text-[12.5px] text-slate-500 mt-0.5 truncate" },
+          origen.nombre, " → ", destino.nombre)),
+      /*#__PURE__*/React.createElement("button", {
+        onClick: onClose, "aria-label": "Cerrar",
+        className: "ml-auto text-slate-400 hover:text-slate-700 text-2xl leading-none shrink-0" }, "×")),
+
+    estado.listo
+      ? /*#__PURE__*/React.createElement("div", { className: "px-5 py-8 text-center" },
+          /*#__PURE__*/React.createElement(EscudoAndes, { size: 54, titulo: "" }),
+          /*#__PURE__*/React.createElement("p", { className: "text-[16px] font-bold text-slate-900 mt-4" },
+            "Pedido enviado"),
+          /*#__PURE__*/React.createElement("p", { className: "text-[13.5px] text-slate-500 mt-2 leading-relaxed" },
+            "Te llamamos al ", telefono.trim(), " para confirmar el precio y la hora antes de salir."),
+          /*#__PURE__*/React.createElement("button", {
+            onClick: onClose,
+            className: "block w-full mt-7 bg-[#0052CC] text-white text-sm font-bold py-3 rounded-xl"
+          }, "Listo"))
+
+      : /*#__PURE__*/React.createElement("div", { className: "px-5 py-5 space-y-3.5" },
+          /*#__PURE__*/React.createElement("div", {
+            className: "rounded-xl p-3.5", style: { background: "#F7F5F1" } },
+            /*#__PURE__*/React.createElement("div", {
+              className: "flex items-baseline justify-between gap-3" },
+              /*#__PURE__*/React.createElement("span", {
+                className: "text-[12.5px] font-semibold text-slate-600" }, "Precio estimado del trayecto"),
+              /*#__PURE__*/React.createElement("b", {
+                className: "text-[20px] font-bold text-slate-900 tg-cifras"
+              }, money(cuenta.total, TRASLADO_TARIFAS.moneda))),
+            /*#__PURE__*/React.createElement("p", {
+              className: "text-[11.5px] text-slate-400 mt-1 tg-cifras"
+            }, cuenta.km, " km aprox. · base ", money(cuenta.base, TRASLADO_TARIFAS.moneda),
+               " + ", money(cuenta.porKm, TRASLADO_TARIFAS.moneda), "/km · ", vehiculo.title)),
+
+          campo("Tu nombre", nombre, setNombre),
+          campo("Tu teléfono", telefono, setTelefono, "tel"),
+          campo("Tu correo (opcional)", email, setEmail, "email"),
+          /*#__PURE__*/React.createElement("div", { className: "grid grid-cols-3 gap-3" },
+            campo("Día", fecha, setFecha, "date", { min: fechaISO(new Date()) }),
+            campo("Hora", hora, setHora, "time"),
+            campo("Pasajeros", pasajeros, setPasajeros, "number", { min: 1, max: vehiculo.seats || 8 })),
+          campo("Algo que debamos saber (opcional)", notas, setNotas),
+
+          estado.error && /*#__PURE__*/React.createElement("p", {
+            className: "text-[13px]", style: { color: "#DC2626" } }, estado.error),
+
+          /*#__PURE__*/React.createElement("button", {
+            onClick: enviar, disabled: estado.enviando,
+            className: "w-full bg-[#FF6B00] disabled:opacity-50 text-white text-sm font-bold py-3.5 rounded-xl"
+          }, estado.enviando ? "Enviando…" : "Enviar el pedido"),
+          /*#__PURE__*/React.createElement("p", { className: "text-[11.5px] text-slate-400 leading-relaxed" },
+            "Esto no cobra nada todavía: es un pedido. El negocio confirma precio y hora, y ahí se acuerda el pago.")))));
+}
+
+/* La tarjeta del conductor. Lo que enseña es el precio DEL TRAYECTO, no
+   una tarifa por día: el vehículo decide cuánta gente cabe y qué tan cómodo
+   va, no cuánto cuesta. */
+function TarjetaTraslado({ v, cuenta, origen, destino, onPedir }) {
+  const specs = [VEH_CAT_LABEL[v.category] || v.category,
+                 v.seats ? v.seats + " puestos" : null].filter(Boolean);
+  return /*#__PURE__*/React.createElement("article", {
+    className: "rounded-2xl overflow-hidden flex flex-col border transition-shadow hover:shadow-lg",
+    style: { borderColor: "#E7E4DE", background: "#fff", boxShadow: "0 1px 2px rgba(12,19,32,.04)" }
+  },
+    /*#__PURE__*/React.createElement("div", {
+      className: "relative overflow-hidden shrink-0",
+      style: { aspectRatio: "16 / 10", background: "#F1EFEA" }
+    },
+      v.cover_image_url
+        ? /*#__PURE__*/React.createElement("img", {
+            src: v.cover_image_url, alt: v.title, loading: "lazy",
+            className: "w-full h-full object-cover" })
+        : /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full flex items-center justify-center text-slate-300"
+          }, /*#__PURE__*/React.createElement(Car, { size: 34 })),
+      /*#__PURE__*/React.createElement("span", {
+        className: "absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1.5 rounded-full",
+        style: { background: "rgba(0,82,204,.94)", color: "#fff",
+                 boxShadow: "0 2px 8px rgba(12,19,32,.2)" }
+      }, "Con conductor")),
+
+    /*#__PURE__*/React.createElement("div", { className: "p-4 flex-1 flex flex-col" },
+      /*#__PURE__*/React.createElement("h3", {
+        className: "font-bold text-slate-900 leading-snug text-[15px]" }, v.title),
+      /*#__PURE__*/React.createElement("p", {
+        className: "text-[12.5px] text-slate-500 mt-1" }, specs.join(" · ")),
+      /*#__PURE__*/React.createElement("p", {
+        className: "text-[12.5px] text-slate-400 mt-0.5" }, "Sale de ", v.municipio),
+
+      /*#__PURE__*/React.createElement("div", { className: "flex-1" }),
+
+      cuenta
+        ? /*#__PURE__*/React.createElement("div", {
+            className: "mt-4 pt-3.5 border-t", style: { borderColor: "#F0EEE9" } },
+            /*#__PURE__*/React.createElement("p", { className: "text-[12px] text-slate-500 leading-snug" },
+              origen.nombre, " → ", destino.nombre),
+            /*#__PURE__*/React.createElement("p", { className: "mt-1" },
+              /*#__PURE__*/React.createElement("span", {
+                className: "text-[21px] font-bold text-slate-900 tg-cifras"
+              }, money(cuenta.total, TRASLADO_TARIFAS.moneda)),
+              /*#__PURE__*/React.createElement("span", {
+                className: "text-[12.5px] text-slate-500" }, " el trayecto")),
+            /*#__PURE__*/React.createElement("p", { className: "text-[11.5px] text-slate-400 tg-cifras" },
+              cuenta.km, " km aprox. · base ", money(cuenta.base, TRASLADO_TARIFAS.moneda),
+              " + ", money(cuenta.porKm, TRASLADO_TARIFAS.moneda), "/km"))
+        : /*#__PURE__*/React.createElement("p", {
+            className: "mt-4 pt-3.5 border-t text-[12.5px] text-slate-400",
+            style: { borderColor: "#F0EEE9" }
+          }, "Dinos de dónde a dónde y te decimos el precio."),
+
+      /*#__PURE__*/React.createElement("button", {
+        onClick: onPedir, disabled: !cuenta,
+        className: "w-full mt-3.5 text-white text-[13px] font-bold py-3 rounded-xl disabled:opacity-40",
+        style: { background: "#0052CC" }
+      }, cuenta ? "Pedir este traslado" : "Elige el trayecto")));
+}
+
+function CotizadorTraslado({ onListo }) {
+  const [origen, setOrigen] = useState(null);
+  const [destino, setDestino] = useState(null);
+  const cuenta = useMemo(() => cotizarTraslado(origen, destino), [origen, destino]);
+
+  useEffect(() => { onListo && onListo(cuenta, origen, destino); }, [cuenta]);
+
+  return /*#__PURE__*/React.createElement("div", { className: "tg-cotiza" },
+    /*#__PURE__*/React.createElement("div", { className: "tg-cotiza-campos" },
+      /*#__PURE__*/React.createElement(CampoSitio, {
+        id: "traslado-origen", etiqueta: "Desde", valor: origen,
+        excluir: destino && destino.id, onElegir: setOrigen }),
+      /*#__PURE__*/React.createElement("button", {
+        type: "button", className: "tg-cotiza-voltea",
+        "aria-label": "Intercambiar origen y destino",
+        onClick: () => { const o = origen; setOrigen(destino); setDestino(o); }
+      }, "⇅"),
+      /*#__PURE__*/React.createElement(CampoSitio, {
+        id: "traslado-destino", etiqueta: "Hasta", valor: destino,
+        excluir: origen && origen.id, onElegir: setDestino })),
+
+    cuenta
+      ? /*#__PURE__*/React.createElement("div", { className: "tg-cotiza-cuenta" },
+          /*#__PURE__*/React.createElement("div", { className: "tg-cotiza-total" },
+            /*#__PURE__*/React.createElement("span", null, "Precio del trayecto"),
+            /*#__PURE__*/React.createElement("b", { className: "tg-cifras" },
+              money(cuenta.total, TRASLADO_TARIFAS.moneda))),
+          /*#__PURE__*/React.createElement("ul", { className: "tg-cotiza-desglose" },
+            /*#__PURE__*/React.createElement("li", null,
+              /*#__PURE__*/React.createElement("span", null, "Tarifa base"),
+              /*#__PURE__*/React.createElement("b", null, money(cuenta.base, TRASLADO_TARIFAS.moneda))),
+            /*#__PURE__*/React.createElement("li", null,
+              /*#__PURE__*/React.createElement("span", null,
+                cuenta.km + " km × " + money(cuenta.porKm, TRASLADO_TARIFAS.moneda)),
+              /*#__PURE__*/React.createElement("b", null, money(cuenta.kmCosto, TRASLADO_TARIFAS.moneda))),
+            cuenta.minimoAplicado && /*#__PURE__*/React.createElement("li", null,
+              /*#__PURE__*/React.createElement("span", null, "Mínimo por trayecto"),
+              /*#__PURE__*/React.createElement("b", null, money(TRASLADO_TARIFAS.minimo, TRASLADO_TARIFAS.moneda)))),
+          /*#__PURE__*/React.createElement("p", { className: "tg-cotiza-nota" },
+            "Estimado para ", cuenta.km, " km de carretera (", cuenta.recta,
+            " km en línea recta). Es un cálculo aproximado: el conductor confirma el precio antes de salir.",
+            TRASLADO_TARIFAS.ejemplo && /*#__PURE__*/React.createElement("b", {
+              style: { display: "block", marginTop: "6px", color: "#B45309" }
+            }, "Tarifas de ejemplo: todavía no son precios reales de un proveedor.")))
+      : /*#__PURE__*/React.createElement("p", { className: "tg-cotiza-vacio" },
+          "Elige de dónde sales y a dónde vas y te decimos lo que cuesta el trayecto."));
+}
+
 function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferInicial = null, onClose }) {
   useCerrarConAtras(onClose);
   /* null = todavía no eligió. Con dos maneras de moverse, abrir ya metido en
@@ -2819,6 +3236,12 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
   const [disponibles, setDisponibles] = useState(null);   // null = sin filtro de fechas
   const [buscando, setBuscando] = useState(false);
   const [reservando, setReservando] = useState(null);
+  /* Lo que el cotizador va calculando. Vive aquí porque lo necesitan tanto
+     el paso 2 como las tarjetas de conductor del paso 3. */
+  const [pidiendo, setPidiendo] = useState(null);     // traslado, no alquiler
+  const [cotizacion, ponerCotizacion] = useState(null);
+  const [origen, ponerOrigen] = useState(null);
+  const [destino, ponerDestino] = useState(null);
 
   useEffect(() => {
     const onKey = e => { if (e.key === "Escape") onClose(); };
@@ -2874,17 +3297,28 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
       className: "shrink-0 w-9 h-9 rounded-full border flex items-center justify-center text-slate-500 hover:text-slate-900",
       style: { borderColor: "#E7E4DE", background: "#fff" }
     }, /*#__PURE__*/React.createElement(ArrowLeft, { size: 17 })),
+      /*#__PURE__*/React.createElement(EscudoAndes, { size: 32 }),
       /*#__PURE__*/React.createElement("div", { className: "min-w-0" },
         /*#__PURE__*/React.createElement("p", {
-          className: "text-[10px] font-bold uppercase text-slate-400",
-          style: { letterSpacing: ".18em" }
+          className: "text-[10px] font-bold uppercase",
+          style: { letterSpacing: ".18em", color: "#0052CC" }
         }, "Movilidad"),
         /*#__PURE__*/React.createElement("h2", {
           className: "text-[17px] font-bold text-slate-900 leading-tight truncate"
         }, !elegida ? "¿Cómo quieres moverte?"
-                    : (conChofer ? "Traslado con chofer" : "Alquiler de vehículos"))))),
+                    : (conChofer ? "Traslado puerta a puerta" : "Alquiler de vehículos"))))),
 
-    /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-5 py-9" },
+    /*#__PURE__*/React.createElement("div", { className: "max-w-5xl mx-auto px-5 py-9 relative" },
+
+      /* El escudo, dos veces y muy tenue: marca la pantalla sin pelearse
+         con lo que hay que leer. */
+      /*#__PURE__*/React.createElement("div", {
+        className: "tg-escudo-fondo", style: { top: "-10px", right: "-30px" }, "aria-hidden": "true"
+      }, /*#__PURE__*/React.createElement(EscudoAndes, { size: 230, titulo: "" })),
+      /*#__PURE__*/React.createElement("div", {
+        className: "tg-escudo-fondo", style: { bottom: "40px", left: "-60px", transform: "rotate(-12deg)" },
+        "aria-hidden": "true"
+      }, /*#__PURE__*/React.createElement(EscudoAndes, { size: 170, titulo: "" })),
 
       /* ----- Paso 1: cómo quiere moverse ----- */
       ELIGE_MODALIDAD && /*#__PURE__*/React.createElement(PasoMovilidad, {
@@ -2944,22 +3378,59 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
               className: "mt-[7px] w-1.5 h-1.5 rounded-full shrink-0",
               style: { background: activo ? "#0052CC" : "#CBD5E1" } }), t))),
 
+            /* Cómo funciona, en tres pasos. Es lo que convierte una tarjeta
+               en una explicación. */
+            /*#__PURE__*/React.createElement("ol", { className: "tg-comofunciona" },
+              m.pasos.map((t, i) => /*#__PURE__*/React.createElement("li", { key: i },
+                /*#__PURE__*/React.createElement("b", {
+                  style: activo ? { background: "#0052CC", color: "#fff" } : null
+                }, i + 1), t))),
+
             /*#__PURE__*/React.createElement("div", { className: "flex-1" }),
             /*#__PURE__*/React.createElement("p", {
               className: "text-[13px] mt-4 pt-3.5 border-t tg-cifras",
               style: { borderColor: "#F0EEE9", color: cuantos.length ? "#0C1320" : "#94A3B8" }
-            }, cuantos.length
-                 ? ["Desde ", /*#__PURE__*/React.createElement("b", { key: "p" }, "$" + minimo), " / día · ",
-                    cuantos.length, cuantos.length === 1 ? " vehículo" : " vehículos"]
-                 : "Sin vehículos por ahora"),
+            }, !cuantos.length
+                 ? (m.conChofer ? "Sin conductores por ahora" : "Sin vehículos por ahora")
+                 : (m.conChofer
+                      ? ["Desde ", /*#__PURE__*/React.createElement("b", { key: "p" },
+                           money(TRASLADO_TARIFAS.minimo, TRASLADO_TARIFAS.moneda)),
+                         " por trayecto · ", cuantos.length,
+                         cuantos.length === 1 ? " conductor" : " conductores"]
+                      : ["Desde ", /*#__PURE__*/React.createElement("b", { key: "p" }, "$" + minimo),
+                         " / día · ", cuantos.length,
+                         cuantos.length === 1 ? " vehículo" : " vehículos"])),
             /*#__PURE__*/React.createElement("span", {
               className: "text-[12.5px] font-bold mt-2",
               style: { color: activo ? "#0052CC" : "#64748B" }
             }, activo ? "Elegido · sigue abajo" : "Elegir →"));
         })),
 
-      /* ----- Pasos 2 y 3: solo existen cuando ya eligió cómo moverse ----- */
-      elegida && /*#__PURE__*/React.createElement(React.Fragment, null,
+      /* ----- El traslado tiene sus propios pasos: no hay fechas de retiro
+               ni devolución, hay un trayecto ----- */
+      elegida && conChofer && /*#__PURE__*/React.createElement(React.Fragment, null,
+        /*#__PURE__*/React.createElement(PasoMovilidad, {
+          n: 2, titulo: "¿De dónde a dónde?", listo: !!cotizacion }),
+        /*#__PURE__*/React.createElement(CotizadorTraslado, {
+          onListo: (c, o, d) => { ponerCotizacion(c); ponerOrigen(o); ponerDestino(d); } }),
+
+        /*#__PURE__*/React.createElement("div", { style: { height: "32px" } }),
+        /*#__PURE__*/React.createElement(PasoMovilidad, {
+          n: 3, titulo: "Quién te lleva", listo: !!cotizacion && flota.length > 0 }),
+        flota.length === 0
+          ? /*#__PURE__*/React.createElement("div", {
+              className: "rounded-2xl border border-dashed p-14 text-center",
+              style: { borderColor: "#DDD9D1" }
+            }, /*#__PURE__*/React.createElement("p", { className: "text-[15px] text-slate-700 font-bold" },
+                 "Todavía nadie ofrece traslados con conductor."))
+          : /*#__PURE__*/React.createElement("div", {
+              className: "grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            }, flota.map(v => /*#__PURE__*/React.createElement(TarjetaTraslado, {
+              key: v.id, v: v, cuenta: cotizacion, origen: origen, destino: destino,
+              onPedir: () => setPidiendo(v) })))),
+
+      /* ----- Pasos 2 y 3 del alquiler: fechas y vehículo ----- */
+      elegida && !conChofer && /*#__PURE__*/React.createElement(React.Fragment, null,
 
       /* ----- Paso 2: cuándo y dónde ----- */
       /*#__PURE__*/React.createElement(PasoMovilidad, { n: ELIGE_MODALIDAD ? 2 : 1, titulo: "¿Cuándo lo necesitas?", listo: rango }),
@@ -3040,6 +3511,11 @@ function RentacarPage({ municipioInicial, desdeInicial, hastaInicial, conChoferI
                 key: v.id, v: v, conChofer: conChofer, dias: rango ? diasEntre(desde, hasta).length : 0,
                 onReservar: setReservando
               })))),
+
+      pidiendo && cotizacion && /*#__PURE__*/React.createElement(PedirTraslado, {
+        vehiculo: pidiendo, cuenta: cotizacion, origen: origen, destino: destino,
+        onClose: () => setPidiendo(null)
+      }),
 
       reservando && /*#__PURE__*/React.createElement(ReservaVehiculoModal, {
         vehiculo: reservando, desdeInicial: desde, hastaInicial: hasta, conChofer: conChofer,
@@ -9125,6 +9601,18 @@ async function cargarCatalogoReal(){
   if (errRank) console.error('Error cargando el ranking:', errRank.message);
   (ranking || []).forEach(r => { RANKING[r.listing_id] = r; });
 
+  /* Capitales de municipio, para el cotizador de traslados. Son 72 filas
+     diminutas y traen la coordenada del pueblo, que es la que sirve para
+     medir un trayecto. */
+  const { data: munis } = await sb.from('municipios')
+    .select('id,estado,nombre,capital,lat,lng').order('capital');
+  (munis || []).forEach(m => {
+    if (m.lat == null || m.lng == null) return;
+    SITIOS_TRASLADO.push({
+      id: 'm:' + m.id, nombre: m.capital, tipo: 'pueblo',
+      pie: m.nombre + ' · ' + m.estado, lat: m.lat, lng: m.lng });
+  });
+
   const { data: puntos } = await sb.from('puntos_interes')
     .select('id,nombre,tipo,municipio_id,lat,lng')
     .eq('activo', true);
@@ -9141,6 +9629,14 @@ async function cargarCatalogoReal(){
       municipio: m ? m.nombre : null, estado: m ? m.estado : null,
       lat: p.lat, lng: p.lng
     });
+    /* Aeropuerto y terminal son justo de donde sale y a donde llega quien
+       pide un traslado: entran al cotizador, y de primeros. */
+    if (MAPA_SIEMPRE[p.tipo] && p.lat != null) {
+      SITIOS_TRASLADO.unshift({
+        id: 'p:' + p.id, nombre: p.nombre, tipo: p.tipo,
+        pie: MAPA_SIEMPRE[p.tipo].etiqueta + (m ? ' · ' + m.nombre : ''),
+        lat: p.lat, lng: p.lng });
+    }
   });
 
   /* ------------------------------------------------------------------
