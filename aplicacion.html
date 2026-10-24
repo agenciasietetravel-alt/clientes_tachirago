@@ -341,25 +341,53 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 .tg-h1-lead{font-size:clamp(17px,2.55vw,27px);font-weight:600;line-height:1.24;
   letter-spacing:-.012em;color:rgba(255,255,255,.93);text-wrap:balance;
   text-shadow:0 1px 6px rgba(2,10,24,.95),0 2px 18px rgba(2,10,24,.7)}
-.tg-andes{display:block;margin-top:4px;font-size:clamp(50px,11vw,116px);font-weight:900;
-  line-height:.93;letter-spacing:-.035em;
-  background-image:linear-gradient(100deg,#FF6B00,#FFC14D,#5BE49B,#4C9AFF,#B48CFF,#FF6B00);
-  background-size:320% 100%;-webkit-background-clip:text;background-clip:text;
-  color:transparent;-webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 2px 9px rgba(2,10,24,.62)) drop-shadow(0 6px 26px rgba(2,10,24,.42));
-  animation:tgAndes 11s linear infinite}
-@keyframes tgAndes{from{background-position:0% 50%}to{background-position:320% 50%}}
-.tg-andes-sub{display:block;margin-top:7px;padding-left:.36em;
+/* ANDES entra una sola vez: la palabra sube desde una máscara y el trazo de
+   marcador se dibuja debajo. Dos recursos, no cinco. El color no se mueve:
+   es el naranja de la marca, fijo. */
+.tg-andes-caja{display:block;overflow:hidden;padding:0 .06em .06em;margin-top:2px}
+.tg-andes{display:block;font-size:clamp(50px,11vw,116px);font-weight:900;
+  line-height:.96;letter-spacing:-.035em;color:#FF8A2B;
+  text-shadow:0 2px 0 rgba(120,44,0,.3), 0 3px 12px rgba(2,10,24,.55), 0 12px 40px rgba(2,10,24,.45);
+  transform:translateY(102%);animation:tgSube .78s cubic-bezier(.17,.84,.3,1) .12s forwards}
+@keyframes tgSube{to{transform:translateY(0)}}
+
+/* El trazo: un rectángulo con las puntas desiguales, como de rotulador, que
+   crece de izquierda a derecha cuando la palabra ya aterrizó. */
+.tg-trazo{display:block;height:clamp(7px,1.25vw,14px);margin:-.06em auto 0;
+  width:min(74%,520px);background:#FF6B00;opacity:.92;
+  border-radius:40% 60% 55% 45%/60% 50% 55% 45%;
+  transform-origin:left center;transform:scaleX(0);
+  animation:tgTrazo .62s cubic-bezier(.22,.9,.3,1) .72s forwards}
+@keyframes tgTrazo{to{transform:scaleX(1)}}
+
+.tg-andes-sub{display:block;margin-top:11px;padding-left:.36em;
   font-size:clamp(12.5px,2.05vw,22px);font-weight:700;letter-spacing:.36em;
-  color:rgba(255,255,255,.9);text-shadow:0 1px 6px rgba(2,10,24,.95)}
+  color:rgba(255,255,255,.92);text-shadow:0 1px 6px rgba(2,10,24,.95);
+  opacity:0;animation:tgAparece .5s ease-out .95s forwards}
+@keyframes tgAparece{to{opacity:1}}
+
+/* Sin movimiento: todo llega puesto, nada se anima. */
 @media(prefers-reduced-motion:reduce){
-  .tg-andes{animation:none;background-position:14% 50%}
+  .tg-andes,.tg-trazo,.tg-andes-sub{animation:none}
+  .tg-andes{transform:none}
+  .tg-trazo{transform:scaleX(1)}
+  .tg-andes-sub{opacity:1}
 }
-/* Si el navegador no sabe recortar el fondo contra la letra, el relleno
-   transparente dejaría la palabra invisible. Vuelve al naranja de siempre. */
-@supports not ((-webkit-background-clip:text) or (background-clip:text)){
-  .tg-andes{background-image:none;color:#FF8A2B;-webkit-text-fill-color:#FF8A2B;animation:none}
-}
+
+/* Los tres botones de la portada: son la acción principal de la página, así
+   que se ven como botones y no como pestañas de un formulario. */
+.tg-pilar{display:flex;align-items:center;justify-content:center;gap:8px;
+  flex:1 1 0;min-width:0;padding:13px 10px;border-radius:14px;border:1.5px solid transparent;
+  font-size:14px;font-weight:700;color:#334155;background:#F1F5F9;cursor:pointer;
+  transition:background .16s,color .16s,border-color .16s,box-shadow .16s,transform .16s}
+.tg-pilar:hover{background:#E2E8F0;color:#0F172A;transform:translateY(-1px)}
+.tg-pilar:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 5.5px #0052CC}
+.tg-pilar[aria-selected="true"]{background:#0052CC;border-color:#0052CC;color:#fff;
+  box-shadow:0 1px 2px rgba(12,19,32,.08),0 10px 22px -10px rgba(0,82,204,.75)}
+.tg-pilar[aria-selected="true"]:hover{background:#0046AE;transform:translateY(-1px)}
+.tg-pilar svg{flex-shrink:0}
+@media(max-width:420px){.tg-pilar{font-size:13px;padding:12px 6px;gap:6px}}
+@media(prefers-reduced-motion:reduce){.tg-pilar{transition:none}.tg-pilar:hover{transform:none}}
 
 /* La franja de confianza. Los separadores son del estilo, no del marcado:
    en el móvil cada punto cae en su línea y un «·» suelto al principio de
@@ -3410,24 +3438,24 @@ function SearchTabsBox({
   };  
   return /*#__PURE__*/React.createElement("div", {  
     className: "w-full max-w-4xl mx-auto mt-8 bg-white rounded-2xl shadow-xl"  
-  }, /*#__PURE__*/React.createElement("div", {  
-    className: "flex items-center gap-1 px-3 pt-3 pb-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 px-3 pt-3 pb-3",
+    role: "tablist",
+    "aria-label": "Qué quieres reservar"
   }, CATEGORIES.map(cat => {  
     const Icon = cat.icon;  
     const active = category === cat.id;  
     return /*#__PURE__*/React.createElement("button", {  
-      key: cat.id,  
+      key: cat.id,
+      role: "tab",
+      "aria-selected": active,
       onClick: () => {
         setCategory(cat.id);
         if (cat.id === "rentacar") setRentacarAbierto({});
         if (cat.id === "alojamientos" && HOTELES.length === 1) setHotelAbierto(HOTELES[0]);
       },  
-      className: `flex flex-1 sm:flex-none items-center justify-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition-colors ${active ? "bg-[#0052CC] text-white" : "text-slate-600 hover:bg-slate-100"}`  
-    }, /*#__PURE__*/React.createElement(Icon, {
-      size: 14,
-      className: "hidden sm:block",
-      style: { flexShrink: 0 }
-    }), cat.label);  
+      className: "tg-pilar"
+    }, /*#__PURE__*/React.createElement(Icon, { size: 17 }), cat.label);  
   })), /*#__PURE__*/React.createElement("div", {  
     className: "h-px bg-slate-100 mx-4"  
   }), /*#__PURE__*/React.createElement("div", {  
@@ -3474,18 +3502,19 @@ function Hero({
     fetchpriority: "high",
     className: "w-full h-full object-cover"
   })),
-  /* Un solo velo, en dos capas: el degradado vertical sostiene el título y la
-     viñeta cierra los bordes. Nada de adornos encima de la foto — con una
-     portada así de cargada, cualquier cosa más es ruido. */
+  /* El velo bajó a la mitad: la foto se ve. Lo que sostiene el texto ya no es
+     una cortina sobre toda la imagen sino una elipse oscura centrada en la
+     columna del titular, más un apoyo abajo para el buscador. Donde no hay
+     texto, la foto queda casi limpia. */
   React.createElement("div", {
-    className: "absolute inset-0",
+    className: "absolute inset-0 pointer-events-none",
     style: {
-      background: "linear-gradient(to bottom, rgba(3,15,34,.52) 0%, rgba(3,15,34,.46) 38%, rgba(3,15,34,.30) 62%, rgba(3,15,34,.50) 100%)"
+      background: "linear-gradient(to bottom, rgba(3,15,34,.30) 0%, rgba(3,15,34,.14) 34%, rgba(3,15,34,.10) 58%, rgba(3,15,34,.34) 100%)"
     }
   }), React.createElement("div", {
     className: "absolute inset-0 pointer-events-none",
     style: {
-      background: "radial-gradient(70% 55% at 50% 44%, rgba(2,10,24,.34) 0%, transparent 70%)"
+      background: "radial-gradient(58% 46% at 50% 40%, rgba(2,10,24,.52) 0%, rgba(2,10,24,.26) 52%, transparent 78%)"
     }
   }), React.createElement("div", {  
     className: "relative z-10 max-w-4xl mx-auto px-4 text-center py-16"
@@ -3495,12 +3524,14 @@ function Hero({
   }, "Mérida · Táchira · Trujillo"), /*#__PURE__*/React.createElement("h1", { className: "tg-h1" },
     /*#__PURE__*/React.createElement("span", { className: "tg-h1-lead" },
       "Reserva experiencias, transporte y alojamiento en los"),
-    /*#__PURE__*/React.createElement("span", { className: "tg-andes" }, "ANDES"),
+    /*#__PURE__*/React.createElement("span", { className: "tg-andes-caja" },
+      /*#__PURE__*/React.createElement("span", { className: "tg-andes" }, "ANDES")),
+    /*#__PURE__*/React.createElement("span", { className: "tg-trazo", "aria-hidden": "true" }),
     /*#__PURE__*/React.createElement("span", { className: "tg-andes-sub" }, "VENEZOLANOS")),
     /*#__PURE__*/React.createElement("p", {
     className: "mt-4 text-base md:text-lg mx-auto",
     style: { maxWidth: "54ch", color: "rgba(255,255,255,.94)", textShadow: "0 1px 6px rgba(2,10,24,.95), 0 2px 18px rgba(2,10,24,.7)" }
-  }, "Todo en un solo lugar, con cada reserva respaldada por un comprobante verificado por la plataforma."), /*#__PURE__*/React.createElement(SearchTabsBox, {  
+  }, "Eliges, pagas y recibes tu comprobante. Tres pasos, con el dinero retenido hasta que el negocio confirme."), /*#__PURE__*/React.createElement(SearchTabsBox, {  
     category: category,  
     setCategory: setCategory,  
     setMunicipioFiltro: setMunicipioFiltro  
