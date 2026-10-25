@@ -563,6 +563,82 @@ html.tg-esperando #tg-espera{display:flex}
   .tg-franja-in{column-gap:18px;row-gap:3px;padding:11px 16px}
 }
 
+/* El botón que invita a publicar. Antes era un contorno naranja entre otros
+   dos botones con contorno: el que trae la oferta no puede pesar lo mismo
+   que «Mis reservas». Ahora va relleno, y es el único relleno de la barra. */
+.tg-cta-prov{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  background:linear-gradient(180deg,#FF7A14,#F06100);color:#fff;border:0;
+  font-weight:700;letter-spacing:-.01em;border-radius:10px;
+  box-shadow:0 1px 2px rgba(146,64,14,.28),0 4px 12px rgba(240,97,0,.26);
+  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;cursor:pointer}
+.tg-cta-prov:hover{filter:brightness(1.05);transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(146,64,14,.3),0 8px 20px rgba(240,97,0,.34)}
+.tg-cta-prov:active{transform:translateY(0)}
+.tg-cta-prov:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 5.5px #F06100}
+/* 44 px de alto: el mínimo para que el pulgar no falle. */
+.tg-cta-prov-lg{font-size:13.5px;padding:0 15px;height:44px}
+.tg-cta-prov-sm{font-size:12.5px;padding:0 13px;height:38px;border-radius:999px}
+@media(prefers-reduced-motion:reduce){
+  .tg-cta-prov{transition:none}.tg-cta-prov:hover{transform:none}
+}
+
+/* Los dos menús de la barra. «Lugares que ver» ya no es una reja de 29
+   nombres sueltos: primero el estado, después sus municipios. */
+.tg-men-vuelta{display:inline-flex;align-items:center;gap:5px;background:none;border:0;
+  padding:2px 0;font-size:12px;font-weight:700;color:#0052CC;cursor:pointer}
+.tg-men-vuelta:hover{text-decoration:underline}
+.tg-men-edo{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:11px 12px;border-radius:12px;border:1px solid #E2E8F0;background:#fff;
+  cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.tg-men-edo:hover{border-color:#0052CC;background:#F5F9FF}
+.tg-men-edo:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(0,82,204,.3)}
+.tg-men-edo-pin{width:10px;height:10px;border-radius:50%;flex:none}
+.tg-men-edo-n{display:block;font-size:14px;font-weight:700;color:#0F172A;line-height:1.2}
+.tg-men-edo-p{display:block;font-size:11.5px;color:#64748B;line-height:1.3;margin-top:1px}
+.tg-men-mun{display:flex;align-items:baseline;gap:6px;width:100%;text-align:left;
+  padding:7px 9px;border-radius:9px;background:none;border:0;cursor:pointer;
+  transition:background .14s ease}
+.tg-men-mun:hover{background:#EFF6FF}
+.tg-men-mun:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(0,82,204,.35)}
+.tg-men-mun-n{font-size:13.5px;color:#334155;font-weight:600}
+.tg-men-mun-c{font-size:11.5px;color:#94A3B8;font-weight:500}
+.tg-men-mun[disabled]{cursor:default;opacity:.62}
+.tg-men-mun[disabled]:hover{background:none}
+/* Lo que todavía no existe se dice, no se esconde detrás de un enlace que
+   no lleva a ninguna parte. */
+.tg-pronto{flex:none;margin-left:auto;font-size:9.5px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;color:#B45309;
+  background:#FEF3C7;border-radius:999px;padding:2px 7px;line-height:1.5}
+.tg-men-nota{display:flex;align-items:flex-start;gap:7px;margin-top:10px;
+  padding-top:9px;border-top:1px solid #F1F5F9;font-size:11.5px;color:#64748B;line-height:1.45}
+.tg-men-top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.tg-men-top p{font-size:11px;font-weight:700;color:#94A3B8;
+  text-transform:uppercase;letter-spacing:.07em;margin:0}
+/* En qué estado está cada cosa. Con tres estados en el catálogo, un título
+   suelto no dice dónde queda. */
+.tg-edo-chip{flex:none;font-size:9.5px;font-weight:800;letter-spacing:.04em;
+  text-transform:uppercase;border-radius:999px;padding:2px 7px;line-height:1.55;
+  color:#0F172A;background:#E2E8F0}
+.tg-men-act{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding:7px 9px;border-radius:9px;background:none;border:0;cursor:pointer;
+  transition:background .14s ease}
+.tg-men-act:hover{background:#EFF6FF}
+.tg-men-act:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(0,82,204,.35)}
+.tg-men-act-n{font-size:13.5px;color:#334155;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tg-men-vacio{font-size:12.5px;color:#64748B;padding:6px 2px;line-height:1.5}
+/* Las rejillas del panel van con clase propia: la hoja de Tailwind de esta
+   página es estática y una clase que no estuviera en aquella compilación no
+   genera nada. Ya pasó con un ancho y el panel salió estrujado. */
+.tg-men-rejilla{display:grid;grid-template-columns:1fr 1fr;gap:2px;max-height:328px;overflow-y:auto}
+.tg-men-rejilla.tg-una{grid-template-columns:1fr;max-height:292px}
+.tg-men-estados{display:grid;grid-template-columns:1fr;gap:6px}
+/* El panel del móvil cuelga del borde de la barra, a todo el ancho y por
+   encima de la tira que lo recortaba. */
+.tg-men-sheet{position:absolute;left:12px;right:12px;top:100%;z-index:40;
+  background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:13px;
+  box-shadow:0 12px 32px rgba(15,23,42,.18);max-height:72vh;overflow-y:auto}
+
 .tg-mapa{background:#050D1E;background-image:radial-gradient(circle at 18% 12%,rgba(31,111,229,.22),transparent 55%),radial-gradient(circle at 86% 78%,rgba(255,107,0,.14),transparent 52%);padding:56px 0;position:relative;overflow:hidden}
 .tg-mapa::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.055) 1px,transparent 1px);background-size:30px 30px;pointer-events:none}
 .tg-mapa-wrap{max-width:1180px;margin:0 auto;padding:0 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:38px;align-items:center;position:relative}
@@ -927,6 +1003,25 @@ const MUNICIPIOS = ["Andrés Bello", "Antonio Rómulo Costa", "Ayacucho", "Bolí
 
 /* Modificación: el dropdown "Cosas que hacer" muestra actividades/destinos de  
    experiencia en vez de municipios (los otros 2 dropdowns siguen con MUNICIPIOS). */  
+/* Los 72 municipios de los tres estados, con su capital. Se llenan al
+   arrancar desde la tabla `municipios`, que es la fuente: ahí están los 29
+   del Táchira, los 23 de Mérida y los 20 de Trujillo con la coordenada del
+   pueblo capital. No se escribe ninguno a mano en esta página. */
+const MUNICIPIOS_ANDES = [];
+const NOMBRE_ESTADO = { Tachira: "Táchira", Merida: "Mérida", Trujillo: "Trujillo" };
+const ORDEN_ESTADOS = ["Tachira", "Merida", "Trujillo"];
+function municipiosDe(estado){
+  return MUNICIPIOS_ANDES.filter(m => m.estado === estado);
+}
+/* Cinco nombres de municipio se repiten entre estados —Andrés Bello está en
+   los tres—, así que el nombre solo no identifica a nadie. Cuando hay que
+   deducir el estado de algo que solo guarda el municipio, se deduce nada
+   más si el nombre es único; si no, se devuelve nulo en vez de adivinar. */
+function estadoDelMunicipio(nombre){
+  const iguales = MUNICIPIOS_ANDES.filter(m => normalizaTexto(m.nombre) === normalizaTexto(nombre));
+  return iguales.length === 1 ? iguales[0].estado : null;
+}
+
 const ACTIVIDADES = ["Parapente", "Chichiriviche", "Margarita", "Ruta al llano", "Chinácota", "Medellín", "Los Roques", "Senderismo", "Cascadas", "Caminatas", "Páramos", "Ruta del café"];
 
 /* Cinta de autoridad: respaldos institucionales/tecnológicos mostrados en el marquee */  
@@ -1195,7 +1290,7 @@ function TachiraMark({
   }));  
 }
 
-/* Punto 6: modal simple "Únete a nosotros" para comercios/proveedores */  
+/* Punto 6: modal simple "Únete a nosotros" para prestadores turísticos */  
 function JoinProviderModal({
   onClose
 }) {
@@ -1363,6 +1458,126 @@ function JoinProviderModal({
     className: "text-[#0052CC] font-semibold"
   }, "Entra al Portal de Proveedores")))));
 }
+/* Qué municipios tienen de verdad algo publicado. Un municipio que se puede
+   tocar y devuelve una pantalla vacía se lee como una página rota; es más
+   honesto enseñarlo apagado y decir que todavía no hay nada. */
+function municipiosConPublicaciones(){
+  const con = new Set();
+  (CARDS_BY_CATEGORY.experiencias || []).forEach(e => e.municipio && con.add(normalizaTexto(e.municipio)));
+  ALOJAMIENTOS.forEach(a => a.municipio && con.add(normalizaTexto(a.municipio)));
+  HOTELES.forEach(h => h.municipio && con.add(normalizaTexto(h.municipio)));
+  return con;
+}
+
+/* Las diez de la cabecera. El orden que pidió el negocio es: primero lo que
+   más se ha vendido —reservas confirmadas, que es lo que cuenta la vista
+   `catalogo_ranking`—, y mientras no haya ventas suficientes manda un número
+   puesto a mano en `listings.featured_rank` (1 = primero). Después la nota
+   media y, para que el orden no baile entre recargas, el título. */
+function destacadosDelMenu(limite){
+  const todo = []
+    .concat(CARDS_BY_CATEGORY.experiencias || [])
+    .concat(ALOJAMIENTOS.map(a => Object.assign({}, a, { title: a.titulo, categoria: 'alojamiento' })));
+  const rango = x => x.destacadoRank == null ? Infinity : x.destacadoRank;
+  const vendidas = x => Number((RANKING[x.id] || {}).vendidas || 0);
+  const nota = x => Number((RANKING[x.id] || {}).valoracion || 0);
+  return todo.slice().sort((a, b) => {
+    if (vendidas(b) !== vendidas(a)) return vendidas(b) - vendidas(a);
+    if (rango(a) !== rango(b)) return rango(a) - rango(b);
+    if (nota(b) !== nota(a)) return nota(b) - nota(a);
+    return String(a.title || '').localeCompare(String(b.title || ''));
+  }).slice(0, limite || 10);
+}
+
+/* El contenido de los dos menús de la barra, uno solo para escritorio y
+   móvil: si se escribieran dos veces, se arreglaría uno y el otro no. */
+function PanelMenu({ menu, compacto, onMunicipio, onActividad }){
+  const [estadoAbierto, setEstadoAbierto] = useState(null);
+  const conOferta = useMemo(municipiosConPublicaciones, []);
+  const destacados = useMemo(() => destacadosDelMenu(10), []);
+
+  if (menu === "Cosas que hacer") {
+    return /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("div", { className: "tg-men-top" },
+        /*#__PURE__*/React.createElement("p", null, "Lo más reservado")),
+      destacados.length
+        ? /*#__PURE__*/React.createElement("div", {
+            className: compacto ? "tg-men-rejilla tg-una" : "tg-men-rejilla"
+          }, destacados.map(d => /*#__PURE__*/React.createElement("button", {
+              key: d.id,
+              onClick: () => onActividad(d),
+              className: "tg-men-act",
+              title: d.title
+            },
+            /*#__PURE__*/React.createElement(d.categoria === 'alojamiento' ? Bed : Compass, {
+              size: 14, className: "text-[#FF6B00] shrink-0" }),
+            /*#__PURE__*/React.createElement("span", { className: "tg-men-act-n" }, d.title),
+            d.estado && /*#__PURE__*/React.createElement("span", { className: "tg-edo-chip" },
+              NOMBRE_ESTADO[d.estado] || d.estado))))
+        : /*#__PURE__*/React.createElement("p", { className: "tg-men-vacio" },
+            "Todavía no hay nada publicado. En cuanto los primeros prestadores suban su catálogo, aquí salen los diez más reservados."));
+  }
+
+  /* Lugares que ver: primero el estado, después sus municipios. */
+  if (!estadoAbierto) {
+    return /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("div", { className: "tg-men-top" },
+        /*#__PURE__*/React.createElement("p", null, "Elige un estado")),
+      /*#__PURE__*/React.createElement("div", { className: "tg-men-estados" },
+        ORDEN_ESTADOS.map(e => {
+          const suyos = municipiosDe(e);
+          return /*#__PURE__*/React.createElement("button", {
+            key: e,
+            onClick: () => setEstadoAbierto(e),
+            className: "tg-men-edo"
+          }, /*#__PURE__*/React.createElement("span", {
+              className: "tg-men-edo-pin",
+              style: { background: COLOR_ESTADO[e.toLowerCase()] || "#94A3B8" },
+              "aria-hidden": "true"
+            }),
+            /*#__PURE__*/React.createElement("span", null,
+              /*#__PURE__*/React.createElement("span", { className: "tg-men-edo-n" }, NOMBRE_ESTADO[e] || e),
+              /*#__PURE__*/React.createElement("span", { className: "tg-men-edo-p" },
+                suyos.length ? suyos.length + " municipios" : "Cargando…")),
+            /*#__PURE__*/React.createElement(ChevronRight, {
+              size: 15, className: "ml-auto text-slate-400 shrink-0" }));
+        })),
+      /*#__PURE__*/React.createElement("div", { className: "tg-men-nota" },
+        /*#__PURE__*/React.createElement("span", { className: "tg-pronto", style: { marginLeft: 0 } }, "Próximamente"),
+        /*#__PURE__*/React.createElement("span", null,
+          "Qué hacer en cada municipio y su mini ruta turística.")));
+  }
+
+  const suyos = municipiosDe(estadoAbierto);
+  return /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("div", { className: "tg-men-top" },
+      /*#__PURE__*/React.createElement("button", {
+        className: "tg-men-vuelta",
+        onClick: () => setEstadoAbierto(null)
+      }, /*#__PURE__*/React.createElement(ChevronLeft, { size: 13 }), "Estados"),
+      /*#__PURE__*/React.createElement("p", null, NOMBRE_ESTADO[estadoAbierto] || estadoAbierto)),
+    /*#__PURE__*/React.createElement("div", {
+      className: compacto ? "tg-men-rejilla tg-una" : "tg-men-rejilla"
+    }, suyos.map(m => {
+      const hay = conOferta.has(normalizaTexto(m.nombre));
+      return /*#__PURE__*/React.createElement("button", {
+        key: m.id,
+        disabled: !hay,
+        "aria-disabled": !hay,
+        onClick: hay ? () => onMunicipio(m) : undefined,
+        className: "tg-men-mun",
+        title: hay ? ("Ver lo publicado en " + m.nombre) : (m.nombre + ": todavía sin publicaciones")
+      },
+        /*#__PURE__*/React.createElement("span", { className: "tg-men-mun-n" }, m.nombre),
+        /*#__PURE__*/React.createElement("span", { className: "tg-men-mun-c" }, "(" + m.capital + ")"),
+        !hay && /*#__PURE__*/React.createElement("span", { className: "tg-pronto" }, "Pronto"));
+    })),
+    /*#__PURE__*/React.createElement("div", { className: "tg-men-nota" },
+      /*#__PURE__*/React.createElement("span", { className: "tg-pronto", style: { marginLeft: 0 } }, "Próximamente"),
+      /*#__PURE__*/React.createElement("span", null,
+        "La ruta de qué hacer en cada municipio.")));
+}
+
 function Navbar({
   cartCount,
   onOpenCart,
@@ -1393,26 +1608,10 @@ function Navbar({
     setCurrencyOpen(false);  
   };
 
-  /* Modificación: contenido del panel según el menú. Solo "Cosas que hacer"  
-     muestra actividades; "Lugares que ver" muestra los 29 municipios reales. */  
-  const getMenuData = menu => {  
-    if (menu === "Cosas que hacer") {  
-      return {  
-        items: ACTIVIDADES,  
-        header: "Actividades y destinos",  
-        icon: Compass  
-      };  
-    }  
-    return {  
-      items: MUNICIPIOS,  
-      header: "Municipios con actividad turística",  
-      icon: MapPin  
-    };  
-  };  
-  const handleItemClick = (menu, item) => {  
-    if (menu === "Cosas que hacer") onSelectActividad(item);else onSelectMunicipio(item);  
-    setOpenDropdown(null);  
-  };  
+  /* El panel de cada menú lo arma PanelMenu, el mismo en escritorio y en
+     móvil. Aquí solo queda cerrar el desplegable cuando se elige algo. */
+  const elegirMunicipio = m => { onSelectMunicipio(m); setOpenDropdown(null); };
+  const elegirActividad = a => { onSelectActividad(a); setOpenDropdown(null); };
   return /*#__PURE__*/React.createElement("header", {  
     className: "sticky top-0 z-40 bg-white border-b border-slate-200"  
   }, (openDropdown || currencyOpen) && /*#__PURE__*/React.createElement("div", {  
@@ -1435,41 +1634,30 @@ function Navbar({
   }, "GOO!"))), /*#__PURE__*/React.createElement("nav", {  
     className: "hidden md:flex items-center gap-1 ml-4 relative z-30"  
   }, menus.map(menu => {  
-    const {  
-      items,  
-      header,  
-      icon: ItemIcon  
-    } = getMenuData(menu);  
-    return /*#__PURE__*/React.createElement("div", {  
-      key: menu,  
-      className: "relative"  
-    }, /*#__PURE__*/React.createElement("button", {  
-      onClick: () => setOpenDropdown(cur => cur === menu ? null : menu),  
-      className: `flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${openDropdown === menu ? "text-[#0052CC] bg-blue-50" : "text-slate-700 hover:text-[#0052CC]"}`  
-    }, menu, /*#__PURE__*/React.createElement(ChevronDown, {  
-      size: 14,  
-      className: `transition-transform ${openDropdown === menu ? "rotate-180" : ""}`  
-    })), openDropdown === menu && /*#__PURE__*/React.createElement("div", {  
-      className: "absolute left-0 mt-1 w-[420px] bg-white border border-slate-200 rounded-xl shadow-xl p-4"  
-    }, /*#__PURE__*/React.createElement("p", {  
-      className: "text-xs font-semibold text-slate-400 uppercase mb-2 tracking-wide"  
-    }, header), /*#__PURE__*/React.createElement("div", {  
-      className: "grid grid-cols-2 gap-1"  
-    }, items.map(item => /*#__PURE__*/React.createElement("button", {  
-      key: item,  
-      onClick: () => handleItemClick(menu, item),  
-      className: "flex items-center gap-2 text-left px-2.5 py-2 rounded-lg text-sm text-slate-700 hover:bg-blue-50 hover:text-[#0052CC] transition-colors"  
-    }, /*#__PURE__*/React.createElement(ItemIcon, {  
-      size: 14,  
-      className: "text-[#FF6B00] shrink-0"  
-    }), " ", item)))));  
+    return /*#__PURE__*/React.createElement("div", {
+      key: menu,
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => setOpenDropdown(cur => cur === menu ? null : menu),
+      "aria-expanded": openDropdown === menu,
+      className: `flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${openDropdown === menu ? "text-[#0052CC] bg-blue-50" : "text-slate-700 hover:text-[#0052CC]"}`
+    }, menu, /*#__PURE__*/React.createElement(ChevronDown, {
+      size: 14,
+      className: `transition-transform ${openDropdown === menu ? "rotate-180" : ""}`
+    })), openDropdown === menu && /*#__PURE__*/React.createElement("div", {
+      className: "absolute left-0 mt-1 w-[420px] bg-white border border-slate-200 rounded-xl shadow-xl p-4"
+    }, /*#__PURE__*/React.createElement(PanelMenu, {
+      menu: menu, compacto: false,
+      onMunicipio: elegirMunicipio, onActividad: elegirActividad
+    })));
   }), /*#__PURE__*/React.createElement("button", {
     onClick: onMisReservas,
     className: "ml-1 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-[#0052CC] text-[#0052CC] hover:bg-blue-50 transition-colors whitespace-nowrap"
   }, "Mis reservas"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setJoinOpen(true),
-    className: "ml-1 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-[#FF6B00] text-[#FF6B00] hover:bg-orange-50 transition-colors whitespace-nowrap"
-  }, "¿Eres un comercio? Únete a nosotros")), /*#__PURE__*/React.createElement("div", {  
+    className: "ml-2 tg-cta-prov tg-cta-prov-lg"
+  }, /*#__PURE__*/React.createElement(Plus, { size: 15, className: "shrink-0" }),
+     "Publica tu alojamiento o experiencia")), /*#__PURE__*/React.createElement("div", {  
     className: "flex items-center gap-1 ml-auto shrink-0 relative z-30"  
   }, /*#__PURE__*/React.createElement("button", {  
     onClick: onOpenCart,  
@@ -1495,43 +1683,37 @@ function Navbar({
       setCurrencyOpen(false);  
     },  
     className: `w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${currency === c ? "font-bold text-[#0052CC]" : "text-slate-700"}`  
-  }, c)))))), /*#__PURE__*/React.createElement("div", {  
-    className: "md:hidden max-w-6xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto relative z-30"  
-  }, menus.map(menu => {  
-    const {  
-      items,  
-      header,  
-      icon: ItemIcon  
-    } = getMenuData(menu);  
-    return /*#__PURE__*/React.createElement("div", {  
-      key: menu,  
-      className: "relative shrink-0"  
-    }, /*#__PURE__*/React.createElement("button", {  
-      onClick: () => setOpenDropdown(cur => cur === menu ? null : menu),  
-      className: `flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap ${openDropdown === menu ? "border-[#0052CC] text-[#0052CC]" : "border-slate-200 text-slate-600"}`  
-    }, menu, " ", /*#__PURE__*/React.createElement(ChevronDown, {  
-      size: 12  
-    })), openDropdown === menu && /*#__PURE__*/React.createElement("div", {  
-      className: "absolute left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-3"  
-    }, /*#__PURE__*/React.createElement("p", {  
-      className: "text-[10px] font-semibold text-slate-400 uppercase mb-1.5 tracking-wide"  
-    }, header), /*#__PURE__*/React.createElement("div", {  
-      className: "grid grid-cols-1 gap-1 max-h-64 overflow-y-auto"  
-    }, items.map(item => /*#__PURE__*/React.createElement("button", {  
-      key: item,  
-      onClick: () => handleItemClick(menu, item),  
-      className: "flex items-center gap-2 text-left px-2 py-1.5 rounded-lg text-sm text-slate-700 hover:bg-blue-50"  
-    }, /*#__PURE__*/React.createElement(ItemIcon, {  
-      size: 13,  
-      className: "text-[#FF6B00] shrink-0"  
-    }), " ", item)))));  
-  }), /*#__PURE__*/React.createElement("button", {
+  }, c)))))),
+  /* La tira del móvil. Dos cambios respecto a antes: el botón de publicar va
+     de primero —al final quedaba fuera de pantalla y había que arrastrar la
+     tira para encontrarlo, justo el botón que trae la oferta—, y el panel
+     salió de la tira. Mientras vivía dentro, el `overflow-x` que permite
+     arrastrar los chips recortaba el desplegable por la mitad. */
+  /*#__PURE__*/React.createElement("div", {
+    className: "md:hidden max-w-6xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto relative z-30"
+  }, /*#__PURE__*/React.createElement("button", {
+    key: "publica",
+    onClick: () => setJoinOpen(true),
+    className: "shrink-0 tg-cta-prov tg-cta-prov-sm",
+    "aria-label": "Publica tu alojamiento o experiencia"
+  }, /*#__PURE__*/React.createElement(Plus, { size: 14, className: "shrink-0" }),
+     "Publica tu alojamiento"), menus.map(menu =>
+    /*#__PURE__*/React.createElement("button", {
+      key: menu,
+      onClick: () => setOpenDropdown(cur => cur === menu ? null : menu),
+      "aria-expanded": openDropdown === menu,
+      className: `shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap ${openDropdown === menu ? "border-[#0052CC] text-[#0052CC]" : "border-slate-200 text-slate-600"}`
+    }, menu, " ", /*#__PURE__*/React.createElement(ChevronDown, { size: 12 }))
+  ), /*#__PURE__*/React.createElement("button", {
     onClick: onMisReservas,
     className: "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#0052CC] text-[#0052CC] whitespace-nowrap"
-  }, "Mis reservas"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setJoinOpen(true),
-    className: "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#FF6B00] text-[#FF6B00] whitespace-nowrap"
-  }, "Únete a nosotros")), joinOpen && /*#__PURE__*/React.createElement(JoinProviderModal, {  
+  }, "Mis reservas")),
+  openDropdown && /*#__PURE__*/React.createElement("div", {
+    className: "md:hidden tg-men-sheet"
+  }, /*#__PURE__*/React.createElement(PanelMenu, {
+    menu: openDropdown, compacto: true,
+    onMunicipio: elegirMunicipio, onActividad: elegirActividad
+  })), joinOpen && /*#__PURE__*/React.createElement(JoinProviderModal, {  
     onClose: () => setJoinOpen(false)  
   }));  
 }
@@ -9361,17 +9543,24 @@ function App() {
     currency: currency,  
     setCurrency: setCurrency,  
     onLogoClick: goHome,  
-    onSelectMunicipio: m => {  
-      setMunicipioFiltro(m);  
-      setView("home");  
-    },  
-    onSelectActividad: () => {
-      setCategory("experiencias");
-      setMunicipioFiltro(null);
+    /* El menú ahora entrega el municipio entero (nombre, capital, estado),
+       no un nombre suelto; el filtro del catálogo sigue trabajando con el
+       nombre. */
+    onSelectMunicipio: m => {
+      setMunicipioFiltro(typeof m === "string" ? m : m.nombre);
       setView("home");
       setTimeout(() => document.getElementById("catalogo-completo")?.scrollIntoView({
         behavior: "smooth"
       }), 60);
+    },
+    /* Y "Cosas que hacer" entrega la publicación de verdad: se abre esa, en
+       vez de bajar a un catálogo donde el viajero tiene que buscarla otra vez. */
+    onSelectActividad: item => {
+      if (item && item.categoria === "alojamiento") { openAloj(item, false); return; }
+      if (item && item.id) { openTour(item, false); return; }
+      setCategory("experiencias");
+      setMunicipioFiltro(null);
+      setView("home");
     },
     onMisReservas: () => abrirMisReservas()
   }), view === "home" && /*#__PURE__*/React.createElement(HomeScreen, {  
@@ -9469,7 +9658,24 @@ const MUNICIPIOS_POR_CLAVE = MUNICIPIOS.reduce((acc, m) => {
   return acc;
 }, {});
 function municipioCanonico(valor){
-  return MUNICIPIOS_POR_CLAVE[normalizaTexto(valor)] || valor;
+  /* Con los tres estados en el catálogo la lista del Táchira ya no alcanza:
+     primero se busca en los 72 municipios cargados y solo se cae a la lista
+     vieja si todavía no llegaron de la base. */
+  const clave = normalizaTexto(valor);
+  const enAndes = MUNICIPIOS_ANDES.find(m => normalizaTexto(m.nombre) === clave);
+  if (enAndes) return enAndes.nombre;
+  return MUNICIPIOS_POR_CLAVE[clave] || valor;
+}
+
+/* De qué estado es una publicación. Primero lo que diga su propia columna,
+   que es el dato explícito; si está vacía —filas viejas, de cuando solo
+   existía el Táchira— se hereda del proveedor y, en último lugar, se deduce
+   del nombre del municipio, pero solo si ese nombre es de un único estado. */
+function estadoDeListado(l){
+  return l.estado
+    || (l.providers && l.providers.estado)
+    || estadoDelMunicipio(l.municipio)
+    || null;
 }
 
 /* Un listado incompleto se ve peor que no verse: sin foto o sin precio la
@@ -9483,6 +9689,23 @@ function listadoCompleto(l){
 
 async function cargarCatalogoReal(){
   const sb = window.__tgSupabase;
+
+  /* Los municipios van de primeros: el menú de la barra los necesita para
+     armarse, el cotizador necesita la coordenada de cada capital y el resto
+     de la carga los usa para saber de qué estado es cada publicación.
+     Antes se pedían al final y nada de eso podía apoyarse en ellos. */
+  const { data: munis } = await sb.from('municipios')
+    .select('id,estado,nombre,capital,lat,lng').order('nombre');
+  (munis || []).forEach(m => {
+    MUNICIPIOS_ANDES.push({
+      id: m.id, estado: m.estado, nombre: m.nombre,
+      capital: m.capital, lat: m.lat, lng: m.lng });
+    if (m.lat == null || m.lng == null) return;
+    SITIOS_TRASLADO.push({
+      id: 'm:' + m.id, nombre: m.capital, tipo: 'pueblo',
+      pie: m.nombre + ' · ' + m.estado, lat: m.lat, lng: m.lng });
+  });
+  SITIOS_TRASLADO.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
   const { data: listados, error } = await sb
     .from('listings')
@@ -9522,6 +9745,7 @@ async function cargarCatalogoReal(){
         id: l.id,
         titulo: l.title,
         municipio: municipioCanonico(l.municipio),
+        estado: estadoDeListado(l),
         tipo: 'alojamiento',
         imgs: [l.cover_image_url],
         proveedor: (l.providers && l.providers.business_name) || null,
@@ -9548,6 +9772,8 @@ async function cargarCatalogoReal(){
         img: l.cover_image_url,
         proveedor: (l.providers && l.providers.business_name) || null,
         municipio: municipioCanonico(l.municipio),
+        estado: estadoDeListado(l),
+        destacadoRank: l.featured_rank == null ? null : Number(l.featured_rank),
         providerId: l.provider_id,
         isVip: false,
         ventas: 0,
@@ -9654,18 +9880,6 @@ async function cargarCatalogoReal(){
   const { data: ranking, error: errRank } = await sb.from('catalogo_ranking').select('*');
   if (errRank) console.error('Error cargando el ranking:', errRank.message);
   (ranking || []).forEach(r => { RANKING[r.listing_id] = r; });
-
-  /* Capitales de municipio, para el cotizador de traslados. Son 72 filas
-     diminutas y traen la coordenada del pueblo, que es la que sirve para
-     medir un trayecto. */
-  const { data: munis } = await sb.from('municipios')
-    .select('id,estado,nombre,capital,lat,lng').order('capital');
-  (munis || []).forEach(m => {
-    if (m.lat == null || m.lng == null) return;
-    SITIOS_TRASLADO.push({
-      id: 'm:' + m.id, nombre: m.capital, tipo: 'pueblo',
-      pie: m.nombre + ' · ' + m.estado, lat: m.lat, lng: m.lng });
-  });
 
   const { data: puntos } = await sb.from('puntos_interes')
     .select('id,nombre,tipo,municipio_id,lat,lng')
