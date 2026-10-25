@@ -524,23 +524,98 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 .tg-paso.listo b{background:#FF6B00;color:#fff}
 .tg-paso span{font-size:14.5px;font-weight:700;color:#fff}
 
-.tg-busca{position:relative;margin-bottom:22px}
-.tg-busca input{width:100%;box-sizing:border-box;padding:13px 16px;border-radius:13px;
-  font-size:14.5px;color:#fff;background:rgba(255,255,255,.08);
-  border:1.5px solid rgba(255,255,255,.2);outline:none}
-.tg-busca input::placeholder{color:rgba(255,255,255,.45)}
-.tg-busca input:focus{border-color:#7FB2FF;background:rgba(255,255,255,.13)}
-.tg-sugerencias{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:5;
-  background:#0B1730;border:1px solid rgba(255,255,255,.16);border-radius:13px;
-  padding:5px;max-height:290px;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.6)}
-.tg-sugerencias li{list-style:none}
-.tg-sugerencias button{width:100%;text-align:left;display:flex;align-items:baseline;gap:9px;
-  padding:9px 11px;border-radius:9px;background:none;border:none;cursor:pointer;
-  font-size:13.5px;color:rgba(255,255,255,.9)}
-.tg-sugerencias button:hover,.tg-sugerencias button[aria-selected="true"]{background:rgba(120,170,255,.2)}
-.tg-sugerencias button em{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.5);margin-left:auto}
-.tg-sugerencias p{margin:0;padding:11px;font-size:13px;color:rgba(255,255,255,.5)}
+/* Elegir es tocar, no escribir. El buscador pedía que el viajero supiera
+   de antemano cómo se llama el sitio al que quiere ir; la mitad de los
+   municipios andinos no se llaman como su pueblo principal. */
+.tg-edos{display:grid;gap:9px;margin-bottom:24px}
+.tg-edo-op{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:15px 16px;border-radius:14px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);
+  transition:background .16s ease,border-color .16s ease,transform .16s ease}
+.tg-edo-op:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);
+  transform:translateX(2px)}
+.tg-edo-op:focus-visible{outline:none;box-shadow:0 0 0 3px #050D1E,0 0 0 5.5px #FF8A33}
+.tg-edo-op[aria-pressed="true"]{background:rgba(255,138,51,.14);
+  border-color:rgba(255,138,51,.65)}
+.tg-edo-op .pin{width:11px;height:11px;border-radius:50%;flex:none}
+.tg-edo-op b{display:block;font-size:15.5px;font-weight:700;color:#fff;line-height:1.2}
+.tg-edo-op span{display:block;font-size:12px;color:rgba(255,255,255,.55);margin-top:2px}
+@media(prefers-reduced-motion:reduce){.tg-edo-op{transition:none}.tg-edo-op:hover{transform:none}}
 
+/* La lista de municipios: tocable, con el pulgar, y con la capital al lado
+   porque es el nombre que la gente reconoce. */
+.tg-muns{max-height:290px;overflow-y:auto;margin-bottom:20px;
+  border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:5px;
+  display:grid;grid-template-columns:1fr 1fr;gap:3px}
+@media(max-width:860px){.tg-muns{grid-template-columns:1fr;max-height:230px}}
+.tg-mun-op{display:flex;align-items:baseline;gap:6px;width:100%;text-align:left;
+  min-height:44px;padding:9px 11px;border:0;border-radius:10px;background:none;
+  cursor:pointer;transition:background .14s ease}
+.tg-mun-op:hover{background:rgba(255,255,255,.09)}
+.tg-mun-op:focus-visible{outline:none;box-shadow:0 0 0 2px #FF8A33}
+.tg-mun-op[aria-pressed="true"]{background:rgba(255,138,51,.2)}
+.tg-mun-op i{font-style:normal;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.92)}
+.tg-mun-op em{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.45)}
+.tg-mun-todo{margin-bottom:20px}
+
+/* La lista y el mapa, uno al lado del otro: señalar un nombre señala el
+   punto, y al revés. Lo de abajo —micrositios y catálogo— no se entera de
+   nada de esto a propósito. */
+.tg-res-cols{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);
+  gap:22px;align-items:start}
+@media(max-width:900px){.tg-res-cols{grid-template-columns:1fr}}
+.tg-res-tit{margin:0 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.14em;color:#94A3B8}
+.tg-res-lista ul{list-style:none;margin:0;padding:0;max-height:430px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:3px}
+@media(max-width:900px){.tg-res-lista ul{max-height:260px}}
+.tg-res-item{display:block;width:100%;text-align:left;min-height:44px;
+  padding:10px 12px;border:1px solid transparent;border-radius:12px;
+  background:#fff;cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.tg-res-item:hover{border-color:#CBD5E1}
+.tg-res-item:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(0,82,204,.35)}
+.tg-res-item.vivo{border-color:#FF6B00;background:#FFF7F0}
+.tg-res-item b{display:block;font-size:13.5px;font-weight:700;color:#0F172A;line-height:1.25}
+.tg-res-item em{display:block;font-style:normal;font-size:11.5px;color:#64748B;margin-top:2px}
+.tg-res-item span{display:block;font-size:10.5px;font-weight:700;color:#C2410C;
+  text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+@media(hover:hover){.tg-res-item span{display:none}}
+.tg-res-nada{font-size:13px;color:#64748B;line-height:1.6;margin:0;padding:14px 2px}
+.tg-res-mapa .tg-mapa-lienzo{min-height:380px}
+/* El punto de una publicación en el mapa. */
+.tg-pto{cursor:pointer}
+.tg-pto circle{transition:r .2s ease,fill .2s ease;
+  filter:drop-shadow(0 1px 3px rgba(2,10,24,.8))}
+@media(prefers-reduced-motion:reduce){.tg-pto circle{transition:none}}
+
+/* Únete como prestador turístico. Va a todo el ancho, debajo del catálogo:
+   quien ha llegado hasta abajo mirando la oferta es justo quien puede
+   pensar que lo suyo también cabe aquí. */
+.tg-unete{margin-top:44px;border-radius:22px;overflow:hidden;position:relative;
+  background:linear-gradient(135deg,#0A2A5E 0%,var(--tg-azul) 55%,#1763DE 100%);
+  padding:46px 40px}
+@media(max-width:640px){.tg-unete{padding:34px 22px;border-radius:18px;margin-top:32px}}
+.tg-unete-in{position:relative;z-index:2;max-width:760px}
+.tg-unete h2{margin:0;font-size:clamp(21px,2.7vw,31px);font-weight:800;color:#fff;
+  letter-spacing:-.025em;line-height:1.18;text-wrap:balance}
+.tg-unete p{margin:14px 0 0;font-size:15px;line-height:1.6;color:rgba(255,255,255,.86);
+  max-width:56ch}
+.tg-unete-tres{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 28px}
+.tg-unete-tres span{display:inline-flex;align-items:center;gap:7px;
+  font-size:13px;font-weight:600;color:#fff;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  border-radius:999px;padding:8px 15px}
+.tg-unete-tres b{font-weight:800;color:var(--tg-portada-acento)}
+.tg-unete-ir{display:inline-flex;align-items:center;gap:9px;min-height:50px;
+  padding:0 26px;border:0;border-radius:14px;cursor:pointer;
+  font-size:15px;font-weight:800;letter-spacing:-.01em;color:#13233F;
+  background:#fff;box-shadow:0 6px 20px rgba(2,10,24,.25);
+  transition:transform .16s ease,box-shadow .16s ease}
+.tg-unete-ir:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(2,10,24,.32)}
+.tg-unete-ir:focus-visible{outline:none;box-shadow:0 0 0 3px #0A2A5E,0 0 0 6px #fff}
+@media(prefers-reduced-motion:reduce){.tg-unete-ir{transition:none}.tg-unete-ir:hover{transform:none}}
+/* Los escudos del fondo, muy tenues: decoran, no compiten. */
+.tg-unete-escudo{position:absolute;pointer-events:none;opacity:.07;z-index:1}
 .tg-elegido{display:inline-flex;align-items:center;gap:9px;margin-bottom:20px;
   background:rgba(255,107,0,.16);border:1px solid rgba(255,138,51,.45);
   border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;color:#FFD9B3}
@@ -1138,19 +1213,9 @@ const CAMINOS = [
     pie: "Tours, páramos, cascadas y rutas con guía local.", accion: "Elegir estado" }
 ];
 
-const CATEGORIES = [{
-  id: "alojamientos",
-  label: "Alojamientos",
-  icon: Bed
-}, {
-  id: "rentacar",
-  label: "Movilidad",
-  icon: Car
-}, {
-  id: "experiencias",
-  label: "Experiencias",
-  icon: Compass
-}];
+/* Las tres categorías del catálogo siguen existiendo como valores de
+   `category` —alojamientos, rentacar, experiencias— pero ya no hay pestañas
+   que dibujar: la portada tiene dos tarjetas y Movilidad está en el menú. */
 const FILTERABLE_CATEGORIES = ["experiencias", "rentacar"];
 
 /* Catálogo real. Se llena en cargarCatalogoReal() con lo que publican los
@@ -2008,6 +2073,10 @@ function MunicipioField({
 }
 
 /* Formulario: Experiencias (comportamiento predictivo original, sin cambios funcionales) */  
+/* Los tres formularios que vivían en la portada: destino, fechas, huéspedes.
+   Salieron de ahí, no del sistema. Se quedan montados porque es la lógica
+   de fechas y huéspedes que hay que pedir más adelante en el flujo, y
+   porque borrarla para reescribirla igual no mejora nada. */
 function SearchExperienciasForm({  
   onSubmit  
 }) {  
@@ -4349,13 +4418,15 @@ function SearchToursForm({
 
 /* Cambio 2: contenedor del buscador con las tabs de categoría ARRIBA del input.  
    El tab activo ES la categoría del catálogo (estado único, sin duplicación). */  
-function SearchTabsBox({  
-  category,  
-  setCategory,  
+function SearchTabsBox({
+  category,
+  setCategory,
   setMunicipioFiltro,
   onAbrirTour,
-  onAbrirAlojamiento
-}) {  
+  onAbrirAlojamiento,
+  onAbrirProveedor
+}) {
+
   const [cotizadorTour, setCotizadorTour] = useState(null);
   const [rentacarAbierto, setRentacarAbierto] = useState(null);
   const [hotelAbierto, setHotelAbierto] = useState(null);
@@ -4439,7 +4510,8 @@ function SearchTabsBox({
       onVolverAElegir: () => { setResultados(null); setZona(category); },
       onSelectTour: t => { setResultados(null); onAbrirTour && onAbrirTour(t); },
       onSelectAloj: a => { setResultados(null); onAbrirAlojamiento && onAbrirAlojamiento(a); },
-      onAbrirHotel: h => { setResultados(null); setHotelAbierto(h); }
+      onAbrirHotel: h => { setResultados(null); setHotelAbierto(h); },
+      onSelectProvider: pv => { setResultados(null); onAbrirProveedor && onAbrirProveedor(pv); }
     })));
 }
 
@@ -4511,7 +4583,8 @@ function Hero({
   setCategory,
   setMunicipioFiltro,
   onAbrirTour,
-  onAbrirAlojamiento
+  onAbrirAlojamiento,
+  onAbrirProveedor
 }) {
   return /*#__PURE__*/React.createElement("section", { className: "tg-portada" },
     /*#__PURE__*/React.createElement(FondoPortada, null),
@@ -4531,7 +4604,8 @@ function Hero({
         setCategory: setCategory,
         setMunicipioFiltro: setMunicipioFiltro,
         onAbrirTour: onAbrirTour,
-        onAbrirAlojamiento: onAbrirAlojamiento
+        onAbrirAlojamiento: onAbrirAlojamiento,
+        onAbrirProveedor: onAbrirProveedor
       }),
       /*#__PURE__*/React.createElement("div", { className: "tg-promesas" },
         PROMESAS.map(t => /*#__PURE__*/React.createElement("span", { key: t }, t)))));
@@ -5652,7 +5726,8 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
 /* El mapa de la pantalla de zona. Es el mismo dibujo de la portada, sin
    capas ni pines: aquí solo sirve para elegir, y lo que se elige aquí queda
    escrito en el buscador de al lado. */
-function MapaZonas({ estado, sitio, conMunicipios, onEstado, onMunicipio }) {
+function MapaZonas({ estado, sitio, conMunicipios, onEstado, onMunicipio,
+                     puntos, resaltado, onPunto }) {
   const svgRef = useRef(null);
   const [anchoPx, setAnchoPx] = useState(560);
   const [encima, setEncima] = useState(null);
@@ -5667,11 +5742,25 @@ function MapaZonas({ estado, sitio, conMunicipios, onEstado, onMunicipio }) {
     return () => window.removeEventListener("resize", medir);
   }, []);
 
+  /* Lo que está señalado manda sobre lo demás: si el viajero pasa el dedo
+     por un nombre de la lista, el mapa va a ese punto. Al soltarlo vuelve
+     al municipio, o al estado si no hay ninguno. */
+  const punto = useMemo(
+    () => (puntos || []).find(x => x.id === resaltado) || null,
+    [puntos, resaltado]);
+
   const destino = useMemo(() => {
+    if (punto && punto.lat != null) {
+      /* Lo justo para que el punto se separe del resto sin perder de vista
+         dónde cae: con un radio pequeño la pantalla se queda en un recuadro
+         negro y el viajero no sabe qué está mirando. */
+      const x = mx(punto.lng), y = my(punto.lat), r = 115;
+      return [x - r, y - r, r * 2, r * 2];
+    }
     if (sitio && sitio.clave) return cajaDeMunicipio(sitio.clave);
     if (estado) return cajaDeEstado(estado);
     return VISTA_REGION;
-  }, [estado, sitio]);
+  }, [estado, sitio, punto]);
 
   /* El viewBox no se puede animar con CSS: se interpola a mano, cuadro a
      cuadro, y un temporizador remata por si el navegador deja de darlos. */
@@ -5749,6 +5838,25 @@ function MapaZonas({ estado, sitio, conMunicipios, onEstado, onMunicipio }) {
         /*#__PURE__*/React.createElement("text", {
           y: -px(8.5), className: "tg-capital-txt",
           style: { fontSize: px(11).toFixed(1) + "px", strokeWidth: px(3.2) } }, c.nombre))),
+
+      /* Lo publicado, como puntos. Solo con un estado elegido: sobre los
+         tres estados a la vez serían alfileres de cabeza de aguja. */
+      estado && (puntos || []).map(pt => pt.lat == null ? null :
+        /*#__PURE__*/React.createElement("g", {
+          key: "pt" + pt.id,
+          transform: "translate(" + mx(pt.lng).toFixed(1) + "," + my(pt.lat).toFixed(1) + ")",
+          className: "tg-pto" + (resaltado === pt.id ? " vivo" : ""),
+          onClick: () => onPunto && onPunto(pt),
+          role: onPunto ? "button" : undefined,
+          "aria-label": pt.nombre
+        },
+          /*#__PURE__*/React.createElement("circle", {
+            r: px(resaltado === pt.id ? 6.5 : 3.6),
+            fill: resaltado === pt.id ? "#FF8A33" : "#fff" }),
+          resaltado === pt.id && /*#__PURE__*/React.createElement("text", {
+            y: -px(15), className: "tg-rotulo",
+            style: { fontSize: px(12).toFixed(1) + "px", strokeWidth: px(3.5) }
+          }, pt.nombre))),
 
       encima && estado && /*#__PURE__*/React.createElement("text", {
         x: (MAPA_PATHS.find(p => p.clave === encima) || {}).cx,
@@ -5828,11 +5936,72 @@ function TarjetaHotel({ hotel, onSelect, currency = "USD" }) {
         className: "text-slate-900" }, money(hotel.desde, currency)), " / noche")));
 }
 
+/* El portal del prestador vive en otro despliegue; en local está al lado. */
+function abrirPortalProveedores(){
+  const url = window.location.hostname === "localhost"
+    ? "/proveedores_tachiragoo/" : "/proveedores";
+  window.location.href = url;
+}
+
+/* "Comercio" era la palabra equivocada: una posada o un guía de montaña no
+   vende mercancía, presta un servicio turístico. */
+function UneteSection({ onRegistrar }){
+  return /*#__PURE__*/React.createElement("section", { className: "tg-unete" },
+    /*#__PURE__*/React.createElement("div", {
+      className: "tg-unete-escudo", style: { right: "-20px", top: "-26px" }, "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(EscudoAndes, { size: 220, titulo: "" })),
+    /*#__PURE__*/React.createElement("div", {
+      className: "tg-unete-escudo", style: { right: "150px", bottom: "-60px" }, "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(EscudoAndes, { size: 150, titulo: "" })),
+    /*#__PURE__*/React.createElement("div", { className: "tg-unete-in" },
+      /*#__PURE__*/React.createElement("h2", null,
+        "Únete a Andes GOO! como prestador turístico de los Andes venezolanos"),
+      /*#__PURE__*/React.createElement("p", null,
+        "Mejora tu visibilidad. Te digitalizamos, te profesionalizamos y te formamos para transformar el turismo andino venezolano."),
+      /*#__PURE__*/React.createElement("div", { className: "tg-unete-tres" },
+        /*#__PURE__*/React.createElement("span", null,
+          /*#__PURE__*/React.createElement(Globe, { size: 15 }),
+          /*#__PURE__*/React.createElement("b", null, "Digitalizamos"), "tu negocio"),
+        /*#__PURE__*/React.createElement("span", null,
+          /*#__PURE__*/React.createElement(ShieldCheck, { size: 15 }),
+          /*#__PURE__*/React.createElement("b", null, "Profesionalizamos"), "tu servicio"),
+        /*#__PURE__*/React.createElement("span", null,
+          /*#__PURE__*/React.createElement(Users, { size: 15 }),
+          /*#__PURE__*/React.createElement("b", null, "Te formamos"))),
+      /*#__PURE__*/React.createElement("button", {
+        className: "tg-unete-ir", onClick: onRegistrar
+      }, /*#__PURE__*/React.createElement(Plus, { size: 17 }),
+         "Registrar mi alojamiento o experiencia")));
+}
+
+const ESTADO_DB = { tachira: "Tachira", merida: "Merida", trujillo: "Trujillo" };
+/* Cada publicación guarda ya su estado. Mientras no lo tenga —filas viejas,
+   de cuando solo existía el Táchira— no se enseña en ningún estado antes que
+   enseñarla en el que no es. */
+const delEstado = (x, id) => !!x && x.estado === ESTADO_DB[id];
+
+/* La capital del municipio, que es el nombre que la gente reconoce: nadie
+   dice "voy a Jáuregui", dice "voy a La Grita". */
+function capitalDe(municipio, estadoId){
+  const m = MAPA_PATHS.find(p => p.estado === estadoId && p.n === municipio);
+  return m && m.cap && m.cap !== m.n ? m.cap : null;
+}
+function conCapital(municipio, estadoId){
+  const c = capitalDe(municipio, estadoId);
+  return c ? municipio + " (" + c + ")" : municipio;
+}
+
 function ResultadosZona({ modo, estado, sitio, onCerrar, onVolverAElegir,
-                          onSelectTour, onSelectAloj, onAbrirHotel, currency }) {
+                          onSelectTour, onSelectAloj, onAbrirHotel, onSelectProvider, currency }) {
   useCerrarConAtras(onCerrar);
   const [cat, setCat] = useState("");
   const [tramo, setTramo] = useState("");
+  /* El filtro del catálogo de abajo es suyo y de nadie más: tocar el mapa
+     mueve el mapa y la lista de arriba, no el catálogo. Si el catálogo se
+     moviera con el mapa, el viajero perdería lo que estaba mirando cada vez
+     que pasara el dedo por encima. */
+  const [munCatalogo, setMunCatalogo] = useState("");
+  const [resaltado, setResaltado] = useState(null);
 
   useEffect(() => {
     const onKey = e => { if (e.key === "Escape") onCerrar(); };
@@ -5844,40 +6013,77 @@ function ResultadosZona({ modo, estado, sitio, onCerrar, onVolverAElegir,
   const municipio = sitio && sitio.tipo === "municipio" ? sitio.nombre : null;
   const donde = sitio ? sitio.nombre : nombreEstado(estado);
 
-  /* Todo lo publicado hoy es del Táchira: el negocio guarda su municipio
-     por nombre, sin estado, así que no hay manera honesta de enseñar algo
-     en Mérida o en Trujillo. Cuando alguien publique allá, esto cambia
-     mirando el estado del proveedor y no esta constante. */
-  const hayOferta = estado === "tachira";
+  /* Todo lo del estado, sin filtrar por municipio: es la base del catálogo
+     de abajo y de la lista de experiencias de arriba. */
+  const expEstado = useMemo(
+    () => ordenarCatalogo((CARDS_BY_CATEGORY.experiencias || []).filter(e => delEstado(e, estado))),
+    [estado]);
+  const alojEstado = useMemo(
+    () => ordenarCatalogo(ALOJAMIENTOS.filter(a => delEstado(a, estado))), [estado]);
+  const hotEstado = useMemo(
+    () => HOTELES.filter(h => delEstado(h, estado)), [estado]);
+  const eliteEstado = useMemo(
+    () => ELITE_PROVIDERS.filter(p => delEstado(p, estado)), [estado]);
 
-  const experiencias = useMemo(() => {
-    if (!hayOferta) return [];
-    let l = (CARDS_BY_CATEGORY.experiencias || []);
-    if (municipio) l = l.filter(e => e.municipio === municipio);
-    if (cat) l = l.filter(e => e.categoria === cat);
-    const t = PRECIO_TRAMOS.find(x => x.id === tramo);
-    if (t && t.id) l = l.filter(e => {
-      const p = Number(e.precioUSD || 0);
-      return p >= t.min && p < t.max;
-    });
-    return ordenarCatalogo(l);
-  }, [hayOferta, municipio, cat, tramo]);
+  /* Cada camino mira lo suyo: que haya experiencias en el Táchira no
+     significa que haya dónde dormir, y enseñar una lista vacía con el
+     catálogo lleno debajo confunde más que decirlo. */
+  const hayOferta = modo === "alojamientos"
+    ? !!(alojEstado.length || hotEstado.length)
+    : !!expEstado.length;
 
-  const alojamientos = useMemo(() => {
-    if (!hayOferta) return [];
-    let l = ALOJAMIENTOS.slice();
-    if (municipio) l = l.filter(a => a.municipio === municipio);
-    return ordenarCatalogo(l);
-  }, [hayOferta, municipio]);
+  /* Arriba: alojamiento enseña el municipio que se pidió; experiencias
+     enseña el estado entero, que es lo que pidió el producto. */
+  const alojArriba = useMemo(
+    () => municipio ? alojEstado.filter(a => a.municipio === municipio) : alojEstado,
+    [alojEstado, municipio]);
+  const hotArriba = useMemo(
+    () => municipio ? hotEstado.filter(h => h.municipio === municipio) : hotEstado,
+    [hotEstado, municipio]);
 
-  const hoteles = useMemo(() => {
-    if (!hayOferta) return [];
-    return HOTELES.filter(h => !municipio || h.municipio === municipio);
-  }, [hayOferta, municipio]);
+  const puntos = useMemo(() => {
+    const de = modo === "alojamientos"
+      ? alojArriba.map(a => ({ id: a.id, nombre: a.titulo, lat: a.lat, lng: a.lng, dato: a, tipo: "aloj" }))
+          .concat(hotArriba.map(h => ({ id: h.id, nombre: h.nombre, lat: h.lat, lng: h.lng, dato: h, tipo: "hotel" })))
+      : expEstado.map(e => ({ id: e.id, nombre: e.title, lat: e.lat, lng: e.lng, dato: e, tipo: "exp" }));
+    return de.filter(x => x.lat != null && x.lng != null);
+  }, [modo, alojArriba, hotArriba, expEstado]);
 
-  const vacio = modo === "alojamientos"
-    ? (!alojamientos.length && !hoteles.length)
-    : !experiencias.length;
+  /* El catálogo de abajo: el estado entero, con su propio filtro. */
+  const catalogo = useMemo(() => {
+    /* En alojamiento el catálogo son las dos cosas que se pueden reservar
+       para dormir: los hoteles con habitaciones publicadas y los alojamientos
+       sueltos. Antes solo salían los sueltos y la sección quedaba vacía
+       teniendo un hotel delante. */
+    let l = modo === "alojamientos"
+      ? hotEstado.map(h => ({ kind: "hotel", data: h }))
+          .concat(alojEstado.map(a => ({ kind: "alojamiento", data: a })))
+      : expEstado.map(e => ({ kind: "experiencia", data: e }));
+    if (munCatalogo) l = l.filter(x => x.data.municipio === munCatalogo);
+    if (modo === "experiencias") {
+      if (cat) l = l.filter(x => x.data.categoria === cat);
+      const t = PRECIO_TRAMOS.find(x => x.id === tramo);
+      if (t && t.id) l = l.filter(x => {
+        const pr = Number(x.data.precioUSD || 0);
+        return pr >= t.min && pr < t.max;
+      });
+    }
+    return l;
+  }, [modo, hotEstado, alojEstado, expEstado, munCatalogo, cat, tramo]);
+
+  /* Los municipios del estado que tienen algo publicado: el filtro no ofrece
+     puertas que no abren. */
+  const munDelFiltro = useMemo(() => {
+    const vistos = new Set();
+    (modo === "alojamientos" ? hotEstado.concat(alojEstado) : expEstado)
+      .forEach(x => x.municipio && vistos.add(x.municipio));
+    return Array.from(vistos).sort((a, b) => a.localeCompare(b));
+  }, [modo, hotEstado, alojEstado, expEstado]);
+
+  const listaArriba = modo === "alojamientos"
+    ? hotArriba.map(h => ({ id: h.id, nombre: h.nombre, municipio: h.municipio, abrir: () => onAbrirHotel && onAbrirHotel(h) }))
+        .concat(alojArriba.map(a => ({ id: a.id, nombre: a.titulo, municipio: a.municipio, abrir: () => onSelectAloj(a) })))
+    : expEstado.map(e => ({ id: e.id, nombre: e.title, municipio: e.municipio, abrir: () => onSelectTour(e) }));
 
   return enCapa(/*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 overflow-y-auto", style: { zIndex: 108, background: "#FBFAF8" },
@@ -5899,7 +6105,7 @@ function ResultadosZona({ modo, estado, sitio, onCerrar, onVolverAElegir,
         /*#__PURE__*/React.createElement("p", {
           className: "text-[10px] font-bold uppercase text-slate-400",
           style: { letterSpacing: ".18em" }
-        }, modo === "alojamientos" ? "Alojamiento" : "Experiencias"),
+        }, modo === "alojamientos" ? "Dónde dormir" : "Qué vivir"),
         /*#__PURE__*/React.createElement("h2", {
           className: "text-[17px] font-bold text-slate-900 leading-tight truncate"
         }, donde)),
@@ -5911,82 +6117,147 @@ function ResultadosZona({ modo, estado, sitio, onCerrar, onVolverAElegir,
 
     /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-5 py-8" },
 
-      /* Filtros: solo en experiencias, que es donde el producto los pidió. */
-      modo === "experiencias" && hayOferta && /*#__PURE__*/React.createElement("div", {
-        className: "flex flex-wrap items-center gap-2 mb-6"
-      },
-        CAT_EXPERIENCIA.map(c => /*#__PURE__*/React.createElement("button", {
-          key: c.id || "todo", onClick: () => setCat(c.id),
-          "aria-pressed": cat === c.id,
-          className: "text-[13px] font-bold px-4 py-2 rounded-full border transition-colors",
-          style: cat === c.id
-            ? { background: "#0C1320", borderColor: "#0C1320", color: "#fff" }
-            : { background: "#fff", borderColor: "#E7E4DE", color: "#475569" }
-        }, c.label)),
-        /*#__PURE__*/React.createElement("span", {
-          className: "w-px h-6 mx-1", style: { background: "#E7E4DE" }, "aria-hidden": "true" }),
-        /*#__PURE__*/React.createElement("label", { className: "sr-only", htmlFor: "tramo-precio" }, "Precio"),
-        /*#__PURE__*/React.createElement("select", {
-          id: "tramo-precio", value: tramo, onChange: e => setTramo(e.target.value),
-          className: "text-[13px] font-bold px-4 py-2 rounded-full border bg-white text-slate-600 outline-none",
-          style: { borderColor: "#E7E4DE" }
-        }, PRECIO_TRAMOS.map(t => /*#__PURE__*/React.createElement("option", {
-          key: t.id || "todo", value: t.id }, t.label)))),
-
-      modo === "experiencias" && hayOferta && experiencias.length > 1 &&
-        /*#__PURE__*/React.createElement("p", { className: "text-[12.5px] text-slate-400 mb-4" },
-          "Primero los negocios con membresía, después los más vendidos y después los mejor valorados."),
-
-      vacio
+      !hayOferta
         ? /*#__PURE__*/React.createElement("div", {
             className: "rounded-2xl border border-dashed p-16 text-center",
             style: { borderColor: "#DDD9D1" }
           },
             /*#__PURE__*/React.createElement("p", { className: "text-[16px] font-bold text-slate-700" },
-              hayOferta ? "Todavía no hay nada publicado en " + donde + "."
-                        : "Todavía no hay negocios publicados en " + nombreEstado(estado) + "."),
+              (modo === "alojamientos" ? "Todavía no hay alojamientos publicados en "
+                                       : "Todavía no hay experiencias publicadas en ") +
+              nombreEstado(estado) + "."),
             /*#__PURE__*/React.createElement("p", {
               className: "text-[13.5px] text-slate-400 mt-2 max-w-md mx-auto leading-relaxed"
-            }, hayOferta
-                 ? "Prueba con otro municipio o mira el estado completo."
-                 : "Estamos abriendo por ahí. Mientras tanto, el Táchira está completo."),
+            }, modo === "alojamientos"
+                 ? "Todavía no hay dónde dormir publicado por ahí. Prueba con otro estado o mira qué hay para hacer."
+                 : "Estamos abriendo por ahí. Prueba con otro estado."),
             /*#__PURE__*/React.createElement("button", {
               onClick: onVolverAElegir,
               className: "mt-6 bg-[#0052CC] text-white text-[14px] font-bold px-7 py-3 rounded-xl"
-            }, "Elegir otra zona"))
+            }, "Elegir otro estado"))
 
         : /*#__PURE__*/React.createElement(React.Fragment, null,
-            modo === "alojamientos" && hoteles.length > 0 && /*#__PURE__*/React.createElement("div",
-              { className: "mb-9" },
+
+            /* ---- Arriba: la lista y el mapa, uno al lado del otro ---- */
+            /*#__PURE__*/React.createElement("div", { className: "tg-res-cols" },
+              /*#__PURE__*/React.createElement("div", { className: "tg-res-lista" },
+                /*#__PURE__*/React.createElement("p", { className: "tg-res-tit" },
+                  listaArriba.length + (listaArriba.length === 1 ? " sitio en " : " sitios en ") + donde),
+                listaArriba.length
+                  ? /*#__PURE__*/React.createElement("ul", null,
+                      listaArriba.map(x => /*#__PURE__*/React.createElement("li", { key: x.id },
+                        /*#__PURE__*/React.createElement("button", {
+                          onMouseEnter: () => setResaltado(x.id),
+                          onMouseLeave: () => setResaltado(null),
+                          onFocus: () => setResaltado(x.id),
+                          onBlur: () => setResaltado(null),
+                          /* En el móvil no hay cursor que pasar por encima:
+                             el primer toque señala en el mapa y el segundo
+                             abre. */
+                          onClick: () => { if (resaltado === x.id) x.abrir(); else setResaltado(x.id); },
+                          onDoubleClick: x.abrir,
+                          "aria-current": resaltado === x.id,
+                          className: "tg-res-item" + (resaltado === x.id ? " vivo" : "")
+                        },
+                          /*#__PURE__*/React.createElement("b", null, x.nombre),
+                          /*#__PURE__*/React.createElement("em", null,
+                            conCapital(x.municipio, estado)),
+                          resaltado === x.id && /*#__PURE__*/React.createElement("span", null,
+                            "Toca otra vez para abrir")))))
+                  : /*#__PURE__*/React.createElement("p", { className: "tg-res-nada" },
+                      "Nada publicado en " + donde + " todavía. Abajo tienes todo " +
+                      nombreEstado(estado) + ".")),
+
+              /*#__PURE__*/React.createElement("div", { className: "tg-res-mapa" },
+                /*#__PURE__*/React.createElement(MapaZonas, {
+                  estado: estado, sitio: sitio, conMunicipios: false,
+                  puntos: puntos, resaltado: resaltado,
+                  onPunto: pt => setResaltado(pt.id),
+                  onEstado: () => {}, onMunicipio: () => {}
+                }))),
+
+            /* ---- Los micrositios del estado ---- */
+            eliteEstado.length > 0 && /*#__PURE__*/React.createElement("section", { className: "mt-10" },
               /*#__PURE__*/React.createElement("h3", {
-                className: "text-[15px] font-bold text-slate-900 mb-3" }, "Hoteles y posadas"),
+                className: "text-[15px] font-bold text-slate-900 mb-1"
+              }, "Prestadores élite verificados de " + nombreEstado(estado)),
+              /*#__PURE__*/React.createElement("p", { className: "text-[12.5px] text-slate-400 mb-4" },
+                "Negocios con página propia y verificación aprobada."),
               /*#__PURE__*/React.createElement("div", {
-                className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
-              }, hoteles.map(h => /*#__PURE__*/React.createElement(TarjetaHotel, {
-                key: "h" + h.id, hotel: h, currency: currency,
-                onSelect: () => onAbrirHotel && onAbrirHotel(h)
-              })))),
+                className: "flex flex-wrap gap-4"
+              }, eliteEstado.map(pv => /*#__PURE__*/React.createElement(ProviderCard, {
+                key: pv.id, provider: pv,
+                onSelect: () => onSelectProvider && onSelectProvider(pv) })))),
 
-            modo === "alojamientos" && alojamientos.length > 0 && /*#__PURE__*/React.createElement("div", null,
-              hoteles.length > 0 && /*#__PURE__*/React.createElement("h3", {
-                className: "text-[15px] font-bold text-slate-900 mb-3" }, "Otros alojamientos"),
+            /* ---- El catálogo del estado, con su propio filtro ---- */
+            /*#__PURE__*/React.createElement("section", { className: "mt-10" },
+              /*#__PURE__*/React.createElement("h3", {
+                className: "text-[15px] font-bold text-slate-900 mb-3"
+              }, "Todo " + (modo === "alojamientos" ? "el alojamiento" : "lo que hay para hacer") +
+                 " en " + nombreEstado(estado)),
+
               /*#__PURE__*/React.createElement("div", {
-                className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
-              }, alojamientos.map(a => /*#__PURE__*/React.createElement(AirbnbCard, {
-                key: "a" + a.id, aloj: a, currency: currency, onSelect: onSelectAloj })))),
+                className: "flex flex-wrap items-center gap-2 mb-5"
+              },
+                /*#__PURE__*/React.createElement("label", {
+                  className: "sr-only", htmlFor: "mun-catalogo" }, "Filtrar por municipio"),
+                /*#__PURE__*/React.createElement("select", {
+                  id: "mun-catalogo", value: munCatalogo,
+                  onChange: ev => setMunCatalogo(ev.target.value),
+                  className: "text-[13px] font-bold px-4 py-2 rounded-full border bg-white text-slate-600 outline-none",
+                  style: { borderColor: "#E7E4DE" }
+                },
+                  /*#__PURE__*/React.createElement("option", { value: "" }, "Todos los municipios"),
+                  munDelFiltro.map(m => /*#__PURE__*/React.createElement("option",
+                    { key: m, value: m }, conCapital(m, estado)))),
 
-            modo === "experiencias" && /*#__PURE__*/React.createElement("div", {
-              className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
-            }, experiencias.map(e => /*#__PURE__*/React.createElement("div", {
-              key: e.id, className: "relative"
-            },
-              (RANKING[e.id] || {}).destacado && /*#__PURE__*/React.createElement("span", {
-                className: "absolute top-2.5 right-2.5 z-10 text-[10px] font-bold uppercase px-2 py-1 rounded-full",
-                style: { letterSpacing: ".08em", background: "rgba(255,255,255,.94)",
-                         color: "#0C1320", boxShadow: "0 2px 8px rgba(12,19,32,.16)" }
-              }, "Destacado"),
-              /*#__PURE__*/React.createElement(TourCard, {
-                card: e, currency: currency, onSelect: () => onSelectTour(e) })))))
+                modo === "experiencias" && CAT_EXPERIENCIA.map(c =>
+                  /*#__PURE__*/React.createElement("button", {
+                    key: c.id || "todo", onClick: () => setCat(c.id),
+                    "aria-pressed": cat === c.id,
+                    className: "text-[13px] font-bold px-4 py-2 rounded-full border transition-colors",
+                    style: cat === c.id
+                      ? { background: "#0C1320", borderColor: "#0C1320", color: "#fff" }
+                      : { background: "#fff", borderColor: "#E7E4DE", color: "#475569" }
+                  }, c.label)),
+
+                modo === "experiencias" && /*#__PURE__*/React.createElement("select", {
+                  "aria-label": "Precio", value: tramo,
+                  onChange: ev => setTramo(ev.target.value),
+                  className: "text-[13px] font-bold px-4 py-2 rounded-full border bg-white text-slate-600 outline-none",
+                  style: { borderColor: "#E7E4DE" }
+                }, PRECIO_TRAMOS.map(tr => /*#__PURE__*/React.createElement("option",
+                  { key: tr.id || "todo", value: tr.id }, tr.label)))),
+
+              catalogo.length > 1 && /*#__PURE__*/React.createElement("p",
+                { className: "text-[12.5px] text-slate-400 mb-4" },
+                "Primero los negocios con membresía, después los más vendidos y después los mejor valorados."),
+
+              catalogo.length
+                ? /*#__PURE__*/React.createElement("div", {
+                    className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+                  }, catalogo.map(x => x.kind === "hotel"
+                      ? /*#__PURE__*/React.createElement(TarjetaHotel, {
+                          key: "h" + x.data.id, hotel: x.data, currency: currency,
+                          onSelect: () => onAbrirHotel && onAbrirHotel(x.data) })
+                      : x.kind === "alojamiento"
+                      ? /*#__PURE__*/React.createElement(AirbnbCard, {
+                          key: "a" + x.data.id, aloj: x.data, currency: currency,
+                          onSelect: onSelectAloj })
+                      : /*#__PURE__*/React.createElement("div", {
+                          key: "e" + x.data.id, className: "relative" },
+                          (RANKING[x.data.id] || {}).destacado && /*#__PURE__*/React.createElement("span", {
+                            className: "absolute top-2.5 right-2.5 z-10 text-[10px] font-bold uppercase px-2 py-1 rounded-full",
+                            style: { letterSpacing: ".08em", background: "rgba(255,255,255,.94)",
+                                     color: "#0C1320", boxShadow: "0 2px 8px rgba(12,19,32,.16)" }
+                          }, "Destacado"),
+                          /*#__PURE__*/React.createElement(TourCard, {
+                            card: x.data, currency: currency,
+                            onSelect: () => onSelectTour(x.data) }))))
+                : /*#__PURE__*/React.createElement("p", { className: "tg-res-nada" },
+                    "Nada con esos filtros.")),
+
+            /*#__PURE__*/React.createElement(UneteSection, { onRegistrar: abrirPortalProveedores }))
     )));
 }
 
@@ -6119,11 +6390,11 @@ function Desfragmentar({ onFin }) {
    ========================================================================== */
 const ZONA_TEXTOS = {
   alojamientos: { titulo: "¿Dónde quieres dormir?",
-                  pie: "Elige el estado y después el municipio, el hotel o la dirección.",
-                  paso2: "¿En qué parte?", boton: "Ver alojamientos" },
-  experiencias: { titulo: "¿A dónde quieres ir?",
+                  pie: "Elige el estado y después el municipio. Nada que escribir.",
+                  boton: "Ver alojamientos" },
+  experiencias: { titulo: "¿Qué quieres vivir?",
                   pie: "Elige el estado y te enseñamos todo lo que hay para hacer ahí.",
-                  paso2: null, boton: "Ver experiencias" }
+                  boton: "Ver experiencias" }
 };
 
 function sinTildes(t) {
@@ -6135,11 +6406,8 @@ function PantallaZona({ modo, onCerrar, onElegido }) {
   const t = ZONA_TEXTOS[modo] || ZONA_TEXTOS.experiencias;
   const [rompiendo, setRompiendo] = useState(true);
   const [estado, setEstado] = useState(null);
-  const [sitio, setSitio] = useState(null);      // { tipo, nombre, estado, dato }
-  const [texto, setTexto] = useState("");
-  const [abierto, setAbierto] = useState(false);
-  const [marcada, setMarcada] = useState(0);
-  const cajaRef = useRef(null);
+  const [sitio, setSitio] = useState(null);      // { tipo, nombre, clave, estado }
+  const conMunicipios = modo === "alojamientos";
 
   useEffect(() => {
     const onKey = e => { if (e.key === "Escape") onCerrar(); };
@@ -6148,63 +6416,15 @@ function PantallaZona({ modo, onCerrar, onElegido }) {
     return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
   }, [onCerrar]);
 
-  /* Todo lo que se puede escribir en el buscador: los tres estados, sus
-     municipios y los alojamientos publicados. Un solo índice, para que
-     escribir y tocar el mapa lleguen al mismo sitio. */
-  const indice = useMemo(() => {
-    const l = ESTADOS_MAPA.map(e => ({
-      tipo: "estado", nombre: e.nombre, estado: e.id, pie: e.geo.length + " municipios" }));
-    MAPA_PATHS.forEach(m => {
-      l.push({ tipo: "municipio", nombre: m.n, estado: m.estado,
-               pie: "Municipio de " + nombreEstado(m.estado), clave: m.clave });
-      /* Nadie busca «Jáuregui»: busca «La Grita». La capital entra como una
-         puerta más al mismo municipio, diciendo a cuál pertenece. */
-      if (m.cap && m.cap !== m.n) l.push({
-        tipo: "municipio", nombre: m.cap, estado: m.estado,
-        pie: m.n + " · " + nombreEstado(m.estado), clave: m.clave });
-    });
-    if (modo === "alojamientos") {
-      HOTELES.forEach(h => l.push({
-        tipo: "hotel", nombre: h.nombre, estado: "tachira",
-        pie: h.municipio || "Alojamiento", dato: h }));
-      ALOJAMIENTOS.forEach(a => l.push({
-        tipo: "alojamiento", nombre: a.titulo, estado: "tachira",
-        pie: a.municipio || "Alojamiento", dato: a }));
-    }
-    return l;
-  }, [modo]);
+  /* Los municipios del estado elegido, con su capital. Salen del mismo
+     dibujo que el mapa, para que tocar la lista y tocar el mapa lleven
+     exactamente al mismo sitio. */
+  const municipios = useMemo(() => {
+    if (!estado) return [];
+    return MAPA_PATHS.filter(m => m.estado === estado)
+      .slice().sort((a, b) => a.n.localeCompare(b.n));
+  }, [estado]);
 
-  const sugerencias = useMemo(() => {
-    const q = sinTildes(texto).trim();
-    const base = estado ? indice.filter(x => x.estado === estado || x.tipo === "estado") : indice;
-    if (!q) return base.filter(x => x.tipo === "estado");
-    return base.filter(x => sinTildes(x.nombre).includes(q)).slice(0, 10);
-  }, [texto, indice, estado]);
-
-  useEffect(() => { setMarcada(0); }, [texto]);
-
-  const tomar = x => {
-    if (x.tipo === "estado") {
-      setEstado(x.estado); setSitio(null);
-      setTexto(""); setAbierto(false);
-      return;
-    }
-    setEstado(x.estado);
-    setSitio(x);
-    setTexto("");
-    setAbierto(false);
-  };
-
-  const enTeclas = ev => {
-    if (!abierto || !sugerencias.length) return;
-    if (ev.key === "ArrowDown") { ev.preventDefault(); setMarcada(m => (m + 1) % sugerencias.length); }
-    else if (ev.key === "ArrowUp") { ev.preventDefault(); setMarcada(m => (m - 1 + sugerencias.length) % sugerencias.length); }
-    else if (ev.key === "Enter") { ev.preventDefault(); tomar(sugerencias[marcada]); }
-    else if (ev.key === "Escape") { setAbierto(false); }
-  };
-
-  /* Alojamiento necesita sitio; experiencias se conforma con el estado. */
-  const listo = modo === "alojamientos" ? !!estado : !!estado;
   const edo = ESTADOS_MAPA.find(e => e.id === estado);
 
   return enCapa(/*#__PURE__*/React.createElement("div", { className: "tg-zona", role: "dialog",
@@ -6228,56 +6448,46 @@ function PantallaZona({ modo, onCerrar, onElegido }) {
             /*#__PURE__*/React.createElement("b", null, "1"),
             /*#__PURE__*/React.createElement("span", null, "El estado")),
 
-          /*#__PURE__*/React.createElement("div", { className: "tg-busca", ref: cajaRef },
-            /*#__PURE__*/React.createElement("input", {
-              type: "text", value: texto,
-              onChange: e => { setTexto(e.target.value); setAbierto(true); },
-              onFocus: () => setAbierto(true),
-              onBlur: () => setTimeout(() => setAbierto(false), 160),
-              onKeyDown: enTeclas,
-              placeholder: modo === "alojamientos"
-                ? "Escribe un estado, municipio o alojamiento"
-                : "Escribe un estado o municipio",
-              role: "combobox", "aria-expanded": abierto, "aria-autocomplete": "list",
-              "aria-label": "Buscar zona"
-            }),
-            abierto && /*#__PURE__*/React.createElement("ul", { className: "tg-sugerencias", role: "listbox" },
-              sugerencias.length
-                ? sugerencias.map((x, i) => /*#__PURE__*/React.createElement("li", { key: x.tipo + x.nombre + i, role: "option",
-                    "aria-selected": i === marcada },
-                    /*#__PURE__*/React.createElement("button", {
-                      type: "button", "aria-selected": i === marcada,
-                      onMouseDown: ev => { ev.preventDefault(); tomar(x); }
-                    }, x.nombre, /*#__PURE__*/React.createElement("em", null, x.pie))))
-                : /*#__PURE__*/React.createElement("p", null, "Nada con ese nombre."))),
+          /*#__PURE__*/React.createElement("div", { className: "tg-edos" },
+            ESTADOS_MAPA.map(e => /*#__PURE__*/React.createElement("button", {
+              key: e.id,
+              "aria-pressed": estado === e.id,
+              onClick: () => { setEstado(e.id); setSitio(null); },
+              className: "tg-edo-op"
+            },
+              /*#__PURE__*/React.createElement("span", {
+                className: "pin", style: { background: COLOR_ESTADO[e.id] }, "aria-hidden": "true" }),
+              /*#__PURE__*/React.createElement("span", null,
+                /*#__PURE__*/React.createElement("b", null, e.nombre),
+                /*#__PURE__*/React.createElement("span", null, e.geo.length + " municipios"))))),
 
-          (estado || sitio) && /*#__PURE__*/React.createElement("div", null,
-            /*#__PURE__*/React.createElement("span", { className: "tg-elegido" },
-              sitio ? sitio.nombre + " · " + nombreEstado(estado) : edo.nombre,
-              /*#__PURE__*/React.createElement("button", {
-                onClick: () => { setEstado(null); setSitio(null); },
-                "aria-label": "Quitar la elección"
-              }, /*#__PURE__*/React.createElement(X, { size: 14 })))),
-
-          t.paso2 && /*#__PURE__*/React.createElement("p", { className: "tg-paso" + (sitio ? " listo" : "") },
+          conMunicipios && /*#__PURE__*/React.createElement("p",
+            { className: "tg-paso" + (sitio ? " listo" : "") },
             /*#__PURE__*/React.createElement("b", null, "2"),
-            /*#__PURE__*/React.createElement("span", null, t.paso2)),
-          t.paso2 && /*#__PURE__*/React.createElement("p", {
-            style: { fontSize: "13px", color: "rgba(255,255,255,.55)", margin: "0 0 18px", lineHeight: 1.6 }
-          }, estado
-               ? "Toca un municipio en el mapa o escríbelo arriba. Si no eliges ninguno, te enseñamos todo el estado."
-               : "Primero el estado."),
+            /*#__PURE__*/React.createElement("span", null, "El municipio")),
+
+          conMunicipios && !estado && /*#__PURE__*/React.createElement("p", {
+            style: { fontSize: "13px", color: "rgba(255,255,255,.45)", margin: "0 0 20px" }
+          }, "Primero el estado."),
+
+          conMunicipios && estado && /*#__PURE__*/React.createElement("div", { className: "tg-muns" },
+            municipios.map(m => /*#__PURE__*/React.createElement("button", {
+              key: m.clave,
+              "aria-pressed": !!(sitio && sitio.clave === m.clave),
+              onClick: () => setSitio({ tipo: "municipio", nombre: m.n, estado: m.estado, clave: m.clave }),
+              className: "tg-mun-op"
+            },
+              /*#__PURE__*/React.createElement("i", null, m.n),
+              m.cap && m.cap !== m.n && /*#__PURE__*/React.createElement("em", null, "(" + m.cap + ")")))),
 
           /*#__PURE__*/React.createElement("button", {
-            className: "tg-zona-ir", disabled: !listo,
+            className: "tg-zona-ir", disabled: !estado,
             onClick: () => onElegido({ estado: estado, sitio: sitio })
-          }, !listo ? "Elige una zona"
-               : (sitio && (sitio.tipo === "hotel" || sitio.tipo === "alojamiento")
-                    ? "Ir a " + sitio.nombre
-                    : t.boton + " en " + (sitio ? sitio.nombre : edo.nombre)))),
+          }, !estado ? "Elige un estado"
+               : t.boton + " en " + (sitio ? sitio.nombre : edo.nombre))),
 
         /*#__PURE__*/React.createElement(MapaZonas, {
-          estado: estado, sitio: sitio, conMunicipios: modo === "alojamientos",
+          estado: estado, sitio: sitio, conMunicipios: conMunicipios,
           onEstado: id => { setEstado(id); setSitio(null); },
           onMunicipio: m => setSitio({ tipo: "municipio", nombre: m.n, estado: m.estado, clave: m.clave })
         })))));
@@ -6298,7 +6508,8 @@ function HomeScreen({
     setCategory: setCategory,  
     setMunicipioFiltro: setMunicipioFiltro,
     onAbrirTour: onSelectTour,
-    onAbrirAlojamiento: onSelectAloj
+    onAbrirAlojamiento: onSelectAloj,
+    onAbrirProveedor: onSelectProvider
   }), /*#__PURE__*/React.createElement(AuthorityMarquee, null), /*#__PURE__*/React.createElement(MapaTachira, {
     municipioFiltro: municipioFiltro,
     setMunicipioFiltro: setMunicipioFiltro,
@@ -6313,13 +6524,14 @@ function HomeScreen({
     currency: currency  
   }), /*#__PURE__*/React.createElement(EliteProvidersSection, {  
     onSelectProvider: onSelectProvider  
-  }), /*#__PURE__*/React.createElement(ProductsGridSection, {  
-    onSelectTour: onSelectTour,  
-    onSelectAloj: onSelectAloj,  
-    currency: currency,  
-    municipioFiltro: municipioFiltro,  
-    setMunicipioFiltro: setMunicipioFiltro  
-  }));  
+  }), /*#__PURE__*/React.createElement(ProductsGridSection, {
+    onSelectTour: onSelectTour,
+    onSelectAloj: onSelectAloj,
+    currency: currency,
+    municipioFiltro: municipioFiltro,
+    setMunicipioFiltro: setMunicipioFiltro
+  }), /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-4 pb-12" },
+    /*#__PURE__*/React.createElement(UneteSection, { onRegistrar: abrirPortalProveedores })));
 }
 
 /* ==========================================================================  
@@ -9986,6 +10198,7 @@ async function cargarCatalogoReal(){
       acento: '#0052CC',
       especialidad: p.cover_tagline || 'Proveedor verificado',
       ubicacion: municipioCanonico(p.municipio),
+      estado: p.estado || estadoDelMunicipio(p.municipio) || null,
       tagline: p.cover_title || p.cover_tagline || '',
       /* Lo que el negocio configura de su propia página. */
       tema: p.tema || 'clasico',
@@ -10025,6 +10238,7 @@ async function cargarCatalogoReal(){
       nombre: hp.business_name,
       slug: hp.slug,
       municipio: municipioCanonico(hp.municipio),
+      estado: hp.estado || estadoDelMunicipio(hp.municipio) || null,
       logo: hp.logo_url,
       portada: hp.cover_image_url,
       about: hp.about || '',
