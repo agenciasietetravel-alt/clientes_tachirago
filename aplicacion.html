@@ -177,6 +177,15 @@ html { scroll-behavior: smooth; }
   --tg-azul:#0052CC;
   --tg-naranja:#FF6B00;
   --tg-linea:#E7E4DE;
+  /* Portada. El velo va aquí para poder subirlo o bajarlo sin tocar el
+     componente; hoy se mueve entre el 46% y el 58% de negro, que es lo que
+     hace falta para leer blanco sobre el video sin apagarlo. */
+  --tg-portada-acento:#FF9540;
+  --tg-velo-alto:rgba(3,12,28,.58);
+  --tg-velo-medio:rgba(3,12,28,.34);
+  --tg-velo-bajo:rgba(3,12,28,.62);
+  --tg-foco-centro:rgba(2,9,22,.46);
+  --tg-foco-medio:rgba(2,9,22,.24);
 }
 body{
   font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -330,41 +339,73 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
    en movimiento recortado sobre la letra. El relleno transparente se lleva
    por delante cualquier text-shadow, así que el despegue de la foto lo hace
    un drop-shadow sobre la forma de las letras. */
-.tg-h1{display:flex;flex-direction:column;align-items:center}
-.tg-h1-lead{font-size:clamp(17px,2.55vw,27px);font-weight:600;line-height:1.24;
-  letter-spacing:-.012em;color:rgba(255,255,255,.93);text-wrap:balance;
-  text-shadow:0 1px 6px rgba(2,10,24,.95),0 2px 18px rgba(2,10,24,.7)}
-/* ANDES entra una sola vez: la palabra sube desde una máscara y el trazo de
-   marcador se dibuja debajo. Dos recursos, no cinco. El color no se mueve:
-   es el naranja de la marca, fijo. */
-.tg-andes-caja{display:block;overflow:hidden;padding:0 .06em .06em;margin-top:2px}
-.tg-andes{display:block;font-size:clamp(50px,11vw,116px);font-weight:900;
-  line-height:.96;letter-spacing:-.035em;color:#FF8A2B;
-  text-shadow:0 2px 0 rgba(120,44,0,.3), 0 3px 12px rgba(2,10,24,.55), 0 12px 40px rgba(2,10,24,.45);
-  transform:translateY(102%);animation:tgSube .78s cubic-bezier(.17,.84,.3,1) .12s forwards}
-@keyframes tgSube{to{transform:translateY(0)}}
+/* ---------------------------------------------------------------------
+   PORTADA. El titular gigante se fue: ocupaba media pantalla y empujaba
+   fuera lo único que la portada tiene que conseguir, que es que alguien
+   elija por dónde empezar. Ahora la jerarquía es tipográfica —peso ligero
+   para la frase, peso y color de marca para el nombre— y el aire lo pone
+   el espacio, no el tamaño de la letra.
+   --------------------------------------------------------------------- */
+.tg-portada{position:relative;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;min-height:min(86vh,720px)}
+.tg-portada-fondo{position:absolute;inset:0;overflow:hidden}
+/* El poster se pinta de inmediato y el video se funde encima cuando puede
+   reproducir. Así nunca hay un hueco negro esperando al video. */
+.tg-portada-fondo img,.tg-portada-fondo video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.tg-portada-fondo video{opacity:0;transition:opacity .7s ease}
+.tg-portada-fondo video.tg-puesto{opacity:1}
+@media(prefers-reduced-motion:reduce){.tg-portada-fondo video{transition:none}}
 
-/* El trazo: un rectángulo con las puntas desiguales, como de rotulador, que
-   crece de izquierda a derecha cuando la palabra ya aterrizó. */
-.tg-trazo{display:block;height:clamp(7px,1.25vw,14px);margin:-.06em auto 0;
-  width:min(74%,520px);background:#FF6B00;opacity:.92;
-  border-radius:40% 60% 55% 45%/60% 50% 55% 45%;
-  transform-origin:left center;transform:scaleX(0);
-  animation:tgTrazo .62s cubic-bezier(.22,.9,.3,1) .72s forwards}
-@keyframes tgTrazo{to{transform:scaleX(1)}}
+/* El velo. Dos capas: una vertical que asienta el conjunto y una elipse
+   centrada donde cae el texto. Entre las dos, el contraste del titular
+   sobre el video queda por encima de 7:1 sin apagar la imagen entera. */
+.tg-portada-velo{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,
+    var(--tg-velo-alto) 0%, var(--tg-velo-medio) 42%, var(--tg-velo-bajo) 100%)}
+.tg-portada-foco{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(62% 52% at 50% 42%,
+    var(--tg-foco-centro) 0%, var(--tg-foco-medio) 54%, transparent 80%)}
 
-.tg-andes-sub{display:block;margin-top:11px;padding-left:.36em;
-  font-size:clamp(12.5px,2.05vw,22px);font-weight:700;letter-spacing:.36em;
-  color:rgba(255,255,255,.92);text-shadow:0 1px 6px rgba(2,10,24,.95);
-  opacity:0;animation:tgAparece .5s ease-out .95s forwards}
-@keyframes tgAparece{to{opacity:1}}
+.tg-portada-cuerpo{position:relative;z-index:10;width:100%;max-width:1060px;
+  margin:0 auto;padding:72px 20px;text-align:center}
+@media(max-width:640px){.tg-portada-cuerpo{padding:52px 18px}}
 
-/* Sin movimiento: todo llega puesto, nada se anima. */
-@media(prefers-reduced-motion:reduce){
-  .tg-andes,.tg-trazo,.tg-andes-sub{animation:none}
-  .tg-andes{transform:none}
-  .tg-trazo{transform:scaleX(1)}
-  .tg-andes-sub{opacity:1}
+.tg-ojo{margin:0 0 22px;font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.3em;color:rgba(255,255,255,.82);
+  text-shadow:0 1px 8px rgba(2,10,24,.9)}
+@media(max-width:640px){.tg-ojo{letter-spacing:.2em;font-size:10px;margin-bottom:16px}}
+
+/* Ligera y con aire: 300 de peso para la frase, que es donde estaba el
+   exceso, y el nombre de la región en el acento de la marca. */
+.tg-titulo{margin:0;font-size:clamp(27px,4.3vw,52px);font-weight:300;
+  line-height:1.16;letter-spacing:-.022em;color:#fff;text-wrap:balance;
+  max-width:19ch;margin-inline:auto;
+  text-shadow:0 1px 10px rgba(2,10,24,.72),0 2px 30px rgba(2,10,24,.5)}
+.tg-titulo b{font-weight:700;color:var(--tg-portada-acento);letter-spacing:-.028em}
+
+.tg-bajada{margin:20px auto 0;max-width:56ch;font-size:clamp(14px,1.45vw,17px);
+  font-weight:400;line-height:1.6;color:rgba(255,255,255,.9);
+  text-shadow:0 1px 8px rgba(2,10,24,.85)}
+
+.tg-pregunta{margin:40px 0 14px;font-size:clamp(14.5px,1.5vw,18px);font-weight:500;
+  color:rgba(255,255,255,.95);text-shadow:0 1px 8px rgba(2,10,24,.85)}
+@media(max-width:640px){.tg-pregunta{margin-top:30px}}
+
+/* La franja de confianza vuelve a la portada. Antes era una banda blanca
+   debajo, que cortaba la imagen en dos y pesaba más que lo que decía. */
+.tg-promesas{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  column-gap:26px;row-gap:6px;margin-top:22px}
+.tg-promesas span{position:relative;font-size:12.5px;font-weight:500;
+  color:rgba(255,255,255,.88);white-space:nowrap;
+  text-shadow:0 1px 7px rgba(2,10,24,.9)}
+@media(min-width:641px){
+  .tg-promesas span + span::before{content:'·';position:absolute;left:-15px;
+    color:rgba(255,255,255,.45)}
+}
+@media(max-width:640px){
+  .tg-promesas{column-gap:14px;row-gap:4px;margin-top:18px}
+  .tg-promesas span{font-size:11.5px}
 }
 
 /* Los tres botones de la portada: son la acción principal de la página, así
@@ -548,20 +589,6 @@ html.tg-esperando #tg-espera{display:flex}
 
 /* El escudo de fondo: marca la pantalla sin estorbar lo que se lee. */
 .tg-escudo-fondo{position:absolute;pointer-events:none;opacity:.045;z-index:0}
-
-/* La franja de confianza. Los separadores son del estilo, no del marcado:
-   en el móvil cada punto cae en su línea y un «·» suelto al principio de
-   una línea se lee como un error. */
-.tg-franja{background:#fff;border-bottom:1px solid #F1F5F9}
-.tg-franja-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
-  column-gap:28px;row-gap:5px;padding:13px 16px}
-.tg-franja-in span{font-size:12.5px;font-weight:600;color:#475569;white-space:nowrap;position:relative}
-@media(min-width:640px){
-  .tg-franja-in span + span::before{content:'·';position:absolute;left:-16px;color:#CBD5E1;font-weight:400}
-}
-@media(max-width:639px){
-  .tg-franja-in{column-gap:18px;row-gap:3px;padding:11px 16px}
-}
 
 /* El botón que invita a publicar. Antes era un contorno naranja entre otros
    dos botones con contorno: el que trae la oferta no puede pesar lo mismo
@@ -972,6 +999,15 @@ async function cargarTasas(){
     if(!TASAS_ACTUALIZADAS || r.actualizado_en > TASAS_ACTUALIZADAS) TASAS_ACTUALIZADAS = r.actualizado_en;
   });
 }
+
+/* El fondo de la portada. Son archivos propios, no un iframe: un reproductor
+   ajeno trae sus controles y su marca y no deja decidir ni el bucle ni el
+   silencio. El poster es un fotograma del propio video. */
+const VIDEO_PORTADA = {
+  ancho: "/assets/video/portada.mp4",        // 960x540, 6,9 s, 4,2 MB
+  movil: "/assets/video/portada-movil.mp4",  // 480x272, 6,9 s, 0,5 MB
+  poster: "/assets/video/portada-poster.jpg"
+};
 
 const IMAGES = {  
   hero: "/assets/portada.jpg",
@@ -4360,75 +4396,103 @@ function SearchTabsBox({
       onAbrirHotel: h => { setResultados(null); setHotelAbierto(h); }
     })));  
 }  
-function Hero({  
-  category,  
-  setCategory,  
+/* El fondo de la portada. El poster se ve desde el primer cuadro y el video
+   se funde encima solo cuando el navegador dice que puede reproducirlo.
+
+   Tres motivos para no cargarlo siempre: quien pidió menos movimiento no
+   quiere un video de fondo, quien va con ahorro de datos tampoco, y en una
+   conexión de 2G el archivo no llegaría nunca. En esos casos la portada se
+   queda en la foto, que es exactamente lo mismo que ve quien tiene el video
+   detenido. */
+function FondoPortada(){
+  const ref = useRef(null);
+  const [puesto, setPuesto] = useState(false);
+  const [conVideo, setConVideo] = useState(false);
+
+  useEffect(() => {
+    const quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const con = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const ahorra = !!(con && (con.saveData || /(^|-)2g$/.test(con.effectiveType || "")));
+    if (quieto || ahorra) return;
+    /* Después del primer cuadro: el video no puede competir con la portada
+       por el ancho de banda mientras la página todavía se está pintando. */
+    const t = setTimeout(() => setConVideo(true), 400);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    /* `muted` como propiedad, no como atributo: sin esto el navegador
+       bloquea la reproducción automática y el video se queda en el poster. */
+    v.muted = true;
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+  }, [conVideo]);
+
+  const estrecho = typeof window !== "undefined" && window.matchMedia
+    && window.matchMedia("(max-width: 640px)").matches;
+
+  return /*#__PURE__*/React.createElement("div", { className: "tg-portada-fondo" },
+    /*#__PURE__*/React.createElement("img", {
+      src: VIDEO_PORTADA.poster,
+      alt: "Siembra de páramo y montañas de los Andes venezolanos",
+      fetchpriority: "high"
+    }),
+    conVideo && /*#__PURE__*/React.createElement("video", {
+      ref: ref,
+      className: puesto ? "tg-puesto" : "",
+      src: estrecho ? VIDEO_PORTADA.movil : VIDEO_PORTADA.ancho,
+      autoPlay: true, loop: true, playsInline: true, muted: true,
+      preload: "auto",
+      "aria-hidden": "true", tabIndex: -1,
+      /* Reproducir en cuanto se pueda, no solo al montar: cuando el efecto
+         corrió, el archivo todavía no tenía datos y el play() se rechazaba
+         en silencio; el video se veía, pero quieto. */
+      onCanPlay: ev => {
+        setPuesto(true);
+        const q = ev.currentTarget.play();
+        if (q && q.catch) q.catch(() => {});
+      }
+    }),
+    /*#__PURE__*/React.createElement("div", { className: "tg-portada-velo" }),
+    /*#__PURE__*/React.createElement("div", { className: "tg-portada-foco" }));
+}
+
+function Hero({
+  category,
+  setCategory,
   setMunicipioFiltro,
   onAbrirTour,
   onAbrirAlojamiento
-}) {  
-  return /*#__PURE__*/React.createElement("section", {  
-    className: "relative flex items-center justify-center overflow-hidden",
-    style: { minHeight: "min(88vh, 760px)" }  
-  }, /*#__PURE__*/React.createElement("picture", {
-    className: "absolute inset-0 w-full h-full"
-  }, React.createElement("source", {
-    media: "(max-width: 640px)",
-    srcSet: IMAGES.heroMovil
-  }), React.createElement("img", {
-    src: IMAGES.hero,
-    alt: "Táchira: pueblos coloniales, parapente, ciclismo y rutas de montaña",
-    fetchpriority: "high",
-    className: "w-full h-full object-cover"
-  })),
-  /* El velo bajó a la mitad: la foto se ve. Lo que sostiene el texto ya no es
-     una cortina sobre toda la imagen sino una elipse oscura centrada en la
-     columna del titular, más un apoyo abajo para el buscador. Donde no hay
-     texto, la foto queda casi limpia. */
-  React.createElement("div", {
-    className: "absolute inset-0 pointer-events-none",
-    style: {
-      background: "linear-gradient(to bottom, rgba(3,15,34,.30) 0%, rgba(3,15,34,.14) 34%, rgba(3,15,34,.10) 58%, rgba(3,15,34,.34) 100%)"
-    }
-  }), React.createElement("div", {
-    className: "absolute inset-0 pointer-events-none",
-    style: {
-      background: "radial-gradient(58% 46% at 50% 40%, rgba(2,10,24,.52) 0%, rgba(2,10,24,.26) 52%, transparent 78%)"
-    }
-  }), React.createElement("div", {  
-    className: "relative z-10 max-w-4xl mx-auto px-4 text-center py-16"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "text-[11px] sm:text-xs font-semibold uppercase mb-5",
-    style: { letterSpacing: ".22em", color: "rgba(255,255,255,.92)", textShadow: "0 1px 6px rgba(2,10,24,.95), 0 2px 16px rgba(2,10,24,.7)" }
-  }, "Mérida · Táchira · Trujillo"), /*#__PURE__*/React.createElement("h1", { className: "tg-h1" },
-    /*#__PURE__*/React.createElement("span", { className: "tg-h1-lead" },
-      "Reserva experiencias, transporte y alojamiento en los"),
-    /*#__PURE__*/React.createElement("span", { className: "tg-andes-caja" },
-      /*#__PURE__*/React.createElement("span", { className: "tg-andes" }, "ANDES")),
-    /*#__PURE__*/React.createElement("span", { className: "tg-trazo", "aria-hidden": "true" }),
-    /*#__PURE__*/React.createElement("span", { className: "tg-andes-sub" }, "VENEZOLANOS")),
-    /*#__PURE__*/React.createElement("p", {
-    className: "mt-4 text-base md:text-lg mx-auto",
-    style: { maxWidth: "54ch", color: "rgba(255,255,255,.94)", textShadow: "0 1px 6px rgba(2,10,24,.95), 0 2px 18px rgba(2,10,24,.7)" }
-  }, "Eliges, pagas y recibes tu comprobante. Tres pasos, con el dinero retenido hasta que el negocio confirme."), /*#__PURE__*/React.createElement(SearchTabsBox, {  
-    category: category,  
-    setCategory: setCategory,  
-    setMunicipioFiltro: setMunicipioFiltro,
-    onAbrirTour: onAbrirTour,
-    onAbrirAlojamiento: onAbrirAlojamiento
-  })));  
+}) {
+  return /*#__PURE__*/React.createElement("section", { className: "tg-portada" },
+    /*#__PURE__*/React.createElement(FondoPortada, null),
+    /*#__PURE__*/React.createElement("div", { className: "tg-portada-cuerpo" },
+      /*#__PURE__*/React.createElement("p", { className: "tg-ojo" },
+        "Mérida · Táchira · Trujillo · y más"),
+      /*#__PURE__*/React.createElement("h1", { className: "tg-titulo" },
+        "Reserva experiencias, transporte y alojamiento en los ",
+        /*#__PURE__*/React.createElement("b", null, "ANDES VENEZOLANOS")),
+      /*#__PURE__*/React.createElement("p", { className: "tg-bajada" },
+        "Todo en un solo lugar, con cada reserva respaldada por un comprobante verificado por la plataforma."),
+      /*#__PURE__*/React.createElement("p", { className: "tg-pregunta" },
+        "¿Qué quieres vivir en los Andes venezolanos?"),
+      /*#__PURE__*/React.createElement(SearchTabsBox, {
+        category: category,
+        setCategory: setCategory,
+        setMunicipioFiltro: setMunicipioFiltro,
+        onAbrirTour: onAbrirTour,
+        onAbrirAlojamiento: onAbrirAlojamiento
+      }),
+      /*#__PURE__*/React.createElement("div", { className: "tg-promesas" },
+        PROMESAS.map(t => /*#__PURE__*/React.createElement("span", { key: t }, t)))));
 }
 
-/* La franja de confianza: las tres cosas que el viajero quiere saber antes
-   de seguir bajando. Va con estilos en línea a propósito —la hoja de
-   Tailwind es estática y una clase que no estuviera en la compilación
-   original no generaría nada. */
-function TrustStrip() {
-  const puntos = ["Soporte por WhatsApp", "Precio final sin costos ocultos", "Anfitriones locales"];
-  return /*#__PURE__*/React.createElement("section", { className: "tg-franja" },
-    /*#__PURE__*/React.createElement("div", { className: "tg-franja-in max-w-6xl mx-auto" },
-      puntos.map(t => /*#__PURE__*/React.createElement("span", { key: t }, t))));
-}
+/* Las tres cosas que el viajero quiere saber antes de seguir bajando. Viven
+   dentro de la portada, bajo las opciones: la banda blanca que había debajo
+   partía la imagen en dos y pesaba más de lo que decía. */
+const PROMESAS = ["Soporte por WhatsApp", "Precio final sin costos ocultos", "Anfitriones locales"];
 
 /* Cambio 5: cinta de autoridad — marquee infinito, monocromático, debajo del hero */  
 function AuthorityMarquee() {  
@@ -6130,8 +6194,7 @@ function HomeScreen({
     setMunicipioFiltro: setMunicipioFiltro,
     onAbrirTour: onSelectTour,
     onAbrirAlojamiento: onSelectAloj
-  }), /*#__PURE__*/React.createElement(TrustStrip, null),
-     /*#__PURE__*/React.createElement(AuthorityMarquee, null), /*#__PURE__*/React.createElement(MapaTachira, {
+  }), /*#__PURE__*/React.createElement(AuthorityMarquee, null), /*#__PURE__*/React.createElement(MapaTachira, {
     municipioFiltro: municipioFiltro,
     setMunicipioFiltro: setMunicipioFiltro,
     category: category,
