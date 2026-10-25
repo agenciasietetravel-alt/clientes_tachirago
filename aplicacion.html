@@ -388,12 +388,53 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
   font-weight:400;line-height:1.6;color:rgba(255,255,255,.9);
   text-shadow:0 1px 8px rgba(2,10,24,.85)}
 
-.tg-pregunta{margin:40px 0 14px;font-size:clamp(14.5px,1.5vw,18px);font-weight:500;
+.tg-pregunta{margin:40px 0 16px;font-size:clamp(14.5px,1.5vw,18px);font-weight:500;
   color:rgba(255,255,255,.95);text-shadow:0 1px 8px rgba(2,10,24,.85)}
+.tg-pregunta em{display:block;margin-bottom:5px;font-style:normal;font-size:10.5px;
+  font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--tg-portada-acento)}
 @media(max-width:640px){.tg-pregunta{margin-top:30px}}
 
 /* La franja de confianza vuelve a la portada. Antes era una banda blanca
    debajo, que cortaba la imagen en dos y pesaba más que lo que decía. */
+/* Las dos puertas de entrada. Sustituyen al buscador de la portada: pedir
+   destino, fechas y número de habitaciones antes de haber elegido siquiera
+   si se busca cama o plan era pedirle al viajero que rellenara un formulario
+   para empezar a mirar. */
+/* Las capas (elegir zona, resultados, vehículos, reserva de hotel) se
+   dibujan en un portal: este contenedor solo las agrupa y no ocupa sitio. */
+.tg-capas{display:contents}
+.tg-caminos{display:grid;grid-template-columns:1fr 1fr;gap:16px;
+  max-width:760px;margin:0 auto}
+@media(max-width:640px){.tg-caminos{grid-template-columns:1fr;gap:12px;max-width:420px}}
+.tg-camino{display:flex;flex-direction:column;align-items:flex-start;gap:9px;
+  padding:26px 24px;min-height:152px;text-align:left;cursor:pointer;
+  border-radius:18px;border:1px solid rgba(255,255,255,.26);
+  background:rgba(8,18,38,.42);
+  -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+  transition:transform .2s cubic-bezier(.2,.8,.3,1),background .2s ease,
+    border-color .2s ease,box-shadow .2s ease}
+.tg-camino:hover{background:rgba(8,18,38,.58);border-color:rgba(255,255,255,.5);
+  transform:translateY(-3px);box-shadow:0 16px 38px rgba(2,10,24,.42)}
+.tg-camino:focus-visible{outline:none;
+  box-shadow:0 0 0 3px rgba(2,10,24,.55),0 0 0 6px var(--tg-portada-acento)}
+.tg-camino:active{transform:translateY(-1px)}
+@media(max-width:640px){.tg-camino{min-height:116px;padding:20px}}
+.tg-camino-icono{display:flex;align-items:center;justify-content:center;
+  width:42px;height:42px;border-radius:12px;flex:none;
+  background:var(--tg-portada-acento);color:#13233F}
+.tg-camino-t{font-size:clamp(19px,2.1vw,24px);font-weight:700;color:#fff;
+  letter-spacing:-.02em;line-height:1.15}
+.tg-camino-p{font-size:13.5px;font-weight:400;line-height:1.5;
+  color:rgba(255,255,255,.8)}
+.tg-camino-ir{display:inline-flex;align-items:center;gap:5px;margin-top:auto;
+  font-size:12.5px;font-weight:700;color:var(--tg-portada-acento)}
+.tg-camino:hover .tg-camino-ir{gap:9px}
+@media(prefers-reduced-motion:reduce){
+  .tg-camino,.tg-camino-ir{transition:none}
+  .tg-camino:hover{transform:none}
+}
+
 .tg-promesas{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
   column-gap:26px;row-gap:6px;margin-top:22px}
 .tg-promesas span{position:relative;font-size:12.5px;font-weight:500;
@@ -1065,6 +1106,27 @@ const AUTHORITY_PROVIDERS = ["SIETE TRAVEL", "SIETE.AI", "AMADEUS", "SABRE", "KI
 /* La plataforma se concentra en tres cosas. El identificador "rentacar" se
    conserva por dentro porque lo usan el catalogo y las reservas; de cara a la
    gente la categoria se llama Movilidad. */
+/* Dónde tocó el dedo o el ratón. La desintegración de la portada nace de
+   ese punto, así que hay que guardarlo antes de desmontar el botón. */
+let ORIGEN_DEL_CLIC = null;
+function marcarOrigenDelClic(ev){
+  const t = ev && (ev.currentTarget || ev.target);
+  if (!t || !t.getBoundingClientRect) { ORIGEN_DEL_CLIC = null; return; }
+  const r = t.getBoundingClientRect();
+  const x = (ev.clientX != null && ev.clientX !== 0) ? ev.clientX : r.left + r.width / 2;
+  const y = (ev.clientY != null && ev.clientY !== 0) ? ev.clientY : r.top + r.height / 2;
+  ORIGEN_DEL_CLIC = { x: x / window.innerWidth, y: y / window.innerHeight };
+}
+
+/* Las dos puertas de la portada. "Movilidad" ya no está aquí: vive en el
+   menú de arriba. */
+const CAMINOS = [
+  { id: "alojamientos", titulo: "Dónde dormir", icono: Bed,
+    pie: "Posadas, hoteles y casas en los tres estados.", accion: "Elegir zona" },
+  { id: "experiencias", titulo: "Qué vivir", icono: Compass,
+    pie: "Tours, páramos, cascadas y rutas con guía local.", accion: "Elegir estado" }
+];
+
 const CATEGORIES = [{
   id: "alojamientos",
   label: "Alojamientos",
@@ -1622,6 +1684,7 @@ function Navbar({
   onLogoClick,
   onSelectMunicipio,
   onSelectActividad,
+  onMovilidad,
   onMisReservas
 }) {
 
@@ -1676,7 +1739,7 @@ function Navbar({
     }, /*#__PURE__*/React.createElement("button", {
       onClick: () => setOpenDropdown(cur => cur === menu ? null : menu),
       "aria-expanded": openDropdown === menu,
-      className: `flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${openDropdown === menu ? "text-[#0052CC] bg-blue-50" : "text-slate-700 hover:text-[#0052CC]"}`
+      className: `flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${openDropdown === menu ? "text-[#0052CC] bg-blue-50" : "text-slate-700 hover:text-[#0052CC]"}`
     }, menu, /*#__PURE__*/React.createElement(ChevronDown, {
       size: 14,
       className: `transition-transform ${openDropdown === menu ? "rotate-180" : ""}`
@@ -1687,6 +1750,10 @@ function Navbar({
       onMunicipio: elegirMunicipio, onActividad: elegirActividad
     })));
   }), /*#__PURE__*/React.createElement("button", {
+    onClick: onMovilidad,
+    className: "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:text-[#0052CC] transition-colors whitespace-nowrap"
+  }, /*#__PURE__*/React.createElement(Car, { size: 15 }), "Movilidad"),
+     /*#__PURE__*/React.createElement("button", {
     onClick: onMisReservas,
     className: "ml-1 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-[#0052CC] text-[#0052CC] hover:bg-blue-50 transition-colors whitespace-nowrap"
   }, "Mis reservas"), /*#__PURE__*/React.createElement("button", {
@@ -1741,6 +1808,10 @@ function Navbar({
       className: `shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap ${openDropdown === menu ? "border-[#0052CC] text-[#0052CC]" : "border-slate-200 text-slate-600"}`
     }, menu, " ", /*#__PURE__*/React.createElement(ChevronDown, { size: 12 }))
   ), /*#__PURE__*/React.createElement("button", {
+    onClick: onMovilidad,
+    className: "shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-600 whitespace-nowrap"
+  }, /*#__PURE__*/React.createElement(Car, { size: 13 }), "Movilidad"),
+     /*#__PURE__*/React.createElement("button", {
     onClick: onMisReservas,
     className: "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-[#0052CC] text-[#0052CC] whitespace-nowrap"
   }, "Mis reservas")),
@@ -4292,67 +4363,31 @@ function SearchTabsBox({
     categoriaPrevia.current = category;
   }, [category]);
 
-  const scrollToCatalogo = () => setTimeout(() => document.getElementById("catalogo-completo")?.scrollIntoView({  
-    behavior: "smooth"  
-  }), 50);  
-  const handleExperiencias = municipio => {  
-    setCategory("experiencias");  
-    setMunicipioFiltro(municipio);  
-    scrollToCatalogo();  
-  };  
-  const handleAlojamientos = ({  
-    destino  
-  }) => {  
-    setCategory("alojamientos");  
-    setMunicipioFiltro(destino || null);  
-    scrollToCatalogo();  
-  };  
-  const handleRentacar = (lugar, desde, hasta, conChofer) => {
-    setCategory("rentacar");
-    // Los vehiculos no viven en el catalogo de tours: tienen su propia seccion.
-    /* Sin coacción a booleano: null significa «todavía no eligió», y la
-       pantalla grande tiene que poder distinguirlo de «yo conduzco». */
-    setRentacarAbierto({ municipio: lugar || "", desde: desde || "", hasta: hasta || "", conChofer: conChofer });
-  };  
-  const handleTours = () => {  
-    scrollToCatalogo();  
-  };  
-  return /*#__PURE__*/React.createElement("div", {  
-    className: "w-full max-w-4xl mx-auto mt-8 bg-white rounded-2xl shadow-xl"  
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2 px-3 pt-3 pb-3",
-    role: "tablist",
-    "aria-label": "Qué quieres reservar"
-  }, CATEGORIES.map(cat => {  
-    const Icon = cat.icon;  
-    const active = category === cat.id;  
-    return /*#__PURE__*/React.createElement("button", {  
-      key: cat.id,
-      role: "tab",
-      "aria-selected": active,
-      /* Alojamiento ya no salta a un hotel concreto —antes, con un solo
-         alojamiento publicado, el botón abría ese y parecía que la
-         plataforma tenía uno— ni Experiencias cae en una cuadrícula sin
-         contexto: los dos preguntan primero a dónde vas. */
-      onClick: () => {
-        setCategory(cat.id);
-        if (cat.id === "rentacar") { setRentacarAbierto({}); return; }
-        setResultados(null);
-        setZona(cat.id);
-      },  
-      className: "tg-pilar"
-    }, /*#__PURE__*/React.createElement(Icon, { size: 17 }), cat.label);  
-  })), /*#__PURE__*/React.createElement("div", {  
-    className: "h-px bg-slate-100 mx-4"  
-  }), /*#__PURE__*/React.createElement("div", {  
-    className: "p-3 md:p-4 min-h-[64px] flex items-center"  
-  }, category === "experiencias" && /*#__PURE__*/React.createElement(SearchExperienciasForm, {  
-    onSubmit: handleExperiencias  
-  }), category === "alojamientos" && /*#__PURE__*/React.createElement(SearchAlojamientosForm, {  
-    onSubmit: handleAlojamientos  
-  }), category === "rentacar" && /*#__PURE__*/React.createElement(SearchRentacarForm, {  
-    onSubmit: handleRentacar  
-  }),
+  /* Dos puertas, no tres. Movilidad se fue al menú de arriba: quien alquila
+     un carro ya sabe que viene a eso, mientras que quien llega por primera
+     vez solo tiene que decidir entre cama y plan. */
+  const abrirCamino = (id, ev) => {
+    setCategory(id);
+    setResultados(null);
+    marcarOrigenDelClic(ev);
+    setZona(id);
+  };
+
+  return /*#__PURE__*/React.createElement("div", { className: "w-full" },
+    /*#__PURE__*/React.createElement("div", { className: "tg-caminos" },
+      CAMINOS.map(c => /*#__PURE__*/React.createElement("button", {
+        key: c.id,
+        onClick: ev => abrirCamino(c.id, ev),
+        className: "tg-camino"
+      },
+        /*#__PURE__*/React.createElement("span", { className: "tg-camino-icono" },
+          /*#__PURE__*/React.createElement(c.icono, { size: 22 })),
+        /*#__PURE__*/React.createElement("span", { className: "tg-camino-t" }, c.titulo),
+        /*#__PURE__*/React.createElement("span", { className: "tg-camino-p" }, c.pie),
+        /*#__PURE__*/React.createElement("span", { className: "tg-camino-ir" },
+          c.accion, /*#__PURE__*/React.createElement(ChevronRight, { size: 14 }))))),
+
+    /*#__PURE__*/React.createElement("div", { className: "tg-capas" },
     cotizadorTour && /*#__PURE__*/React.createElement(TourQuotePage, {
       tipo: cotizadorTour,
       onClose: () => setCotizadorTour(null)
@@ -4394,8 +4429,9 @@ function SearchTabsBox({
       onSelectTour: t => { setResultados(null); onAbrirTour && onAbrirTour(t); },
       onSelectAloj: a => { setResultados(null); onAbrirAlojamiento && onAbrirAlojamiento(a); },
       onAbrirHotel: h => { setResultados(null); setHotelAbierto(h); }
-    })));  
-}  
+    })));
+}
+
 /* El fondo de la portada. El poster se ve desde el primer cuadro y el video
    se funde encima solo cuando el navegador dice que puede reproducirlo.
 
@@ -4477,6 +4513,7 @@ function Hero({
       /*#__PURE__*/React.createElement("p", { className: "tg-bajada" },
         "Todo en un solo lugar, con cada reserva respaldada por un comprobante verificado por la plataforma."),
       /*#__PURE__*/React.createElement("p", { className: "tg-pregunta" },
+        /*#__PURE__*/React.createElement("em", null, "Elige por dónde empezar"),
         "¿Qué quieres vivir en los Andes venezolanos?"),
       /*#__PURE__*/React.createElement(SearchTabsBox, {
         category: category,
@@ -9625,6 +9662,10 @@ function App() {
       setMunicipioFiltro(null);
       setView("home");
     },
+    /* Movilidad salió de la portada. Cambiar la categoría es lo que abre la
+       pantalla de vehículos: ya funcionaba así para los micrositios que
+       alquilan, y ahora también para el menú. */
+    onMovilidad: () => { setView("home"); setCategory("rentacar"); },
     onMisReservas: () => abrirMisReservas()
   }), view === "home" && /*#__PURE__*/React.createElement(HomeScreen, {  
     municipioFiltro: municipioFiltro,  
