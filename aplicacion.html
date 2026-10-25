@@ -471,18 +471,29 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
    que salen volando y vuelven a juntarse mostrando lo de debajo. Todo con
    transform y opacity, que es lo único que el navegador anima sin repintar.
    ========================================================================== */
+/* La portada se rompe en piezas pequeñas —de 24 a 30 px— en vez de en los
+   24 ladrillos de antes: a ese tamaño ya no se leen los bordes de la
+   cuadrícula y el movimiento se ve como polvo, no como un muro cayéndose.
+
+   Cada pieza enseña el trozo de foto que le toca: una sola imagen compartida
+   y la posición del fondo desplazada. Se mueve `transform` y `opacity` y
+   nada más, que son las dos cosas que el compositor puede animar sin pedirle
+   nada al hilo principal. */
 .tg-fragmentos{position:fixed;inset:0;z-index:120;pointer-events:none;
-  display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(4,1fr)}
-.tg-fragmentos i{display:block;background:var(--tg-azul);
-  animation:tgPieza .72s cubic-bezier(.65,0,.35,1) forwards}
+  overflow:hidden;contain:strict}
+.tg-fragmentos i{position:absolute;display:block;
+  background-repeat:no-repeat;will-change:transform,opacity;
+  animation:tgPieza var(--dur,.62s) cubic-bezier(.4,0,.5,1) var(--esp,0s) both}
 @keyframes tgPieza{
-  0%{transform:none;opacity:1}
-  42%{transform:none;opacity:1}
-  100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.4);opacity:0}
+  0%{transform:translate3d(0,0,0) scale(1);opacity:1}
+  100%{transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(.26);opacity:0}
 }
+/* Sin movimiento: ni piezas ni cuadrícula, solo un fundido. */
+.tg-fragmentos.tg-plano{background:var(--tg-azul);
+  animation:tgDesvanece .3s linear forwards}
+@keyframes tgDesvanece{from{opacity:.9}to{opacity:0}}
 @media(prefers-reduced-motion:reduce){
   .tg-fragmentos i{animation:tgDesvanece .3s linear forwards}
-  @keyframes tgDesvanece{to{opacity:0}}
 }
 
 /* ==========================================================================
@@ -6012,34 +6023,91 @@ function EscudoAndes({ size = 84, titulo = "Andes GOO!" }) {
       fill: "none", stroke: "var(--tg-naranja)", strokeWidth: "2.5" }));
 }
 
-/* La pantalla se rompe en piezas y vuelve a juntarse. Cada pieza sale en una
-   dirección distinta, calculada desde el centro: si todas salieran igual
-   parecería una cortina, no una rotura. */
+/* La desintegración de la portada.
+
+   Dos cosas la gobiernan: el punto donde se tocó, porque el movimiento tiene
+   que nacer de ahí y no del centro, y el techo de piezas, porque una malla
+   de 24 px sobre una pantalla de escritorio son más de tres mil elementos y
+   eso sí se nota. Si no caben, la pieza crece hasta que caben.
+
+   Pase lo que pase, `onFin` se llama: el temporizador no depende de que la
+   animación haya funcionado. Si algo falla aquí, la pantalla siguiente ya
+   está debajo y se ve igual. */
+const PIEZA_IDEAL = 26;      // px
+const PIEZAS_MAX_MOVIL = 600;
+const PIEZAS_MAX_ANCHO = 1800;
+
 function Desfragmentar({ onFin }) {
-  const piezas = useMemo(() => {
-    const cols = 6, filas = 4, out = [];
-    for (let f = 0; f < filas; f++) for (let c = 0; c < cols; c++) {
-      const ox = (c + .5) / cols - .5, oy = (f + .5) / filas - .5;
-      out.push({
-        dx: (ox * 150 + (c % 2 ? 24 : -24)).toFixed(0) + "vw",
-        dy: (oy * 150 + (f % 2 ? 20 : -20)).toFixed(0) + "vh",
-        rot: ((ox + oy) * 70).toFixed(0) + "deg",
-        retardo: (Math.abs(ox) + Math.abs(oy)) * 0.14
-      });
+  const quieto = typeof window !== "undefined" && window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const plan = useMemo(() => {
+    if (quieto) return null;
+    try {
+      const W = window.innerWidth, H = window.innerHeight;
+      const movil = W < 768;
+      const techo = movil ? PIEZAS_MAX_MOVIL : PIEZAS_MAX_ANCHO;
+      /* El lado de la pieza sale del techo: si con 26 px no caben, se sube
+         hasta el primer tamaño que quepa. Nunca baja de 20 ni sube de 32. */
+      let lado = Math.max(PIEZA_IDEAL, Math.ceil(Math.sqrt((W * H) / techo)));
+      lado = Math.min(32, Math.max(20, lado));
+      const cols = Math.ceil(W / lado), filas = Math.ceil(H / lado);
+      const o = ORIGEN_DEL_CLIC || { x: .5, y: .62 };
+      const ox = o.x * W, oy = o.y * H;
+      /* Cuánto hay de aquí al rincón más lejano: sirve para que el escalón
+         entre la primera pieza y la última sea siempre el mismo, caiga el
+         clic donde caiga. */
+      const lejos = Math.max(
+        Math.hypot(ox, oy), Math.hypot(W - ox, oy),
+        Math.hypot(ox, H - oy), Math.hypot(W - ox, H - oy)) || 1;
+      const piezas = [];
+      for (let f = 0; f < filas; f++) for (let c = 0; c < cols; c++) {
+        const x = c * lado, y = f * lado;
+        const cx = x + lado / 2, cy = y + lado / 2;
+        let vx = cx - ox, vy = cy - oy;
+        const d = Math.hypot(vx, vy) || 1;
+        vx /= d; vy /= d;
+        /* Las de fuera vuelan más lejos: el conjunto se abre, no se desplaza. */
+        const empuje = 90 + (d / lejos) * 190;
+        piezas.push({
+          x: x, y: y,
+          dx: Math.round(vx * empuje) + "px",
+          dy: Math.round(vy * empuje - 40) + "px",
+          rot: Math.round((vx - vy) * 55) + "deg",
+          esp: ((d / lejos) * 0.26).toFixed(3) + "s"
+        });
+      }
+      return { lado: lado, W: W, H: H, piezas: piezas };
+    } catch (e) {
+      /* Si no se puede medir la pantalla, no hay efecto: la pantalla de
+         debajo ya está puesta y el viajero no pierde nada. */
+      return null;
     }
-    return out;
-  }, []);
+  }, [quieto]);
 
   useEffect(() => {
-    const t = setTimeout(onFin, 760);
+    /* 260 ms de escalonado + 620 de vuelo. Si no hay efecto, lo justo para
+       que el cambio no sea un corte seco. */
+    const t = setTimeout(onFin, plan ? 900 : 300);
     return () => clearTimeout(t);
-  }, [onFin]);
+  }, [onFin, plan]);
 
+  if (!plan) return /*#__PURE__*/React.createElement("div", {
+    className: "tg-fragmentos tg-plano", "aria-hidden": "true" });
+
+  const fondo = "url(" + VIDEO_PORTADA.poster + ")";
   return /*#__PURE__*/React.createElement("div", {
     className: "tg-fragmentos", "aria-hidden": "true"
-  }, piezas.map((p, i) => /*#__PURE__*/React.createElement("i", {
+  }, plan.piezas.map((p, i) => /*#__PURE__*/React.createElement("i", {
     key: i,
-    style: { "--dx": p.dx, "--dy": p.dy, "--rot": p.rot, animationDelay: p.retardo + "s" }
+    style: {
+      left: p.x + "px", top: p.y + "px",
+      width: plan.lado + "px", height: plan.lado + "px",
+      backgroundImage: fondo,
+      backgroundSize: plan.W + "px " + plan.H + "px",
+      backgroundPosition: (-p.x) + "px " + (-p.y) + "px",
+      "--dx": p.dx, "--dy": p.dy, "--rot": p.rot, "--esp": p.esp
+    }
   })));
 }
 
