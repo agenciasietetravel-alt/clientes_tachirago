@@ -8307,22 +8307,37 @@ function MsFlota({ p, t, ancla, vehiculos, onIrARentacar }) {
 /* --------------------------------------------------------------- GALERÍA */
 function MsGaleria({ p, t }) {
   const [visor, setVisor] = useState(null);
-  const fotos = p.gallery || [];
-  if (fotos.length < 2) return null;
+  /* Si el negocio eligió sus fotos, son esas y en su orden. Basta con una:
+     la eligió a propósito. La galería automática sí pide dos, porque con
+     una sola portada repetida no es una galería. */
+  const suyas = (p.galeria || []).filter(f => f && f.url);
+  const fotos = suyas.length ? suyas.map(f => f.url) : (p.gallery || []);
+  const pies = suyas.length ? suyas.map(f => f.pie || "") : [];
+  if (!fotos.length || (!suyas.length && fotos.length < 2)) return null;
   return React.createElement(MsSeccion, { t, id: "ms-galeria" },
     React.createElement(MsEyebrow, { t }, "Galería"),
     React.createElement(MsTitulo, { t }, "Así se ve por dentro"),
     React.createElement("div", {
       style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
                gap: 12, marginTop: 30 }
-    }, fotos.slice(0, 8).map((f, i) => React.createElement("button", {
+    }, fotos.slice(0, suyas.length ? 12 : 8).map((f, i) => React.createElement("button", {
       key: i, onClick: () => setVisor(i),
+      title: pies[i] || undefined,
       style: { padding: 0, border: "none", cursor: "pointer", borderRadius: t.radio,
-               overflow: "hidden", background: t.suave, aspectRatio: "4 / 3" }
-    }, React.createElement("img", {
-      src: f, alt: "",
-      style: { width: "100%", height: "100%", objectFit: "cover", display: "block" }
-    })))),
+               overflow: "hidden", background: t.suave, textAlign: "left" }
+    },
+      React.createElement("span", {
+        style: { display: "block", width: "100%", aspectRatio: "4 / 3", overflow: "hidden" }
+      }, React.createElement("img", {
+        src: f, alt: pies[i] || "",
+        style: { width: "100%", height: "100%", objectFit: "cover", display: "block" }
+      })),
+      /* El pie solo sale si el negocio lo escribió: una fila de huecos
+         vacíos debajo de las fotos se ve peor que no tener pies. */
+      pies[i] && React.createElement("span", {
+        style: { display: "block", padding: "8px 2px 2px", fontSize: 12,
+                 lineHeight: 1.4, color: t.tenue, fontFamily: t.cuerpo }
+      }, pies[i])))),
     React.createElement(GalleryLightbox, {
       photos: fotos, index: visor, onClose: () => setVisor(null),
       onPrev: () => setVisor(i => (i - 1 + fotos.length) % fotos.length),
@@ -9109,6 +9124,12 @@ function temaDe(p){
   if (pal) Object.assign(t, {
     acento: pal.acento, acento2: pal.acento2, fondo: pal.fondo, suave: pal.suave,
     texto: pal.texto, tenue: pal.tenue, borde: pal.borde });
+  /* Encima de todo, los colores propios. Van uno a uno y solo si son un
+     hexadecimal de verdad: esto termina dentro de un atributo style, y un
+     valor suelto como "red;}" se saldría de él. */
+  if (p && p.paletaPropia) Object.entries(p.paletaPropia).forEach(([k, v]) => {
+    if (/^#[0-9a-fA-F]{6}$/.test(String(v || ""))) t[k] = v;
+  });
   if (tip) Object.assign(t, {
     titulo: tip.titulo, cuerpo: tip.cuerpo,
     tituloPeso: tip.peso, tituloEspaciado: tip.espaciado });
@@ -10274,6 +10295,10 @@ async function cargarCatalogoReal(){
       /* Lo que el negocio configura de su propia página. */
       tema: p.tema || 'clasico',
       paleta: p.paleta || null,
+      /* Los colores escritos por el negocio mandan sobre la paleta de
+         catálogo, y sus fotos sobre la galería que se arma sola. */
+      paletaPropia: p.paleta_propia || null,
+      galeriaPropia: Array.isArray(p.galeria) ? p.galeria : [],
       tipografia: p.tipografia || null,
       /* "portada" ya era la foto; la plantilla necesita su propio nombre. */
       plantillaPortada: p.portada || null,
@@ -10380,7 +10405,9 @@ async function cargarCatalogoReal(){
     prov.foto = prov.portada;
     prov.bio  = prov.about;
 
-    /* Galería: las portadas de todo lo que vende, sin repetir. */
+    /* Galería: la que el negocio eligió y ordenó. Si no eligió ninguna, se
+       arma sola con las portadas de todo lo que vende, sin repetir. */
+    prov.galeria = (prov.galeriaPropia || []).filter(f => f && f.url);
     prov.gallery = Array.from(new Set([].concat(
       prov.portada ? [prov.portada] : [],
       habitaciones.map(h => h.cover_image_url),
