@@ -960,6 +960,17 @@ html.tg-esperando #tg-espera{display:flex}
 /* El estado responde al cursor y al teclado con el mismo gesto. */
 .tg-mun:focus{outline:none}
 .tg-mun:focus-visible{outline:none;stroke:#fff;stroke-width:2.6}
+/* Las carreteras. Tres grosores según el rango, y el trazo no se engorda
+   al acercarse: `non-scaling-stroke` las mantiene en grosor de pantalla,
+   que es como se leen los mapas de verdad. */
+.tg-vias{pointer-events:none}
+.tg-via-base{fill:none;stroke:rgba(4,12,26,.75);stroke-linecap:round;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke}
+.tg-via{fill:none;stroke-linecap:round;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke}
+.tg-via-base.r1{stroke-width:4.2} .tg-via.r1{stroke:rgba(255,206,122,.92);stroke-width:2.4}
+.tg-via-base.r2{stroke-width:3.2} .tg-via.r2{stroke:rgba(255,226,180,.78);stroke-width:1.7}
+.tg-via-base.r3{stroke-width:2.4} .tg-via.r3{stroke:rgba(228,236,248,.5);stroke-width:1.1}
 .tg-rio{fill:none;stroke:rgba(104,186,255,.4);stroke-width:1.15;stroke-linecap:round;
   vector-effect:non-scaling-stroke;pointer-events:none}
 .tg-pueblo{fill:rgba(205,225,255,.5);pointer-events:none}
@@ -5342,7 +5353,12 @@ function pedirDetalle(estado) {
           (pueblos[municipio] = pueblos[municipio] || []).push({ n, x: mx(lng), y: my(lat), rango });
         });
         Object.keys(pueblos).forEach(k => { pueblos[k].sort((a, b) => a.rango - b.rango); });
-        DETALLE[estado] = { estado, porMun, pueblos, rios: d.rios.map(r => ({ n: r.n, d: unaLinea(r.g) })) };
+        /* Las vías vienen con su rango: 1 autopista o troncal, 2 primaria,
+           3 secundaria. El grosor con que se pintan sale de ahí. Si el
+           archivo todavía no las trae, el mapa se dibuja igual. */
+        const vias = (d.vias || []).map(v => ({ n: v.n || "", r: v.r || 3, d: unaLinea(v.g) }));
+        DETALLE[estado] = { estado, porMun, pueblos, vias,
+                            rios: d.rios.map(r => ({ n: r.n, d: unaLinea(r.g) })) };
         return DETALLE[estado];
       })
       .catch(e => {
@@ -5500,6 +5516,19 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
      React no vuelve a recorrerlos en cada cuadro del acercamiento. */
   const riosEl = useMemo(() => detalle && /*#__PURE__*/React.createElement("g", { className: "tg-rios" },
     detalle.rios.map((r, i) => /*#__PURE__*/React.createElement("path", { key: i, d: r.d, className: "tg-rio" }))), [detalle]);
+
+  /* Las carreteras. Sin ellas el municipio es una mancha con pueblos
+     sueltos: lo que dice dónde queda una cosa es por dónde se llega.
+     Van encima de los ríos y debajo de los pueblos. Cada vía se pinta dos
+     veces, un trazo ancho oscuro debajo y el fino encima, que es como se
+     separa una carretera del fondo sin subirle el brillo. */
+  const viasEl = useMemo(() => detalle && detalle.vias && detalle.vias.length
+    ? /*#__PURE__*/React.createElement("g", { className: "tg-vias" },
+        detalle.vias.map((v, i) => /*#__PURE__*/React.createElement("path", {
+          key: "vb" + i, d: v.d, className: "tg-via-base r" + v.r })),
+        detalle.vias.map((v, i) => /*#__PURE__*/React.createElement("path", {
+          key: "v" + i, d: v.d, className: "tg-via r" + v.r })))
+    : null, [detalle]);
 
   /* El filtro del resto de la portada es un nombre de municipio a secas, sin
      estado: solo se lo pasamos cuando el municipio es del Táchira. Si no,
@@ -5684,6 +5713,7 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
              una maraña, y de cerca son lo que hace que el municipio se
              parezca al territorio y no a una mancha. */
           muni ? riosEl : null,
+          muni ? viasEl : null,
 
           pueblos.map(l => {
             if (l.n === capital) return null;        // la capital ya tiene su luz y su rótulo
