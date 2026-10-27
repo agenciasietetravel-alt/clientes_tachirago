@@ -354,12 +354,9 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 /* La toma es de un día gris. Un punto de saturación y de contraste la
    levantan sin tener que recodificar el archivo, y sin pasarse: si se
    fuerza, el verde del sembrado se vuelve fosforescente. */
-.tg-portada-fondo img,.tg-portada-fondo video{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
-  filter:saturate(1.16) contrast(1.07) brightness(1.05)}
-.tg-portada-fondo video{opacity:0;transition:opacity .7s ease}
-.tg-portada-fondo video.tg-puesto{opacity:1}
-@media(prefers-reduced-motion:reduce){.tg-portada-fondo video{transition:none}}
+.tg-portada-fondo picture,.tg-portada-fondo img{
+  position:absolute;inset:0;width:100%;height:100%;display:block}
+.tg-portada-fondo img{object-fit:cover}
 
 /* El velo. Dos capas: una vertical que asienta el conjunto y una elipse
    centrada donde cae el texto. Entre las dos, el contraste del titular
@@ -1193,15 +1190,6 @@ async function cargarTasas(){
     if(!TASAS_ACTUALIZADAS || r.actualizado_en > TASAS_ACTUALIZADAS) TASAS_ACTUALIZADAS = r.actualizado_en;
   });
 }
-
-/* El fondo de la portada. Son archivos propios, no un iframe: un reproductor
-   ajeno trae sus controles y su marca y no deja decidir ni el bucle ni el
-   silencio. El poster es un fotograma del propio video. */
-const VIDEO_PORTADA = {
-  ancho: "/assets/video/portada.mp4",        // 960x540, 4,9 s, 3,0 MB
-  movil: "/assets/video/portada-movil.mp4",  // 480x272, 4,9 s, 0,3 MB
-  poster: "/assets/video/portada-poster.jpg"
-};
 
 const IMAGES = {  
   hero: "/assets/portada.jpg",
@@ -4597,65 +4585,20 @@ function SearchTabsBox({
     })));
 }
 
-/* El fondo de la portada. El poster se ve desde el primer cuadro y el video
-   se funde encima solo cuando el navegador dice que puede reproducirlo.
-
-   Tres motivos para no cargarlo siempre: quien pidió menos movimiento no
-   quiere un video de fondo, quien va con ahorro de datos tampoco, y en una
-   conexión de 2G el archivo no llegaría nunca. En esos casos la portada se
-   queda en la foto, que es exactamente lo mismo que ve quien tiene el video
-   detenido. */
+/* El fondo de la portada: la foto. Hubo un video de fondo entre medias y se
+   retiró —el material disponible era de un día encapotado y pesaba tres
+   megas para no aportar movimiento que mereciera la pena. La foto carga en
+   el primer cuadro y no cuesta nada. */
 function FondoPortada(){
-  const ref = useRef(null);
-  const [puesto, setPuesto] = useState(false);
-  const [conVideo, setConVideo] = useState(false);
-
-  useEffect(() => {
-    const quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const con = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const ahorra = !!(con && (con.saveData || /(^|-)2g$/.test(con.effectiveType || "")));
-    if (quieto || ahorra) return;
-    /* Después del primer cuadro: el video no puede competir con la portada
-       por el ancho de banda mientras la página todavía se está pintando. */
-    const t = setTimeout(() => setConVideo(true), 400);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    const v = ref.current;
-    if (!v) return;
-    /* `muted` como propiedad, no como atributo: sin esto el navegador
-       bloquea la reproducción automática y el video se queda en el poster. */
-    v.muted = true;
-    const p = v.play();
-    if (p && p.catch) p.catch(() => {});
-  }, [conVideo]);
-
-  const estrecho = typeof window !== "undefined" && window.matchMedia
-    && window.matchMedia("(max-width: 640px)").matches;
-
   return /*#__PURE__*/React.createElement("div", { className: "tg-portada-fondo" },
-    /*#__PURE__*/React.createElement("img", {
-      src: VIDEO_PORTADA.poster,
-      alt: "Siembra de páramo y montañas de los Andes venezolanos",
-      fetchpriority: "high"
-    }),
-    conVideo && /*#__PURE__*/React.createElement("video", {
-      ref: ref,
-      className: puesto ? "tg-puesto" : "",
-      src: estrecho ? VIDEO_PORTADA.movil : VIDEO_PORTADA.ancho,
-      autoPlay: true, loop: true, playsInline: true, muted: true,
-      preload: "auto",
-      "aria-hidden": "true", tabIndex: -1,
-      /* Reproducir en cuanto se pueda, no solo al montar: cuando el efecto
-         corrió, el archivo todavía no tenía datos y el play() se rechazaba
-         en silencio; el video se veía, pero quieto. */
-      onCanPlay: ev => {
-        setPuesto(true);
-        const q = ev.currentTarget.play();
-        if (q && q.catch) q.catch(() => {});
-      }
-    }),
+    /*#__PURE__*/React.createElement("picture", null,
+      /*#__PURE__*/React.createElement("source", {
+        media: "(max-width: 640px)", srcSet: IMAGES.heroMovil }),
+      /*#__PURE__*/React.createElement("img", {
+        src: IMAGES.hero,
+        alt: "Los Andes venezolanos: pueblos coloniales, parapente y rutas de montaña",
+        fetchpriority: "high"
+      })),
     /*#__PURE__*/React.createElement("div", { className: "tg-portada-velo" }),
     /*#__PURE__*/React.createElement("div", { className: "tg-portada-foco" }));
 }
@@ -6473,7 +6416,7 @@ function Desfragmentar({ onFin }) {
   if (!plan) return /*#__PURE__*/React.createElement("div", {
     className: "tg-fragmentos tg-plano", "aria-hidden": "true" });
 
-  const fondo = "url(" + VIDEO_PORTADA.poster + ")";
+  const fondo = "url(" + IMAGES.hero + ")";
   return /*#__PURE__*/React.createElement("div", {
     className: "tg-fragmentos", "aria-hidden": "true"
   }, plan.piezas.map((p, i) => /*#__PURE__*/React.createElement("i", {
