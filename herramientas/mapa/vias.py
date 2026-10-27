@@ -11,8 +11,9 @@ from geo import dp
 
 RANGO = {'motorway': 1, 'trunk': 1, 'primary': 2, 'secondary': 3}
 TOL, DEC = 0.0007, 4          # la vía no necesita el detalle del contorno
-DESTINO = os.path.join(os.path.dirname(__file__),
-                       '../repos/clientes_tachirago/assets/mapa')
+# El script vive en <repo>/herramientas/mapa; el detalle, en <repo>/assets/mapa.
+DESTINO = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       '..', '..', 'assets', 'mapa')
 
 def main(estado):
     crudo = json.load(open(estado + '_vias.json'))

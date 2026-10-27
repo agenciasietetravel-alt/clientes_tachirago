@@ -1,0 +1,4 @@
+# Las descargas crudas de OpenStreetMap: pesan megas y se vuelven a bajar
+# con traer-vias.sh. Lo que se guarda es el resultado ya simplificado, en
+# assets/mapa.
+*_vias.json

@@ -5514,21 +5514,27 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
 
   /* Los 287 tramos de río se arman una sola vez. Con el elemento ya hecho,
      React no vuelve a recorrerlos en cada cuadro del acercamiento. */
-  const riosEl = useMemo(() => detalle && /*#__PURE__*/React.createElement("g", { className: "tg-rios" },
-    detalle.rios.map((r, i) => /*#__PURE__*/React.createElement("path", { key: i, d: r.d, className: "tg-rio" }))), [detalle]);
+  /* El detalle cargado puede ser el del estado anterior: mientras llega el
+     nuevo, el de antes sigue en memoria. Sin comprobar de quién es, al pasar
+     del Táchira a Mérida se dibujaban los 287 ríos tachirenses encima de un
+     municipio merideño. Los pueblos ya lo comprobaban; los ríos no. */
+  const detalleDelMuni = detalle && muni && detalle.estado === muni.estado ? detalle : null;
+
+  const riosEl = useMemo(() => detalleDelMuni && /*#__PURE__*/React.createElement("g", { className: "tg-rios" },
+    detalleDelMuni.rios.map((r, i) => /*#__PURE__*/React.createElement("path", { key: i, d: r.d, className: "tg-rio" }))), [detalleDelMuni]);
 
   /* Las carreteras. Sin ellas el municipio es una mancha con pueblos
      sueltos: lo que dice dónde queda una cosa es por dónde se llega.
      Van encima de los ríos y debajo de los pueblos. Cada vía se pinta dos
      veces, un trazo ancho oscuro debajo y el fino encima, que es como se
      separa una carretera del fondo sin subirle el brillo. */
-  const viasEl = useMemo(() => detalle && detalle.vias && detalle.vias.length
+  const viasEl = useMemo(() => detalleDelMuni && detalleDelMuni.vias && detalleDelMuni.vias.length
     ? /*#__PURE__*/React.createElement("g", { className: "tg-vias" },
-        detalle.vias.map((v, i) => /*#__PURE__*/React.createElement("path", {
+        detalleDelMuni.vias.map((v, i) => /*#__PURE__*/React.createElement("path", {
           key: "vb" + i, d: v.d, className: "tg-via-base r" + v.r })),
-        detalle.vias.map((v, i) => /*#__PURE__*/React.createElement("path", {
+        detalleDelMuni.vias.map((v, i) => /*#__PURE__*/React.createElement("path", {
           key: "v" + i, d: v.d, className: "tg-via r" + v.r })))
-    : null, [detalle]);
+    : null, [detalleDelMuni]);
 
   /* El filtro del resto de la portada es un nombre de municipio a secas, sin
      estado: solo se lo pasamos cuando el municipio es del Táchira. Si no,
