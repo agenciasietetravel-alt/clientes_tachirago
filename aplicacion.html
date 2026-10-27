@@ -181,11 +181,11 @@ html { scroll-behavior: smooth; }
      componente; hoy se mueve entre el 46% y el 58% de negro, que es lo que
      hace falta para leer blanco sobre el video sin apagarlo. */
   --tg-portada-acento:#FF9540;
-  --tg-velo-alto:rgba(3,12,28,.46);
-  --tg-velo-medio:rgba(3,12,28,.22);
-  --tg-velo-bajo:rgba(3,12,28,.5);
-  --tg-foco-centro:rgba(2,9,22,.4);
-  --tg-foco-medio:rgba(2,9,22,.18);
+  --tg-velo-alto:rgba(3,11,26,.66);
+  --tg-velo-medio:rgba(3,11,26,.5);
+  --tg-velo-bajo:rgba(3,11,26,.72);
+  --tg-foco-centro:rgba(2,8,20,.42);
+  --tg-foco-medio:rgba(2,8,20,.2);
 }
 body{
   font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -354,9 +354,13 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 /* La toma es de un día gris. Un punto de saturación y de contraste la
    levantan sin tener que recodificar el archivo, y sin pasarse: si se
    fuerza, el verde del sembrado se vuelve fosforescente. */
+/* La foto va desenfocada a propósito: es telón, no contenido. El `scale`
+   acompaña al blur porque un desenfoque deja los bordes transparentes y se
+   vería un halo claro en el filo de la pantalla. */
 .tg-portada-fondo picture,.tg-portada-fondo img{
   position:absolute;inset:0;width:100%;height:100%;display:block}
-.tg-portada-fondo img{object-fit:cover}
+.tg-portada-fondo img{object-fit:cover;
+  filter:blur(3px) saturate(.9) brightness(.86);transform:scale(1.04)}
 
 /* El velo. Dos capas: una vertical que asienta el conjunto y una elipse
    centrada donde cae el texto. Entre las dos, el contraste del titular
@@ -379,25 +383,16 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 
 /* Ligera y con aire: 300 de peso para la frase, que es donde estaba el
    exceso, y el nombre de la región en el acento de la marca. */
-.tg-titulo{margin:0;font-size:clamp(27px,4.3vw,52px);font-weight:300;
-  line-height:1.16;letter-spacing:-.022em;color:#fff;text-wrap:balance;
-  max-width:19ch;margin-inline:auto;
-  text-shadow:0 1px 10px rgba(2,10,24,.72),0 2px 30px rgba(2,10,24,.5)}
-.tg-titulo b{font-weight:700;color:var(--tg-portada-acento);letter-spacing:-.028em}
+/* Una sola frase, en peso fino y abierta: el contraste con ANDES —pesado,
+   ceñido y en el naranja de la marca— es lo que hace el titular. Antes eran
+   tres bloques de texto y una pregunta encima de las tarjetas. */
+.tg-titulo{margin:0 auto;max-width:17ch;
+  font-size:clamp(30px,5vw,62px);font-weight:200;line-height:1.1;
+  letter-spacing:-.025em;color:#fff;text-wrap:balance;
+  text-shadow:0 1px 14px rgba(2,8,20,.62),0 2px 42px rgba(2,8,20,.46)}
+.tg-titulo b{font-weight:800;letter-spacing:-.045em;color:var(--tg-portada-acento)}
+@media(max-width:640px){.tg-titulo{max-width:14ch;letter-spacing:-.02em}}
 
-.tg-bajada{margin:20px auto 0;max-width:56ch;font-size:clamp(14px,1.45vw,17px);
-  font-weight:400;line-height:1.6;color:rgba(255,255,255,.9);
-  text-shadow:0 1px 8px rgba(2,10,24,.85)}
-
-.tg-pregunta{margin:40px 0 16px;font-size:clamp(14.5px,1.5vw,18px);font-weight:500;
-  color:rgba(255,255,255,.95);text-shadow:0 1px 8px rgba(2,10,24,.85)}
-.tg-pregunta em{display:block;margin-bottom:5px;font-style:normal;font-size:10.5px;
-  font-weight:700;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--tg-portada-acento)}
-@media(max-width:640px){.tg-pregunta{margin-top:30px}}
-
-/* La franja de confianza vuelve a la portada. Antes era una banda blanca
-   debajo, que cortaba la imagen en dos y pesaba más que lo que decía. */
 /* Las dos puertas de entrada. Sustituyen al buscador de la portada: pedir
    destino, fechas y número de habitaciones antes de haber elegido siquiera
    si se busca cama o plan era pedirle al viajero que rellenara un formulario
@@ -406,7 +401,7 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
    dibujan en un portal: este contenedor solo las agrupa y no ocupa sitio. */
 .tg-capas{display:contents}
 .tg-caminos{display:grid;grid-template-columns:1fr 1fr;gap:18px;
-  max-width:800px;margin:0 auto}
+  max-width:760px;margin:44px auto 0}
 @media(max-width:640px){.tg-caminos{grid-template-columns:1fr;gap:13px;max-width:440px}}
 
 /* Las dos puertas. Eran dos rectángulos de cristal ahumado sobre el video y
@@ -414,78 +409,75 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
    marca, con cuerpo, y cuentan lo que va a pasar al tocarlas —los pasos
    están escritos en la propia tarjeta— en vez de hacer que el viajero lo
    averigüe tocando. */
+/* La tarjeta. El relleno de azul saturado con icono naranja y números en
+   círculos se leía como un botón de juguete. Ahora el azul es hondo y plano,
+   el borde fino hace el trabajo que hacía el degradado, y lo que destaca es
+   lo que hay dentro: posadas, tours, rutas. El movimiento es un desplazamiento
+   corto y un borde que se enciende, nada que gire ni rebote. */
 .tg-camino{position:relative;overflow:hidden;isolation:isolate;
-  display:flex;flex-direction:column;align-items:flex-start;gap:10px;
-  padding:24px 24px 20px;min-height:196px;text-align:left;cursor:pointer;
-  border-radius:20px;border:1px solid rgba(255,255,255,.14);color:#fff;
-  background:linear-gradient(155deg,#1366E8 0%,var(--tg-azul) 46%,#073A91 100%);
-  box-shadow:0 2px 4px rgba(2,10,24,.3),0 14px 34px rgba(2,24,70,.42);
-  transition:transform .24s cubic-bezier(.2,.85,.3,1),box-shadow .24s ease}
-@media(max-width:640px){.tg-camino{min-height:168px;padding:20px 20px 17px}}
+  display:flex;flex-direction:column;align-items:stretch;gap:0;
+  padding:22px 22px 18px;min-height:208px;text-align:left;cursor:pointer;
+  border-radius:16px;color:#fff;
+  border:1px solid rgba(146,180,236,.3);
+  background:linear-gradient(168deg,rgba(14,52,118,.94),rgba(6,26,66,.96));
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  box-shadow:0 1px 2px rgba(2,8,20,.4),0 18px 44px rgba(2,12,36,.44);
+  transition:transform .26s cubic-bezier(.2,.85,.3,1),border-color .26s ease,
+    box-shadow .26s ease}
+@media(max-width:640px){.tg-camino{min-height:184px;padding:19px 19px 16px}}
 
-/* El brillo que cruza al pasar por encima. Va en un pseudoelemento para que
-   solo se mueva `transform`. */
-.tg-camino::after{content:'';position:absolute;inset:-40% -60%;z-index:-1;
-  background:linear-gradient(68deg,transparent 38%,rgba(255,255,255,.17) 50%,transparent 62%);
-  transform:translateX(-62%);transition:transform .55s cubic-bezier(.3,.7,.3,1)}
-.tg-camino:hover::after,.tg-camino:focus-visible::after{transform:translateX(62%)}
-/* Un halo naranja que crece desde la esquina del icono. */
-.tg-camino::before{content:'';position:absolute;left:-30px;top:-30px;z-index:-1;
-  width:150px;height:150px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,138,51,.42),transparent 68%);
-  opacity:.5;transform:scale(.7);
-  transition:opacity .3s ease,transform .45s cubic-bezier(.2,.85,.3,1)}
-.tg-camino:hover::before,.tg-camino:focus-visible::before{opacity:1;transform:scale(1.25)}
+/* Una luz tenue arriba, del lado del icono. Sustituye al halo naranja. */
+.tg-camino::before{content:'';position:absolute;left:0;top:0;right:0;height:120px;
+  z-index:-1;background:radial-gradient(120% 100% at 18% 0%,
+    rgba(120,170,255,.2),transparent 70%);
+  opacity:.75;transition:opacity .3s ease}
+.tg-camino:hover::before,.tg-camino:focus-visible::before{opacity:1}
 
-.tg-camino:hover{transform:translateY(-5px);
-  box-shadow:0 4px 8px rgba(2,10,24,.32),0 22px 50px rgba(2,24,70,.54)}
+.tg-camino:hover{transform:translateY(-4px);border-color:rgba(255,154,61,.62);
+  box-shadow:0 2px 4px rgba(2,8,20,.44),0 24px 56px rgba(2,12,36,.56)}
 .tg-camino:active{transform:translateY(-1px)}
-.tg-camino:focus-visible{outline:none;
-  box-shadow:0 0 0 3px rgba(2,10,24,.6),0 0 0 6px #FF8A33,0 22px 50px rgba(2,24,70,.5)}
+.tg-camino:focus-visible{outline:none;border-color:transparent;
+  box-shadow:0 0 0 2px rgba(2,8,20,.7),0 0 0 4.5px #FF9A3D,0 24px 56px rgba(2,12,36,.5)}
 
+.tg-camino-cab{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+/* El icono deja de ser un bloque naranja: un cuadro traslúcido con el trazo
+   en el acento pesa lo justo. */
 .tg-camino-icono{display:flex;align-items:center;justify-content:center;
-  width:48px;height:48px;border-radius:14px;flex:none;
-  background:linear-gradient(160deg,#FF9A3D,#F06100);color:#fff;
-  box-shadow:0 3px 10px rgba(180,60,0,.45);
-  transition:transform .3s cubic-bezier(.2,.9,.3,1)}
-.tg-camino:hover .tg-camino-icono{transform:translateY(-2px) rotate(-6deg) scale(1.06)}
+  width:38px;height:38px;border-radius:10px;flex:none;
+  color:var(--tg-portada-acento);
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  transition:background .25s ease,border-color .25s ease}
+.tg-camino:hover .tg-camino-icono{background:rgba(255,154,61,.15);
+  border-color:rgba(255,154,61,.45)}
+.tg-camino-cuenta{margin-left:auto;font-size:10.5px;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:rgba(197,216,246,.72)}
 
-.tg-camino-t{font-size:clamp(20px,2.2vw,25px);font-weight:800;color:#fff;
-  letter-spacing:-.025em;line-height:1.12}
-.tg-camino-p{font-size:13.5px;font-weight:400;line-height:1.5;
-  color:rgba(255,255,255,.82)}
+.tg-camino-t{font-size:clamp(21px,2.3vw,27px);font-weight:600;color:#fff;
+  letter-spacing:-.03em;line-height:1.1;margin-bottom:13px}
 
-/* Los pasos. Es la parte didáctica: el viajero ve de antemano que son tres
-   decisiones cortas y no un formulario. */
-.tg-camino-pasos{display:flex;flex-wrap:wrap;align-items:center;gap:7px;
-  margin-top:auto;padding-top:14px;width:100%;
-  border-top:1px solid rgba(255,255,255,.16)}
-.tg-camino-paso{display:inline-flex;align-items:center;gap:5px;
-  font-size:11px;font-weight:600;color:rgba(255,255,255,.78);white-space:nowrap}
-.tg-camino-paso b{display:inline-flex;align-items:center;justify-content:center;
-  width:17px;height:17px;border-radius:50%;flex:none;
-  font-size:9.5px;font-weight:800;color:#0A2A5E;background:rgba(255,255,255,.9);
-  transition:background .25s ease,color .25s ease,transform .25s ease}
-.tg-camino:hover .tg-camino-paso b{background:#FF8A33;color:#fff;transform:scale(1.1)}
-.tg-camino-paso:nth-child(2) b{transition-delay:.05s}
-.tg-camino-paso:nth-child(3) b{transition-delay:.1s}
-.tg-camino-flecha{margin-left:auto;display:inline-flex;align-items:center;
-  color:#FF9A3D;transition:transform .25s cubic-bezier(.2,.9,.3,1)}
-.tg-camino:hover .tg-camino-flecha{transform:translateX(4px)}
+/* Lo que hay dentro, en cuatro palabras. Es lo que el viajero reconoce y
+   lo que de verdad distingue una puerta de la otra. */
+.tg-camino-que{display:flex;flex-wrap:wrap;gap:6px}
+.tg-camino-que span{font-size:12.5px;font-weight:500;letter-spacing:-.005em;
+  color:rgba(222,234,252,.95);background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:5px 10px;
+  transition:background .25s ease,border-color .25s ease}
+.tg-camino:hover .tg-camino-que span{background:rgba(255,255,255,.13);
+  border-color:rgba(255,255,255,.2)}
+@media(max-width:400px){.tg-camino-que span{font-size:11.5px;padding:4px 8px}}
 
-/* Cuánto hay publicado de verdad. Si no hay nada, no se inventa un número:
-   la etiqueta no sale. */
-.tg-camino-cuenta{position:absolute;top:18px;right:18px;z-index:1;
-  font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
-  color:#0A2A5E;background:rgba(255,255,255,.92);border-radius:999px;
-  padding:4px 10px;line-height:1.5}
+.tg-camino-pie{display:flex;align-items:center;gap:7px;margin-top:auto;
+  padding-top:16px;font-size:12.5px;font-weight:600;letter-spacing:.02em;
+  color:var(--tg-portada-acento)}
+.tg-camino-flecha{display:inline-flex;align-items:center;
+  transition:transform .25s cubic-bezier(.2,.9,.3,1)}
+.tg-camino:hover .tg-camino-flecha{transform:translateX(5px)}
 
 @media(prefers-reduced-motion:reduce){
-  .tg-camino,.tg-camino::before,.tg-camino::after,.tg-camino-icono,
-  .tg-camino-flecha,.tg-camino-paso b{transition:none}
+  .tg-camino,.tg-camino::before,.tg-camino-icono,.tg-camino-flecha,
+  .tg-camino-que span{transition:none}
   .tg-camino:hover{transform:none}
-  .tg-camino:hover .tg-camino-icono{transform:none}
-  .tg-camino:hover::after,.tg-camino:focus-visible::after{transform:translateX(-62%)}
+  .tg-camino:hover .tg-camino-flecha{transform:none}
 }
 
 .tg-promesas{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
@@ -1031,7 +1023,7 @@ html.tg-esperando #tg-espera{display:flex}
 </script>
 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Playfair+Display:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Archivo:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Playfair+Display:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Archivo:wght@500;600;700;800&display=swap">
 <!-- Las librerías se sirven desde este mismo dominio. Dependían de unpkg y
      jsdelivr, que desde Venezuela pueden tardar o no llegar: sin ellas la
      página se quedaba en el texto plano, sin diseño. -->
@@ -1263,11 +1255,9 @@ function marcarOrigenDelClic(ev){
    menú de arriba. */
 const CAMINOS = [
   { id: "alojamientos", titulo: "Dónde dormir", icono: Bed,
-    pie: "Posadas, hoteles y casas en los tres estados.",
-    pasos: ["Estado", "Municipio", "Reservas"] },
-  { id: "experiencias", titulo: "Qué vivir", icono: Compass,
-    pie: "Tours, páramos, cascadas y rutas con guía local.",
-    pasos: ["Estado", "Eliges", "Reservas"] }
+    que: ["Posadas", "Hoteles", "Cabañas", "Casas"] },
+  { id: "experiencias", titulo: "Qué hacer", icono: Compass,
+    que: ["Tours", "Salidas", "Rutas", "Experiencias"] }
 ];
 
 /* Las tres categorías del catálogo siguen existiendo como valores de
@@ -4523,20 +4513,20 @@ function SearchTabsBox({
           onClick: ev => abrirCamino(c.id, ev),
           className: "tg-camino"
         },
-          cuantos > 0 && /*#__PURE__*/React.createElement("span", { className: "tg-camino-cuenta" },
-            cuantos + (c.id === "alojamientos"
-              ? (cuantos === 1 ? " sitio" : " sitios")
-              : (cuantos === 1 ? " plan" : " planes"))),
-          /*#__PURE__*/React.createElement("span", { className: "tg-camino-icono" },
-            /*#__PURE__*/React.createElement(c.icono, { size: 24 })),
+          /*#__PURE__*/React.createElement("span", { className: "tg-camino-cab" },
+            /*#__PURE__*/React.createElement("span", { className: "tg-camino-icono" },
+              /*#__PURE__*/React.createElement(c.icono, { size: 20 })),
+            cuantos > 0 && /*#__PURE__*/React.createElement("span", { className: "tg-camino-cuenta" },
+              cuantos + (cuantos === 1 ? " publicado" : " publicados"))),
           /*#__PURE__*/React.createElement("span", { className: "tg-camino-t" }, c.titulo),
-          /*#__PURE__*/React.createElement("span", { className: "tg-camino-p" }, c.pie),
-          /*#__PURE__*/React.createElement("span", { className: "tg-camino-pasos" },
-            c.pasos.map((t, i) => /*#__PURE__*/React.createElement("span", {
-              key: t, className: "tg-camino-paso"
-            }, /*#__PURE__*/React.createElement("b", null, i + 1), t)),
+          /* Lo que hay dentro, dicho con sus nombres. Es lo que el viajero
+             reconoce —"rutas", "salidas"— y pesa más que una frase. */
+          /*#__PURE__*/React.createElement("span", { className: "tg-camino-que" },
+            c.que.map(x => /*#__PURE__*/React.createElement("span", { key: x }, x))),
+          /*#__PURE__*/React.createElement("span", { className: "tg-camino-pie" },
+            /*#__PURE__*/React.createElement("span", null, "Empezar"),
             /*#__PURE__*/React.createElement("span", { className: "tg-camino-flecha" },
-              /*#__PURE__*/React.createElement(ChevronRight, { size: 18 }))));
+              /*#__PURE__*/React.createElement(ChevronRight, { size: 17 }))));
       })),
 
     /*#__PURE__*/React.createElement("div", { className: "tg-capas" },
@@ -4615,15 +4605,10 @@ function Hero({
     /*#__PURE__*/React.createElement(FondoPortada, null),
     /*#__PURE__*/React.createElement("div", { className: "tg-portada-cuerpo" },
       /*#__PURE__*/React.createElement("p", { className: "tg-ojo" },
-        "Mérida · Táchira · Trujillo · y más"),
+        "Mérida · Táchira · Trujillo"),
       /*#__PURE__*/React.createElement("h1", { className: "tg-titulo" },
-        "Reserva experiencias, transporte y alojamiento en los ",
-        /*#__PURE__*/React.createElement("b", null, "ANDES VENEZOLANOS")),
-      /*#__PURE__*/React.createElement("p", { className: "tg-bajada" },
-        "Todo en un solo lugar, con cada reserva respaldada por un comprobante verificado por la plataforma."),
-      /*#__PURE__*/React.createElement("p", { className: "tg-pregunta" },
-        /*#__PURE__*/React.createElement("em", null, "Elige por dónde empezar"),
-        "¿Qué quieres vivir en los Andes venezolanos?"),
+        "Duerme y reserva experiencias en los ",
+        /*#__PURE__*/React.createElement("b", null, "Andes"), " venezolanos"),
       /*#__PURE__*/React.createElement(SearchTabsBox, {
         category: category,
         setCategory: setCategory,
