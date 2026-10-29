@@ -346,118 +346,94 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
    para la frase, peso y color de marca para el nombre— y el aire lo pone
    el espacio, no el tamaño de la letra.
    --------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------
+   PORTADA. Sin foto. Una fotografía de fondo con un velo encima obliga a
+   oscurecer la imagen para que el texto se lea, y acaba escondiendo lo
+   único que la portada tiene que conseguir. Aquí el fondo es un degradado
+   claro, el titular pesa y la decisión va centrada. Las fotos se ganan el
+   sitio abajo, en el catálogo, donde cada una es algo que se puede reservar.
+   --------------------------------------------------------------------- */
 .tg-portada{position:relative;display:flex;align-items:center;justify-content:center;
-  overflow:hidden;min-height:min(86vh,720px)}
-.tg-portada-fondo{position:absolute;inset:0;overflow:hidden}
-/* El poster se pinta de inmediato y el video se funde encima cuando puede
-   reproducir. Así nunca hay un hueco negro esperando al video. */
-/* La toma es de un día gris. Un punto de saturación y de contraste la
-   levantan sin tener que recodificar el archivo, y sin pasarse: si se
-   fuerza, el verde del sembrado se vuelve fosforescente. */
-/* La foto va desenfocada a propósito: es telón, no contenido. El `scale`
-   acompaña al blur porque un desenfoque deja los bordes transparentes y se
-   vería un halo claro en el filo de la pantalla. */
-.tg-portada-fondo picture,.tg-portada-fondo img{
-  position:absolute;inset:0;width:100%;height:100%;display:block}
-/* La foto se ve, sin desenfoque: lo que sostiene el texto es el velo de
-   arriba, y lo de abajo lo sostiene el panel blanco. Un fondo borroso
-   debajo de una tarjeta blanca se lee como una pantalla sucia. */
-.tg-portada-fondo img{object-fit:cover;filter:saturate(.96) brightness(.94)}
+  background:linear-gradient(176deg,#E8F1FC 0%,#F4F8FD 46%,#fff 100%);
+  border-bottom:1px solid #EAEFF6}
+.tg-portada-cuerpo{position:relative;z-index:10;width:100%;max-width:980px;
+  margin:0 auto;padding:68px 20px 60px;text-align:center}
+@media(max-width:640px){.tg-portada-cuerpo{padding:40px 16px 44px}}
 
-/* El velo. Dos capas: una vertical que asienta el conjunto y una elipse
-   centrada donde cae el texto. Entre las dos, el contraste del titular
-   sobre el video queda por encima de 7:1 sin apagar la imagen entera. */
-.tg-portada-velo{position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(to bottom,
-    var(--tg-velo-alto) 0%, var(--tg-velo-medio) 42%, var(--tg-velo-bajo) 100%)}
-.tg-portada-foco{position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(62% 52% at 50% 42%,
-    var(--tg-foco-centro) 0%, var(--tg-foco-medio) 54%, transparent 80%)}
+.tg-ojo{margin:0 0 18px;font-size:11.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.2em;color:#5B7498}
+@media(max-width:640px){.tg-ojo{letter-spacing:.14em;font-size:10.5px;margin-bottom:14px}}
 
-.tg-portada-cuerpo{position:relative;z-index:10;width:100%;max-width:1060px;
-  margin:0 auto;padding:72px 20px;text-align:center}
-@media(max-width:640px){.tg-portada-cuerpo{padding:52px 18px}}
+/* El titular pesa: es lo primero y lo único grande de la pantalla, y Andes
+   va en el naranja de la marca para que la región se lea antes que la frase. */
+.tg-titulo{margin:0 auto;max-width:16ch;
+  font-size:clamp(31px,4.6vw,56px);font-weight:800;line-height:1.08;
+  letter-spacing:-.035em;color:#13294B;text-wrap:balance}
+.tg-titulo b{font-weight:800;color:#E2561B}
+@media(max-width:640px){.tg-titulo{max-width:13ch;font-size:clamp(29px,8.4vw,38px)}}
 
-.tg-ojo{margin:0 0 22px;font-size:11px;font-weight:600;text-transform:uppercase;
-  letter-spacing:.3em;color:rgba(255,255,255,.82);
-  text-shadow:0 1px 8px rgba(2,10,24,.9)}
-@media(max-width:640px){.tg-ojo{letter-spacing:.2em;font-size:10px;margin-bottom:16px}}
-
-/* Ligera y con aire: 300 de peso para la frase, que es donde estaba el
-   exceso, y el nombre de la región en el acento de la marca. */
-/* Una sola frase, en peso fino y abierta: el contraste con ANDES —pesado,
-   ceñido y en el naranja de la marca— es lo que hace el titular. Antes eran
-   tres bloques de texto y una pregunta encima de las tarjetas. */
-.tg-titulo{margin:0 auto;max-width:17ch;
-  font-size:clamp(30px,5vw,62px);font-weight:200;line-height:1.1;
-  letter-spacing:-.025em;color:#fff;text-wrap:balance;
-  text-shadow:0 1px 14px rgba(2,8,20,.62),0 2px 42px rgba(2,8,20,.46)}
-.tg-titulo b{font-weight:800;letter-spacing:-.045em;color:var(--tg-portada-acento)}
-@media(max-width:640px){.tg-titulo{max-width:14ch;letter-spacing:-.02em}}
-
-/* Las dos puertas de entrada. Sustituyen al buscador de la portada: pedir
-   destino, fechas y número de habitaciones antes de haber elegido siquiera
-   si se busca cama o plan era pedirle al viajero que rellenara un formulario
-   para empezar a mirar. */
+/* El panel ya no flota sobre una foto, así que no necesita tarjeta blanca
+   ni sombra de cine: basta el aire. */
 /* Las capas (elegir zona, resultados, vehículos, reserva de hotel) se
    dibujan en un portal: este contenedor solo las agrupa y no ocupa sitio. */
 .tg-capas{display:contents}
-/* El panel. Es lo que ordena la portada: arriba la foto y una frase, aquí
-   abajo la decisión, sobre blanco y con todo el contraste del mundo. */
-.tg-panel{max-width:760px;margin:38px auto 0;background:#fff;
-  border-radius:18px;padding:18px;text-align:left;
-  box-shadow:0 1px 2px rgba(10,24,54,.1),0 20px 50px rgba(6,18,44,.3)}
-@media(max-width:640px){.tg-panel{margin-top:28px;padding:14px;border-radius:16px}}
-.tg-panel-lab{margin:2px 2px 14px;font-size:11px;font-weight:700;
-  letter-spacing:.14em;text-transform:uppercase;color:#94A3B8}
 
-.tg-caminos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0}
-@media(max-width:640px){.tg-caminos{grid-template-columns:1fr;gap:10px}}
+/* La tira de chips del móvil se arrastra con el dedo; su barra de scroll
+   se veía como una raya gris de lado a lado debajo de la barra. */
+.tg-tira{scrollbar-width:none;-ms-overflow-style:none}
+.tg-tira::-webkit-scrollbar{display:none}
 
-/* Las dos puertas. Eran dos rectángulos de cristal ahumado sobre el video y
-   no se leían como botones: se leían como dos huecos. Ahora son azul de
-   marca, con cuerpo, y cuentan lo que va a pasar al tocarlas —los pasos
-   están escritos en la propia tarjeta— en vez de hacer que el viajero lo
-   averigüe tocando. */
+.tg-panel{max-width:720px;margin:34px auto 0;text-align:left}
+@media(max-width:640px){.tg-panel{margin-top:26px}}
+.tg-panel-lab{margin:0 0 12px;font-size:11px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:#8CA2BD;text-align:center}
+
+.tg-caminos{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0}
+@media(max-width:640px){.tg-caminos{grid-template-columns:1fr;gap:12px}}
+
 /* La tarjeta. Sobre blanco y con su color: azul la de dormir, naranja la de
    hacer. Es lo que las separa de un vistazo, antes de leer el título. */
-.tg-camino{--tono:#0052CC;--tono-suave:#EEF4FF;--tono-borde:#C7DBFF;
+.tg-camino{--tono:#0052CC;--tono-suave:#EFF5FF;--tono-borde:#C7DBFF;
   position:relative;display:flex;flex-direction:column;align-items:stretch;
-  padding:16px;text-align:left;cursor:pointer;border-radius:13px;
-  background:#fff;border:1.5px solid #E7EBF1;
-  transition:border-color .2s ease,background .2s ease,transform .2s cubic-bezier(.2,.85,.3,1),
+  padding:20px;text-align:left;cursor:pointer;border-radius:16px;
+  background:#fff;border:1.5px solid #E3E9F2;
+  box-shadow:0 1px 2px rgba(19,41,75,.05),0 6px 18px rgba(19,41,75,.06);
+  transition:border-color .2s ease,transform .2s cubic-bezier(.2,.85,.3,1),
     box-shadow .2s ease}
-.tg-camino.tono-naranja{--tono:#E85D04;--tono-suave:#FFF3E9;--tono-borde:#FFD4AE}
-.tg-camino:hover{border-color:var(--tono-borde);background:var(--tono-suave);
-  transform:translateY(-2px);box-shadow:0 8px 22px rgba(10,24,54,.1)}
-.tg-camino:active{transform:translateY(0)}
+.tg-camino.tono-naranja{--tono:#E2561B;--tono-suave:#FFF4EC;--tono-borde:#FFD2B4}
+.tg-camino:hover{border-color:var(--tono);transform:translateY(-3px);
+  box-shadow:0 2px 4px rgba(19,41,75,.06),0 14px 32px rgba(19,41,75,.13)}
+.tg-camino:active{transform:translateY(-1px)}
 .tg-camino:focus-visible{outline:none;border-color:var(--tono);
-  box-shadow:0 0 0 3px color-mix(in srgb,var(--tono) 26%,transparent)}
+  box-shadow:0 0 0 3px var(--tono-borde)}
+@media(max-width:640px){.tg-camino{padding:17px}}
 
-.tg-camino-cab{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.tg-camino-cab{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .tg-camino-icono{display:flex;align-items:center;justify-content:center;
-  width:42px;height:42px;border-radius:11px;flex:none;
-  color:#fff;background:var(--tono)}
-.tg-camino-tit{display:flex;flex-direction:column;gap:2px;min-width:0}
-.tg-camino-tit b{font-size:17px;font-weight:700;letter-spacing:-.02em;
-  color:#0F172A;line-height:1.15}
-.tg-camino-tit em{font-style:normal;font-size:12px;color:#64748B;line-height:1.3}
+  width:46px;height:46px;border-radius:13px;flex:none;color:#fff;background:var(--tono)}
+.tg-camino-tit{display:flex;flex-direction:column;gap:3px;min-width:0}
+.tg-camino-tit b{font-size:19px;font-weight:800;letter-spacing:-.025em;
+  color:#13294B;line-height:1.12}
+.tg-camino-tit em{font-style:normal;font-size:12.5px;color:#6B819E;line-height:1.3}
+@media(max-width:640px){.tg-camino-tit b{font-size:18px}}
 
 /* Los cuatro nombres. Son lo didáctico: dicen qué vas a encontrar sin
    obligar a entrar a mirarlo. */
-.tg-camino-que{display:flex;flex-wrap:wrap;gap:5px}
-.tg-camino-que span{font-size:12px;font-weight:600;color:var(--tono);
+.tg-camino-que{display:flex;flex-wrap:wrap;gap:6px}
+.tg-camino-que span{font-size:12.5px;font-weight:600;color:var(--tono);
   background:var(--tono-suave);border:1px solid var(--tono-borde);
-  border-radius:6px;padding:4px 8px;line-height:1.35}
-@media(max-width:400px){.tg-camino-que span{font-size:11.5px;padding:3px 7px}}
+  border-radius:7px;padding:5px 9px;line-height:1.35}
+@media(max-width:640px){.tg-camino-que span{font-size:12px}}
 
-.tg-camino-pie{display:flex;align-items:center;gap:6px;margin-top:14px;
-  padding-top:11px;border-top:1px solid #F1F4F8;
-  font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-  color:#94A3B8}
-.tg-camino-flecha{display:inline-flex;align-items:center;margin-left:auto;
-  color:var(--tono);transition:transform .2s cubic-bezier(.2,.9,.3,1)}
-.tg-camino:hover .tg-camino-flecha{transform:translateX(4px)}
+.tg-camino-pie{display:flex;align-items:center;gap:6px;margin-top:16px;
+  padding-top:13px;border-top:1px solid #EEF2F7;
+  font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:#8CA2BD}
+.tg-camino-flecha{display:inline-flex;align-items:center;justify-content:center;
+  margin-left:auto;width:28px;height:28px;border-radius:50%;flex:none;
+  color:#fff;background:var(--tono);
+  transition:transform .2s cubic-bezier(.2,.9,.3,1)}
+.tg-camino:hover .tg-camino-flecha{transform:translateX(3px)}
 
 @media(prefers-reduced-motion:reduce){
   .tg-camino,.tg-camino-flecha{transition:none}
@@ -465,17 +441,16 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
   .tg-camino:hover .tg-camino-flecha{transform:none}
 }
 
+/* Las tres promesas, ya sobre fondo claro: tinta, no blanco con sombra. */
 .tg-promesas{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
-  column-gap:26px;row-gap:6px;margin-top:26px}
-.tg-promesas span{position:relative;font-size:12.5px;font-weight:500;
-  color:rgba(255,255,255,.88);white-space:nowrap;
-  text-shadow:0 1px 7px rgba(2,10,24,.9)}
+  column-gap:24px;row-gap:6px;margin-top:26px}
+.tg-promesas span{position:relative;font-size:12.5px;font-weight:600;
+  color:#5B7498;white-space:nowrap}
 @media(min-width:641px){
-  .tg-promesas span + span::before{content:'·';position:absolute;left:-15px;
-    color:rgba(255,255,255,.45)}
+  .tg-promesas span + span::before{content:'·';position:absolute;left:-14px;color:#B8C6D8}
 }
 @media(max-width:640px){
-  .tg-promesas{column-gap:14px;row-gap:4px;margin-top:18px}
+  .tg-promesas{column-gap:14px;row-gap:3px;margin-top:20px}
   .tg-promesas span{font-size:11.5px}
 }
 
@@ -761,7 +736,7 @@ html.tg-esperando #tg-espera{display:flex}
 .tg-cta-prov:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 5.5px #F06100}
 /* 44 px de alto: el mínimo para que el pulgar no falle. */
 .tg-cta-prov-lg{font-size:13.5px;padding:0 15px;height:44px}
-.tg-cta-prov-sm{font-size:12.5px;padding:0 13px;height:38px;border-radius:999px}
+.tg-cta-prov-sm{font-size:13px;padding:0 15px;height:44px;border-radius:999px}
 @media(prefers-reduced-motion:reduce){
   .tg-cta-prov{transition:none}.tg-cta-prov:hover{transform:none}
 }
@@ -1905,7 +1880,7 @@ function Navbar({
      salió de la tira. Mientras vivía dentro, el `overflow-x` que permite
      arrastrar los chips recortaba el desplegable por la mitad. */
   /*#__PURE__*/React.createElement("div", {
-    className: "md:hidden max-w-6xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto relative z-30"
+    className: "tg-tira md:hidden max-w-6xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto relative z-30"
   }, /*#__PURE__*/React.createElement("button", {
     key: "publica",
     onClick: () => setJoinOpen(true),
@@ -4569,24 +4544,6 @@ function SearchTabsBox({
     })));
 }
 
-/* El fondo de la portada: la foto. Hubo un video de fondo entre medias y se
-   retiró —el material disponible era de un día encapotado y pesaba tres
-   megas para no aportar movimiento que mereciera la pena. La foto carga en
-   el primer cuadro y no cuesta nada. */
-function FondoPortada(){
-  return /*#__PURE__*/React.createElement("div", { className: "tg-portada-fondo" },
-    /*#__PURE__*/React.createElement("picture", null,
-      /*#__PURE__*/React.createElement("source", {
-        media: "(max-width: 640px)", srcSet: IMAGES.heroMovil }),
-      /*#__PURE__*/React.createElement("img", {
-        src: IMAGES.hero,
-        alt: "Los Andes venezolanos: pueblos coloniales, parapente y rutas de montaña",
-        fetchpriority: "high"
-      })),
-    /*#__PURE__*/React.createElement("div", { className: "tg-portada-velo" }),
-    /*#__PURE__*/React.createElement("div", { className: "tg-portada-foco" }));
-}
-
 function Hero({
   category,
   setCategory,
@@ -4596,7 +4553,6 @@ function Hero({
   onAbrirProveedor
 }) {
   return /*#__PURE__*/React.createElement("section", { className: "tg-portada" },
-    /*#__PURE__*/React.createElement(FondoPortada, null),
     /*#__PURE__*/React.createElement("div", { className: "tg-portada-cuerpo" },
       /*#__PURE__*/React.createElement("p", { className: "tg-ojo" },
         "Mérida · Táchira · Trujillo"),
@@ -6395,7 +6351,9 @@ function Desfragmentar({ onFin }) {
   if (!plan) return /*#__PURE__*/React.createElement("div", {
     className: "tg-fragmentos tg-plano", "aria-hidden": "true" });
 
-  const fondo = "url(" + IMAGES.hero + ")";
+  /* Las piezas ya no enseñan una foto: la portada no tiene. Se rompen en el
+     mismo claro del fondo, que es lo que el viajero está mirando. */
+  const fondo = "linear-gradient(176deg,#E8F1FC,#F4F8FD)";
   return /*#__PURE__*/React.createElement("div", {
     className: "tg-fragmentos", "aria-hidden": "true"
   }, plan.piezas.map((p, i) => /*#__PURE__*/React.createElement("i", {
