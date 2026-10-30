@@ -356,6 +356,22 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 .tg-portada{position:relative;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(176deg,#E8F1FC 0%,#F4F8FD 46%,#fff 100%);
   border-bottom:1px solid #EAEFF6}
+/* Los dos adornos de la portada: el sello a la izquierda y el andinito a la
+   derecha. Van detrás del texto y no reciben el ratón. Por debajo de 1180 px
+   no caben sin empujar el titular, así que ahí no salen: en un teléfono la
+   portada es el titular y las dos puertas, nada más. */
+.tg-adorno{position:absolute;z-index:1;pointer-events:none;user-select:none;
+  display:block;height:auto}
+.tg-sello{left:clamp(16px,5vw,86px);top:50%;transform:translateY(-54%);
+  width:clamp(132px,12vw,186px);
+  filter:drop-shadow(0 10px 22px rgba(19,41,75,.16))}
+.tg-andinito{right:clamp(0px,2vw,40px);top:50%;transform:translateY(-50%);
+  width:clamp(250px,26vw,356px)}
+@media(min-width:1600px){
+  .tg-sello{width:200px}
+  .tg-andinito{width:390px}
+}
+
 .tg-portada-cuerpo{position:relative;z-index:10;width:100%;max-width:980px;
   margin:0 auto;padding:68px 20px 60px;text-align:center}
 @media(max-width:640px){.tg-portada-cuerpo{padding:40px 16px 44px}}
@@ -4544,6 +4560,23 @@ function SearchTabsBox({
     })));
 }
 
+/* Una consulta de medios leída desde React. Hace falta cuando lo que cambia
+   no es cómo se ve algo sino si llega a existir. */
+function usaMedia(consulta){
+  const [vale, setVale] = useState(
+    () => typeof window !== "undefined" && window.matchMedia
+      ? window.matchMedia(consulta).matches : false);
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const m = window.matchMedia(consulta);
+    const al = e => setVale(e.matches);
+    setVale(m.matches);
+    m.addEventListener("change", al);
+    return () => m.removeEventListener("change", al);
+  }, [consulta]);
+  return vale;
+}
+
 function Hero({
   category,
   setCategory,
@@ -4552,7 +4585,24 @@ function Hero({
   onAbrirAlojamiento,
   onAbrirProveedor
 }) {
+  /* `display:none` esconde la imagen pero el navegador la descarga igual:
+     eran 128 KB que un teléfono pagaba para no ver nada. Con la consulta
+     resuelta aquí, en una pantalla estrecha el <img> no llega a existir. */
+  const anchaDeVerdad = usaMedia("(min-width: 1180px)");
+
   return /*#__PURE__*/React.createElement("section", { className: "tg-portada" },
+    anchaDeVerdad && /*#__PURE__*/React.createElement("img", {
+      className: "tg-adorno tg-sello",
+      src: "/assets/marca/sello-calidad.webp",
+      alt: "Sello de calidad turística de Andes GOO!",
+      width: 413, height: 440, decoding: "async"
+    }),
+    anchaDeVerdad && /*#__PURE__*/React.createElement("img", {
+      className: "tg-adorno tg-andinito",
+      src: "/assets/marca/andinito.webp",
+      alt: "", "aria-hidden": "true",
+      width: 448, height: 620, decoding: "async"
+    }),
     /*#__PURE__*/React.createElement("div", { className: "tg-portada-cuerpo" },
       /*#__PURE__*/React.createElement("p", { className: "tg-ojo" },
         "Mérida · Táchira · Trujillo"),
