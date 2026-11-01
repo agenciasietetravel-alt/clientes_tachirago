@@ -974,6 +974,77 @@ html.tg-esperando #tg-espera{display:flex}
 .tg-osm-ciudad::before,.tg-osm-sitio::before{display:none}
 .tg-osm-sitio{font-size:12.5px}
 .tg-osm-pin-caja{background:none;border:none}
+
+/* --- La ficha de una experiencia --- */
+
+/* La franja de reserva era una caja blanca entre cajas blancas y había que
+   buscarla. Ahora tiene cabecera de color con el precio dentro, su sombra,
+   y un botón que se ve desde el otro lado de la pantalla. */
+.tg-reserva{border-radius:18px;overflow:hidden;background:#fff;
+  border:1.5px solid #E3E9F2;
+  box-shadow:0 2px 6px rgba(19,41,75,.06),0 18px 44px rgba(19,41,75,.12)}
+.tg-reserva-cab{padding:17px 20px;color:#fff;
+  background:linear-gradient(135deg,#FF8A33,#E2561B)}
+.tg-reserva-cab span{display:block;font-size:11px;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase;opacity:.88}
+.tg-reserva-cab b{display:block;margin-top:2px;font-size:32px;font-weight:800;
+  letter-spacing:-.035em;line-height:1.05}
+.tg-reserva-cab em{font-style:normal;font-size:13px;font-weight:600;opacity:.9}
+.tg-reserva-cuerpo{padding:18px 20px 20px}
+.tg-reserva-ir{width:100%;margin-top:18px;min-height:54px;border:0;border-radius:13px;
+  cursor:pointer;background:#E2561B;color:#fff;font-family:inherit;
+  font-size:16.5px;font-weight:800;letter-spacing:-.01em;
+  box-shadow:0 8px 20px rgba(226,86,27,.3);
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease}
+.tg-reserva-ir:hover{filter:brightness(1.07);transform:translateY(-2px);
+  box-shadow:0 12px 26px rgba(226,86,27,.38)}
+.tg-reserva-ir:active{transform:translateY(0)}
+.tg-reserva-ir:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 5.5px #E2561B}
+
+/* En el móvil no hay columna derecha: reservar va fijo abajo para que no
+   quede enterrado debajo del itinerario. */
+.tg-barra-reserva{position:fixed;left:0;right:0;bottom:0;z-index:60;
+  display:flex;align-items:center;gap:14px;
+  padding:11px 16px;padding-bottom:calc(11px + env(safe-area-inset-bottom,0px));
+  background:rgba(255,255,255,.97);backdrop-filter:blur(12px);
+  border-top:1px solid #E3E9F2;box-shadow:0 -6px 24px rgba(19,41,75,.1)}
+@media(min-width:1024px){.tg-barra-reserva{display:none}}
+.tg-barra-reserva>div{min-width:0}
+.tg-barra-reserva b{display:block;font-size:19px;font-weight:800;color:#13294B;line-height:1.1}
+.tg-barra-reserva span{font-size:11.5px;color:#6B819E}
+.tg-barra-reserva button{margin-left:auto;flex:none;min-height:46px;padding:0 24px;
+  border:0;border-radius:12px;background:#E2561B;color:#fff;font-family:inherit;
+  font-size:15.5px;font-weight:800;cursor:pointer}
+@media(max-width:1023px){.tg-ficha-tour{padding-bottom:90px}}
+
+/* Con el botón del proveedor al lado, las migas se partían en dos líneas.
+   Mejor que se corten: son un rastro, no información que haga falta. */
+.tg-migas{white-space:nowrap;overflow:hidden}
+.tg-migas>*{flex:none}
+
+.tg-ver-prov{display:inline-flex;align-items:center;gap:7px;flex:none;
+  min-height:38px;padding:0 15px;border-radius:999px;cursor:pointer;
+  background:#EFF5FF;border:1.5px solid #C7DBFF;color:#0052CC;font-family:inherit;
+  font-size:13px;font-weight:800;transition:background .16s ease,border-color .16s ease}
+.tg-ver-prov:hover{background:#E0ECFF;border-color:#0052CC}
+.tg-ver-prov:focus-visible{outline:none;box-shadow:0 0 0 3px #C7DBFF}
+
+/* El punto de encuentro. Antes era un cuadriculado gris con un alfiler
+   dibujado encima: decoraba, no decía dónde. */
+.tg-punto-mapa{height:320px;border-radius:14px;overflow:hidden;
+  border:1px solid #E3E9F2;background:#0B1B33}
+@media(max-width:640px){.tg-punto-mapa{height:250px}}
+.tg-punto-enlace{display:inline-flex;align-items:center;gap:7px;
+  font-size:14px;font-weight:700;color:#0052CC}
+.tg-punto-aviso{display:flex;align-items:flex-start;gap:7px;margin-top:10px;
+  font-size:12.5px;line-height:1.45;color:#8A6A2F;
+  background:#FFF7E8;border:1px solid #F2DFB4;border-radius:10px;padding:9px 11px}
+.tg-punto-aviso svg{flex:none;margin-top:1px}
+
+@media(prefers-reduced-motion:reduce){
+  .tg-reserva-ir{transition:none}
+  .tg-reserva-ir:hover{transform:none}
+}
 .tg-osm-pin{display:flex;align-items:center;justify-content:center;
   width:30px;height:30px;border-radius:50%;
   background:#E2561B;color:#fff;border:2.5px solid #fff;
@@ -7066,11 +7137,121 @@ function ImageGrid({
   }));
 }
 
-function FeatureIcons() {  
-  const items = [{  
-    icon: CheckCircle2,  
-    label: "Cancelación gratuita",  
-    sub: "Hasta 24h antes"  
+/* ------------------------------------------------------ UN SOLO PUNTO
+   El mismo OpenStreetMap de los caminos, en pequeño: una coordenada, su
+   nombre y nada más. Si Leaflet no llega, queda el enlace al mapa, que es
+   lo que de verdad hace falta para llegar. */
+function MapaPunto({ lat, lng, titulo }) {
+  const cajaRef = useRef(null);
+  const mapaRef = useRef(null);
+  const [falla, setFalla] = useState(false);
+
+  useEffect(() => {
+    let vivo = true;
+    cargarLeaflet().then(L => {
+      if (!vivo || !cajaRef.current || mapaRef.current) return;
+      const m = L.map(cajaRef.current, { scrollWheelZoom: false });
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(m);
+      m.setView([lat, lng], 14);
+      L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: "tg-osm-pin-caja",
+          html: '<span class="tg-osm-pin"></span>',
+          iconSize: [30, 30], iconAnchor: [15, 15]
+        })
+      }).bindTooltip(titulo, {
+        permanent: true, direction: "top", offset: [0, -16], className: "tg-osm-sitio"
+      }).addTo(m);
+      mapaRef.current = m;
+      setTimeout(() => { try { m.invalidateSize(); } catch (e) {} }, 200);
+    }).catch(() => { if (vivo) setFalla(true); });
+    return () => {
+      vivo = false;
+      if (mapaRef.current) { try { mapaRef.current.remove(); } catch (e) {} mapaRef.current = null; }
+    };
+  }, [lat, lng, titulo]);
+
+  if (falla) return /*#__PURE__*/React.createElement("a", {
+    className: "tg-punto-enlace",
+    href: "https://www.openstreetmap.org/?mlat=" + lat + "&mlon=" + lng + "#map=15/" + lat + "/" + lng,
+    target: "_blank", rel: "noopener"
+  }, /*#__PURE__*/React.createElement(MapPin, { size: 16 }), "Abrir en OpenStreetMap");
+
+  return /*#__PURE__*/React.createElement("div", { ref: cajaRef, className: "tg-punto-mapa" });
+}
+
+/* Una coordenada repetida en dos publicaciones con direcciones distintas no
+   puede ser la de las dos: es la del pueblo, puesta por defecto. No se
+   borra —sitúa, y eso ya es algo— pero se dice que es aproximada en vez de
+   dar por exacto algo que no lo es. */
+function puntoAproximado(x) {
+  if (!x || x.lat == null || x.lng == null) return false;
+  const todos = (CARDS_BY_CATEGORY.experiencias || []).concat(ALOJAMIENTOS || []);
+  return todos.some(o => o && o.id !== x.id && o.lat === x.lat && o.lng === x.lng
+    && String(o.direccion || "") !== String(x.direccion || ""));
+}
+
+/* ------------------------------------------------------- QUÉ VAS A HACER
+   Lo que escribió el negocio, tal cual. Es lo primero que se lee debajo de
+   las fotos: antes de cuánto dura o qué incluye, qué es esto. */
+function QueHacer({ tour }) {
+  const texto = (tour.descripcion || "").trim();
+  if (!texto) return null;
+  return /*#__PURE__*/React.createElement("div", { className: "py-6" },
+    /*#__PURE__*/React.createElement("h2", { className: "text-xl font-bold text-slate-900 mb-2" },
+      "Qué hacer"),
+    /*#__PURE__*/React.createElement("p", {
+      className: "text-[15px] text-slate-600 leading-relaxed whitespace-pre-line"
+    }, texto));
+}
+
+/* ---------------------------------------------------- PUNTO DE ENCUENTRO */
+function PuntoDeEncuentro({ tour }) {
+  const dir = (tour.direccion || "").trim();
+  const hayPunto = tour.lat != null && tour.lng != null;
+  if (!dir && !hayPunto) return null;
+  const aprox = puntoAproximado(tour);
+  return /*#__PURE__*/React.createElement("div", { className: "py-6 border-t border-slate-200" },
+    /*#__PURE__*/React.createElement("h2", { className: "text-xl font-bold text-slate-900 mb-2" },
+      "Punto de encuentro"),
+    dir && /*#__PURE__*/React.createElement("p", {
+      className: "text-[15px] text-slate-700 font-medium mb-1"
+    }, dir),
+    /*#__PURE__*/React.createElement("p", { className: "text-sm text-slate-500 mb-3" },
+      "Llega 15 minutos antes de la hora acordada."),
+    hayPunto
+      ? /*#__PURE__*/React.createElement(React.Fragment, null,
+          /*#__PURE__*/React.createElement(MapaPunto, {
+            lat: tour.lat, lng: tour.lng, titulo: dir || tour.title }),
+          aprox && /*#__PURE__*/React.createElement("p", { className: "tg-punto-aviso" },
+            /*#__PURE__*/React.createElement(MapPin, { size: 14 }),
+            "Ubicación aproximada: el negocio aún no ha marcado el punto exacto. ",
+            "Vale la dirección de arriba."))
+      : /*#__PURE__*/React.createElement("p", { className: "tg-punto-aviso" },
+          /*#__PURE__*/React.createElement(MapPin, { size: 14 }),
+          "Este punto todavía no está en el mapa. Confírmalo con el proveedor al reservar."));
+}
+
+/* Los cuatro datos de cabecera. Dos salen de la publicación —el cupo y la
+   política de cancelación, que el negocio sí rellena— y los otros dos
+   siguen siendo los de siempre: no hay campo para la duración ni para el
+   idioma del guía. */
+const CANCELACION_TXT = {
+  full:    { label: "Cancelación gratuita", sub: "Devolución completa" },
+  partial: { label: "Cancelación parcial",  sub: "Devolución según plazo" },
+  none:    { label: "Sin cancelación",      sub: "La reserva no se devuelve" }
+};
+
+function FeatureIcons({ tour }) {
+  const t = tour || {};
+  const canc = CANCELACION_TXT[t.cancelacion] || CANCELACION_TXT.partial;
+  const items = [{
+    icon: CheckCircle2,
+    label: canc.label,
+    sub: canc.sub
   }, {  
     icon: Clock,  
     label: "Duración",  
@@ -7079,10 +7260,10 @@ function FeatureIcons() {
     icon: Globe,  
     label: "Guía en vivo",  
     sub: "Español"  
-  }, {  
-    icon: Users,  
-    label: "Grupo reducido",  
-    sub: "Máx. 10 personas"  
+  }, {
+    icon: Users,
+    label: "Grupo reducido",
+    sub: t.duration || "Consulta el cupo"
   }];  
   return /*#__PURE__*/React.createElement("div", {  
     className: "grid grid-cols-2 sm:grid-cols-4 gap-4 py-6 border-y border-slate-200"  
@@ -7129,11 +7310,10 @@ function ItineraryTimeline() {
 function TextBlocks() {  
   return /*#__PURE__*/React.createElement("div", {  
     className: "py-6 border-t border-slate-200 space-y-6"  
+  /* "Qué harás" salió de aquí: ahora arriba está el texto que escribió el
+     negocio, y tener dos títulos parecidos diciendo cosas distintas —uno
+     real y otro de ejemplo— era peor que no tener ninguno. */
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {  
-    className: "text-xl font-bold text-slate-900 mb-2"  
-  }, "Qué harás"), /*#__PURE__*/React.createElement("p", {  
-    className: "text-sm text-slate-600 leading-relaxed"  
-  }, "Vive un día completo entre cafetales de altura, senderos de bosque nublado y la hospitalidad andina del Táchira, con la mano de guías y productores locales.")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {  
     className: "text-xl font-bold text-slate-900 mb-2"  
   }, "En detalle"), /*#__PURE__*/React.createElement("ul", {  
     className: "text-sm text-slate-600 space-y-1.5"  
@@ -7166,18 +7346,7 @@ function TextBlocks() {
     className: "text-xl font-bold text-slate-900 mb-2"  
   }, "No apto para"), /*#__PURE__*/React.createElement("p", {  
     className: "text-sm text-slate-600"  
-  }, "Personas con movilidad reducida, niños menores de 5 años y personas con condiciones cardíacas severas, debido a los tramos de senderismo.")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {  
-    className: "text-xl font-bold text-slate-900 mb-2"  
-  }, "Punto de encuentro"), /*#__PURE__*/React.createElement("p", {  
-    className: "text-sm text-slate-600 mb-3"  
-  }, "Llega 15 minutos antes de la hora indicada."), /*#__PURE__*/React.createElement("div", {  
-    className: "relative h-48 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center overflow-hidden"  
-  }, /*#__PURE__*/React.createElement("div", {  
-    className: "absolute inset-0 opacity-30 [background-image:linear-gradient(#94a3b8_1px,transparent_1px),linear-gradient(90deg,#94a3b8_1px,transparent_1px)] [background-size:24px_24px]"  
-  }), /*#__PURE__*/React.createElement(MapPin, {  
-    size: 32,  
-    className: "text-[#0052CC] fill-[#0052CC]/20 relative z-10"  
-  }))));  
+  }, "Personas con movilidad reducida, niños menores de 5 años y personas con condiciones cardíacas severas, debido a los tramos de senderismo.")));
 }  
 function SocialProof() {  
   return /*#__PURE__*/React.createElement("div", {  
@@ -7446,6 +7615,10 @@ function DetailScreenTour({
   const servicio = useMemo(() => recargoDe("experiencia", tarifa, adults + children),
     [tarifa, adults, children]);
   const total = useMemo(() => Math.round((tarifa + servicio) * 100) / 100, [tarifa, servicio]);
+  /* Quién opera la experiencia: hace falta arriba, para el botón, y abajo,
+     para la ficha del negocio. */
+  const perfil = perfilDeNegocio(tour);
+
   const handleAdd = () => {  
     onAddToCart({  
       id: `tour-${Date.now()}`,
@@ -7461,12 +7634,14 @@ function DetailScreenTour({
       providerId: tour.providerId || null  
     });  
   };  
-  return /*#__PURE__*/React.createElement("main", {  
-    className: "max-w-6xl mx-auto px-4 pb-16"  
-  }, /*#__PURE__*/React.createElement("div", {  
-    className: "flex items-center gap-1.5 text-sm text-slate-500 pt-3"  
-  }, /*#__PURE__*/React.createElement("button", {  
-    onClick: onBack,  
+  return /*#__PURE__*/React.createElement("main", {
+    className: "tg-ficha-tour max-w-6xl mx-auto px-4 pb-16"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between gap-3 pt-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "tg-migas flex items-center gap-1.5 text-sm text-slate-500 min-w-0"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onBack,
     className: "hover:text-[#0052CC]"  
   }, "Andes"), /*#__PURE__*/React.createElement(ChevronRight, {  
     size: 14  
@@ -7476,7 +7651,14 @@ function DetailScreenTour({
     size: 14  
   }), /*#__PURE__*/React.createElement("span", {  
     className: "text-slate-700 font-medium"  
-  }, "Excursiones")), /*#__PURE__*/React.createElement("div", {  
+  }, "Excursiones")),
+  /* Quién opera esto y cómo llegar a su página: arriba a la derecha, que es
+     donde se mira antes de reservar, no después. */
+  perfil && perfil.slug && /*#__PURE__*/React.createElement("button", {
+    onClick: () => { window.location.href = "/" + perfil.slug; },
+    className: "tg-ver-prov"
+  }, /*#__PURE__*/React.createElement(ShieldCheck, { size: 15 }), "Ver proveedor")),
+  /*#__PURE__*/React.createElement("div", {
     className: "mt-3"  
   }, /*#__PURE__*/React.createElement("span", {  
     className: "inline-block bg-blue-50 text-[#0052CC] text-xs font-semibold px-2 py-1 rounded"  
@@ -7500,28 +7682,37 @@ function DetailScreenTour({
   }, tour.proveedor || "Proveedor verificado")))), /*#__PURE__*/React.createElement(ImageGrid, {
     mainImg: tour.img
   }),
-  /* Quién opera la experiencia, con su portada y su descripción: la misma
-     cabecera que ve quien reserva un alojamiento. */
-  /*#__PURE__*/React.createElement("div", { className: "mt-6" },
-    /*#__PURE__*/React.createElement(PerfilNegocio, {
-      perfil: perfilDeNegocio(tour),
-      etiqueta: "Quién la opera",
-      onVerMicrositio: slug => { window.location.href = "/" + slug; }
-    })),
   /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6"  
-  }, /*#__PURE__*/React.createElement("div", {  
-    className: "lg:col-span-2"  
-  }, /*#__PURE__*/React.createElement(SocialProof, null), /*#__PURE__*/React.createElement(FeatureIcons, null), /*#__PURE__*/React.createElement(TravelersLoved, null), /*#__PURE__*/React.createElement(ItineraryTimeline, null), /*#__PURE__*/React.createElement(TextBlocks, null)), /*#__PURE__*/React.createElement("div", {  
-    className: "lg:sticky lg:top-24 bg-white border border-slate-200 rounded-xl shadow-sm p-5 h-fit"  
-  }, /*#__PURE__*/React.createElement("p", {  
-    className: "text-sm text-slate-500"  
-  }, "Desde"), /*#__PURE__*/React.createElement("p", {  
-    className: "text-2xl font-bold text-[#FF6B00]"  
-  }, "$", precioAdulto.toFixed(2), " USD ", /*#__PURE__*/React.createElement("span", {  
-    className: "text-sm font-normal text-slate-500"  
-  }, "por persona")), /*#__PURE__*/React.createElement("div", {  
-    className: "mt-4 divide-y divide-slate-100"  
+    className: "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lg:col-span-2"
+  },
+    /* Primero qué es esto, después cómo transcurre. Lo demás —lo que
+       incluye, quién lo opera, dónde se empieza— va detrás. */
+    /*#__PURE__*/React.createElement(QueHacer, { tour: tour }),
+    /*#__PURE__*/React.createElement(ItineraryTimeline, null),
+    /*#__PURE__*/React.createElement(FeatureIcons, { tour: tour }),
+    /*#__PURE__*/React.createElement(SocialProof, null),
+    /*#__PURE__*/React.createElement(TravelersLoved, null),
+    /*#__PURE__*/React.createElement(TextBlocks, null),
+    /*#__PURE__*/React.createElement(PuntoDeEncuentro, { tour: tour }),
+    /* Quién opera la experiencia, con su portada y su descripción: la misma
+       cabecera que ve quien reserva un alojamiento. */
+    /*#__PURE__*/React.createElement("div", { className: "pt-6 border-t border-slate-200" },
+      /*#__PURE__*/React.createElement(PerfilNegocio, {
+        perfil: perfil,
+        etiqueta: "Quién la opera",
+        onVerMicrositio: slug => { window.location.href = "/" + slug; }
+      }))),
+  /*#__PURE__*/React.createElement("div", {
+    className: "tg-reserva lg:sticky lg:top-24 h-fit"
+  }, /*#__PURE__*/React.createElement("div", { className: "tg-reserva-cab" },
+    /*#__PURE__*/React.createElement("span", null, "Desde"),
+    /*#__PURE__*/React.createElement("b", null, "$", precioAdulto.toFixed(2)),
+    /*#__PURE__*/React.createElement("em", null, "USD por persona")),
+  /*#__PURE__*/React.createElement("div", { className: "tg-reserva-cuerpo" },
+  /*#__PURE__*/React.createElement("div", {
+    className: "divide-y divide-slate-100"
   }, /*#__PURE__*/React.createElement(Counter, {  
     label: "Adultos",  
     sub: "Edad 18+",  
@@ -7574,10 +7765,12 @@ function DetailScreenTour({
   servicio > 0 ? /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] text-slate-500 mt-1.5"
   }, "Incluye $", servicio.toFixed(2), " de servicio Andes GOO.") : null,
-  /*#__PURE__*/React.createElement("button", {  
-    onClick: handleAdd,
-    className: "w-full mt-4 bg-[#FF6B00] hover:bg-[#EA580C] text-white font-bold py-3 rounded-lg transition-colors"
-  }, "Añadir al carrito"),
+  /*#__PURE__*/React.createElement("button", {
+    onClick: handleAdd, className: "tg-reserva-ir"
+  }, "Reservar"),
+  /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-slate-400 text-center mt-2"
+  }, "Se añade a tu carrito; confirmas al pagar."),
   /* La excursión es de un día: el traslado se propone para esa misma fecha. */
   /*#__PURE__*/React.createElement(AgregarMovilidad, {
     desde: date, hasta: date, municipio: tour.municipio, onAgregar: onAddToCart
@@ -7593,7 +7786,18 @@ function DetailScreenTour({
   }, /*#__PURE__*/React.createElement(CheckCircle2, {  
     size: 16,  
     className: "text-green-600 shrink-0"  
-  }), " Reserva ahora y paga después")))), /*#__PURE__*/React.createElement(ReviewsSection, null));  
+  }), " Reserva ahora y paga después"))))),
+  /*#__PURE__*/React.createElement(ReviewsSection, null),
+
+  /* En el móvil no hay columna derecha, y reservar quedaba enterrado bajo
+     el itinerario. Aquí va fijo abajo, con el precio delante. */
+  /*#__PURE__*/React.createElement("div", { className: "tg-barra-reserva" },
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("b", null, money(total, currency)),
+      /*#__PURE__*/React.createElement("span", null,
+        (adults + children) + ((adults + children) === 1 ? " persona" : " personas"),
+        date ? " · " + date.split("-").reverse().join("/") : "")),
+    /*#__PURE__*/React.createElement("button", { onClick: handleAdd }, "Reservar")));
 }
 
 /* ==========================================================================  
