@@ -2691,13 +2691,58 @@ function PerfilNegocio({ perfil, etiqueta, onVerMicrositio }) {
         }, "Ver su página") : null)));
 }
 
-function HotelBookingPage({ hotel, onClose }) {
+/* La disponibilidad real del alojamiento. Sale de room_inventory, que es
+   donde el negocio abre y cierra noches y les pone precio.
+
+   La regla de las noches sin fila —valen el total del hotel al precio
+   base— es la que ya tenía la pantalla de reserva. Vive aquí, y no copiada
+   en dos sitios, porque si la portada del micrositio dijera una cosa y la
+   pantalla de reserva otra, el viajero vería un precio y pagaría otro. */
+async function disponibilidadDe(habitaciones, checkIn, checkOut) {
+  const noches = (checkIn && checkOut && checkOut > checkIn)
+    ? Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000) : 0;
+  const sb = window.__tgSupabase;
+  if (!noches || !habitaciones || !habitaciones.length || !sb) return {};
+  const ids = habitaciones.map(t => t.id);
+  const { data } = await sb.from("room_inventory")
+    .select("room_type_id, fecha, disponibles, precio, bloqueado")
+    .in("room_type_id", ids).gte("fecha", checkIn).lt("fecha", checkOut);
+
+  const porTipo = {};
+  (data || []).forEach(r => {
+    (porTipo[r.room_type_id] = porTipo[r.room_type_id] || []).push(r);
+  });
+
+  const res = {};
+  habitaciones.forEach(t => {
+    const filas = porTipo[t.id] || [];
+    let minimo = t.cantidad_total;
+    let total = 0;
+    let cerrado = false;
+    for (let i = 0; i < noches; i++) {
+      const f = fechaISO(new Date(new Date(checkIn).getTime() + i * 86400000));
+      const fila = filas.find(x => x.fecha === f);
+      if (fila && fila.bloqueado) { cerrado = true; break; }
+      const disp = fila ? fila.disponibles : t.cantidad_total;
+      const precio = fila && fila.precio != null ? Number(fila.precio) : Number(t.precio_base);
+      minimo = Math.min(minimo, disp);
+      total += precio;
+    }
+    res[t.id] = cerrado ? { libres: 0, total: 0, cerrado: true }
+                        : { libres: minimo, total: total, cerrado: false };
+  });
+  return res;
+}
+
+function HotelBookingPage({ hotel, onClose, fechas }) {
   useCerrarConAtras(onClose);
   const hoy = new Date();
   const manana = new Date(hoy.getTime() + 86400000);
-  const [checkIn, setCheckIn] = useState(fechaISO(hoy));
-  const [checkOut, setCheckOut] = useState(fechaISO(manana));
-  const [huespedes, setHuespedes] = useState(2);
+  /* Si se llega desde el buscador de la portada del micrositio, las fechas
+     ya están dichas: volver a preguntarlas sería empezar de cero. */
+  const [checkIn, setCheckIn] = useState((fechas && fechas.checkIn) || fechaISO(hoy));
+  const [checkOut, setCheckOut] = useState((fechas && fechas.checkOut) || fechaISO(manana));
+  const [huespedes, setHuespedes] = useState((fechas && fechas.huespedes) || 2);
   const [disponibilidad, setDisponibilidad] = useState(null);
   const [buscando, setBuscando] = useState(false);
   const [reservando, setReservando] = useState(null);
@@ -2715,35 +2760,7 @@ function HotelBookingPage({ hotel, onClose }) {
   const buscar = async () => {
     if (!noches) return;
     setBuscando(true);
-    const ids = hotel.habitaciones.map(t => t.id);
-    const { data } = await window.__tgSupabase.from("room_inventory")
-      .select("room_type_id, fecha, disponibles, precio, bloqueado")
-      .in("room_type_id", ids).gte("fecha", checkIn).lt("fecha", checkOut);
-
-    const porTipo = {};
-    (data || []).forEach(r => {
-      (porTipo[r.room_type_id] = porTipo[r.room_type_id] || []).push(r);
-    });
-
-    const res = {};
-    hotel.habitaciones.forEach(t => {
-      const filas = porTipo[t.id] || [];
-      /* Las noches sin fila aún no se han tocado: valen el total del hotel. */
-      let minimo = t.cantidad_total;
-      let total = 0;
-      let cerrado = false;
-      for (let i = 0; i < noches; i++) {
-        const f = fechaISO(new Date(new Date(checkIn).getTime() + i * 86400000));
-        const fila = filas.find(x => x.fecha === f);
-        if (fila && fila.bloqueado) { cerrado = true; break; }
-        const disp = fila ? fila.disponibles : t.cantidad_total;
-        const precio = fila && fila.precio != null ? Number(fila.precio) : Number(t.precio_base);
-        minimo = Math.min(minimo, disp);
-        total += precio;
-      }
-      res[t.id] = cerrado ? { libres: 0, total: 0, cerrado: true } : { libres: minimo, total, cerrado: false };
-    });
-    setDisponibilidad(res);
+    setDisponibilidad(await disponibilidadDe(hotel.habitaciones, checkIn, checkOut));
     setBuscando(false);
   };
 
@@ -8486,8 +8503,13 @@ function MsBoton({ t, onClick, href, children, secundario }) {
    "sobria" no usa foto —hay negocios que no tienen una buena y es mejor un
    color limpio que una imagen borrosa—; "partida" pone la foto a un lado,
    así que el texto va sobre el fondo del negocio y no sobre la imagen. */
-function MsPortada({ p, t, onVerOferta }) {
+function MsPortada({ p, t, onVerOferta, conFechas }) {
   const forma = t.heroForma || "plena";
+  /* La foto de portada ocupaba dos tercios de la pantalla y empujaba lo que
+     se viene a hacer —ver fechas y habitaciones— fuera de la vista. Se
+     respeta la plantilla que eligió el negocio, pero con un techo; y si
+     debajo va el buscador de fechas, un poco más baja todavía. */
+  const alto = "min(" + (t.heroAlto || "60vh") + ", " + (conFechas ? 400 : 440) + "px)";
   const velo = t.heroVelo == null ? 0.45 : t.heroVelo;
   const centrado = (t.heroAlineacion || "izquierda") === "centro";
   const conFoto = forma !== "sobria" && !!p.portada;
@@ -8504,7 +8526,8 @@ function MsPortada({ p, t, onVerOferta }) {
   const bloque = React.createElement("div", {
     style: Object.assign(
       { position: "relative", width: "100%", maxWidth: partida ? 560 : 1120,
-        margin: partida ? 0 : "0 auto", padding: partida ? "0 44px" : "0 20px 54px",
+        margin: partida ? 0 : "0 auto",
+        padding: partida ? "0 44px" : (conFechas ? "0 20px 76px" : "0 20px 54px"),
         textAlign: centrado ? "center" : "left" },
       tarjeta ? { background: t.fondo, borderRadius: t.radio, padding: "34px 36px",
                   maxWidth: 580, margin: centrado ? "0 auto" : "0 0 46px 0",
@@ -8550,7 +8573,7 @@ function MsPortada({ p, t, onVerOferta }) {
     return React.createElement("header", { style: { background: t.fondo } },
       React.createElement("div", {
         style: { display: "grid", gridTemplateColumns: conFoto ? "1fr 1fr" : "1fr",
-                 minHeight: t.heroAlto, alignItems: "center" }
+                 minHeight: alto, alignItems: "center" }
       },
         React.createElement("div", {
           style: { display: "flex", alignItems: "center", padding: "46px 0" } }, bloque),
@@ -8560,7 +8583,7 @@ function MsPortada({ p, t, onVerOferta }) {
 
   return React.createElement("header", { style: { position: "relative", background: t.suave } },
     React.createElement("div", {
-      style: { position: "relative", minHeight: t.heroAlto, display: "flex",
+      style: { position: "relative", minHeight: alto, display: "flex",
                alignItems: centrado ? "center" : "flex-end",
                justifyContent: centrado ? "center" : "flex-start",
                background: conFoto ? undefined : t.suave, overflow: "hidden" }
@@ -8572,6 +8595,155 @@ function MsPortada({ p, t, onVerOferta }) {
                    + (velo * 0.78).toFixed(2) + ") 45%, rgba(0,0,0," + (velo * 0.27).toFixed(2) + ") 100%)" }
       }) : null,
       bloque));
+}
+
+/* ------------------------------------------------------ VER DISPONIBILIDAD
+   Lo primero que alguien quiere de una posada no es su historia: es saber
+   si hay sitio la noche que viene y cuánto cuesta. Va montado sobre la
+   portada, antes de cualquier otra cosa, y pregunta lo justo —entrada,
+   salida, cuántos— para contestarlo con el calendario de verdad.
+
+   Lo que no sabemos no se inventa: si el negocio no ha abierto noches, se
+   dice; si para esas fechas no queda nada, se dice. */
+function MsDisponibilidad({ p, t, hotel, onAbrir }) {
+  const hoy = new Date();
+  const manana = new Date(hoy.getTime() + 86400000);
+  const [checkIn, setCheckIn] = useState(fechaISO(hoy));
+  const [checkOut, setCheckOut] = useState(fechaISO(manana));
+  const [huespedes, setHuespedes] = useState(2);
+  const [disp, setDisp] = useState(null);
+  const [buscando, setBuscando] = useState(false);
+
+  const noches = (checkIn && checkOut && checkOut > checkIn)
+    ? Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000) : 0;
+
+  useEffect(() => {
+    let vivo = true;
+    if (!noches || !hotel) { setDisp(null); return; }
+    setBuscando(true);
+    disponibilidadDe(hotel.habitaciones, checkIn, checkOut).then(r => {
+      if (!vivo) return;
+      setDisp(r); setBuscando(false);
+    }).catch(() => { if (vivo) { setDisp({}); setBuscando(false); } });
+    return () => { vivo = false; };
+  }, [checkIn, checkOut, noches, hotel]);
+
+  if (!hotel || !hotel.habitaciones.length) return null;
+
+  const caben = hotel.habitaciones.filter(h => Number(h.capacidad) >= huespedes);
+  const libres = caben.filter(h => disp && disp[h.id] && !disp[h.id].cerrado && disp[h.id].libres > 0);
+
+  const campo = (etiqueta, control) => React.createElement("label", {
+    style: { display: "flex", flexDirection: "column", gap: 5, minWidth: 0, flex: "1 1 150px" }
+  },
+    React.createElement("span", {
+      style: { fontFamily: t.cuerpo, fontSize: 11, fontWeight: 800, letterSpacing: ".07em",
+               textTransform: "uppercase", color: t.tenue }
+    }, etiqueta), control);
+
+  const estiloCampo = {
+    width: "100%", minHeight: 46, padding: "10px 12px", boxSizing: "border-box",
+    borderRadius: t.radioBoton, border: "1.5px solid " + t.borde,
+    background: t.fondo, color: t.texto, fontFamily: t.cuerpo, fontSize: 14.5
+  };
+
+  return React.createElement("section", {
+    id: "ms-fechas",
+    style: { position: "relative", zIndex: 5, padding: "0 20px", marginTop: -54 }
+  },
+    React.createElement("div", {
+      style: { maxWidth: 1120, margin: "0 auto", background: t.fondo,
+               border: "1px solid " + t.borde, borderRadius: t.radio,
+               boxShadow: "0 18px 54px rgba(10,22,44,.2)", padding: "22px 24px" }
+    },
+      React.createElement("p", {
+        style: { fontFamily: t.titulo, fontWeight: t.tituloPeso, color: t.texto,
+                 fontSize: 20, margin: "0 0 4px", letterSpacing: t.tituloEspaciado }
+      }, "Introduce las fechas en que quieres hospedarte"),
+      React.createElement("p", {
+        style: { fontFamily: t.cuerpo, fontSize: 13, color: t.tenue, margin: "0 0 16px" }
+      }, "Te decimos qué habitaciones quedan libres y cuánto cuestan esas noches."),
+
+      React.createElement("div", {
+        style: { display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }
+      },
+        campo("Entrada", React.createElement("input", {
+          type: "date", value: checkIn, min: fechaISO(hoy), style: estiloCampo,
+          onChange: e => {
+            const v = e.target.value;
+            setCheckIn(v);
+            if (v && checkOut <= v) {
+              setCheckOut(fechaISO(new Date(new Date(v).getTime() + 86400000)));
+            }
+          }
+        })),
+        campo("Salida", React.createElement("input", {
+          type: "date", value: checkOut, min: checkIn, style: estiloCampo,
+          onChange: e => setCheckOut(e.target.value)
+        })),
+        campo("Huéspedes", React.createElement("select", {
+          value: huespedes, style: estiloCampo,
+          onChange: e => setHuespedes(Number(e.target.value))
+        }, [1, 2, 3, 4, 5, 6, 7, 8].map(n =>
+          React.createElement("option", { key: n, value: n },
+            n + (n === 1 ? " huésped" : " huéspedes")))))),
+
+      React.createElement("div", { style: { marginTop: 18 } },
+        !noches
+          ? React.createElement("p", {
+              style: { fontFamily: t.cuerpo, fontSize: 13.5, color: t.tenue, margin: 0 }
+            }, "La salida tiene que ser después de la entrada.")
+          : buscando
+            ? React.createElement("p", {
+                style: { fontFamily: t.cuerpo, fontSize: 13.5, color: t.tenue, margin: 0 }
+              }, "Mirando el calendario…")
+            : !caben.length
+              ? React.createElement("p", {
+                  style: { fontFamily: t.cuerpo, fontSize: 13.5, color: t.tenue, margin: 0 }
+                }, "Ninguna de nuestras habitaciones es para " + huespedes +
+                   (huespedes === 1 ? " huésped." : " huéspedes."))
+              : !libres.length
+                ? React.createElement("p", {
+                    style: { fontFamily: t.cuerpo, fontSize: 13.5, color: t.tenue, margin: 0 }
+                  }, "Para esas noches no nos queda nada libre. Prueba con otras fechas.")
+                : React.createElement("div", {
+                    style: { display: "flex", flexDirection: "column", gap: 10 }
+                  },
+                    React.createElement("p", {
+                      style: { fontFamily: t.cuerpo, fontSize: 12, fontWeight: 800,
+                               letterSpacing: ".07em", textTransform: "uppercase",
+                               color: t.tenue, margin: 0 }
+                    }, libres.length + (libres.length === 1 ? " habitación libre · " : " habitaciones libres · ") +
+                       noches + (noches === 1 ? " noche" : " noches")),
+                    libres.map(h => {
+                      const d = disp[h.id];
+                      return React.createElement("div", {
+                        key: h.id,
+                        style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14,
+                                 padding: "13px 15px", borderRadius: t.radioBoton,
+                                 border: "1px solid " + t.borde, background: t.suave }
+                      },
+                        React.createElement("div", { style: { minWidth: 0, flex: "1 1 200px" } },
+                          React.createElement("b", {
+                            style: { display: "block", fontFamily: t.cuerpo, fontSize: 15,
+                                     fontWeight: 800, color: t.texto }
+                          }, h.nombre),
+                          React.createElement("span", {
+                            style: { fontFamily: t.cuerpo, fontSize: 12.5, color: t.tenue }
+                          }, "Hasta " + h.capacidad + (h.capacidad === 1 ? " huésped" : " huéspedes") +
+                             " · " + d.libres + (d.libres === 1 ? " libre" : " libres"))),
+                        React.createElement("div", { style: { textAlign: "right", flex: "0 0 auto" } },
+                          React.createElement("b", {
+                            style: { display: "block", fontFamily: t.cuerpo, fontSize: 17,
+                                     fontWeight: 800, color: t.texto }
+                          }, "$" + totalViajero("alojamiento", d.total, 1).toFixed(0)),
+                          React.createElement("span", {
+                            style: { fontFamily: t.cuerpo, fontSize: 11.5, color: t.tenue }
+                          }, noches === 1 ? "la noche" : "las " + noches + " noches")),
+                        React.createElement(MsBoton, {
+                          t, onClick: () => onAbrir(hotel, { checkIn, checkOut, huespedes })
+                        }, "Reservar"));
+                    })))));
 }
 
 /* -------------------------------------------------------------- NOSOTROS */
@@ -8928,6 +9100,7 @@ function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrA
   const p = provider;
   const t = temaDe(p);
   const [hotelAbierto, setHotelAbierto] = useState(null);
+  const [fechasHotel, setFechasHotel] = useState(null);
 
   const hotel = useMemo(() => HOTELES.find(h => h.id === p.id) || null, [p.id]);
   const tours = useMemo(
@@ -8935,10 +9108,14 @@ function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrA
   const vehiculos = useMemo(() => VEHICULOS.filter(v => v.provider_id === p.id), [p.id]);
   const rubro = rubroPrincipal(p);
 
+  /* Si hay buscador de fechas, "Ver disponibilidad" lleva ahí: es lo que
+     promete el botón. Si no, al catálogo del rubro, como antes. */
   const irAOferta = () => {
-    const el = document.getElementById("ms-oferta");
+    const el = document.getElementById("ms-fechas") || document.getElementById("ms-oferta");
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
+
+  const abrirHotel = (h, f) => { setFechasHotel(f || null); setHotelAbierto(h); };
 
   /* Lo que no es el rubro principal baja a "también ofrecemos". */
   const secundarios = rubro === "experiencias" ? [] : tours;
@@ -8947,11 +9124,20 @@ function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrA
     style: { background: t.fondo, color: t.texto, fontFamily: t.cuerpo, minHeight: "100vh" }
   },
     React.createElement(MsBarraPlataforma, { t, onBack }),
-    React.createElement(MsPortada, { p, t, onVerOferta: irAOferta }),
+    React.createElement(MsPortada, {
+      p, t, onVerOferta: irAOferta,
+      conFechas: rubro === "habitaciones" && !!hotel }),
+
+    /* Antes que nada, las fechas: es a lo que viene quien busca dónde
+       dormir, y hasta ahora había que bajar hasta las habitaciones y
+       entrar en una para poder preguntarlo. */
+    rubro === "habitaciones"
+      ? React.createElement(MsDisponibilidad, { p, t, hotel, onAbrir: abrirHotel })
+      : null,
 
     /* El rubro principal va primero: es lo que el negocio vende. */
     rubro === "habitaciones"
-      ? React.createElement(MsHabitaciones, { p, t, ancla: "ms-oferta", hotel, onAbrir: setHotelAbierto })
+      ? React.createElement(MsHabitaciones, { p, t, ancla: "ms-oferta", hotel, onAbrir: abrirHotel })
       : rubro === "flota"
         ? React.createElement(MsFlota, { p, t, ancla: "ms-oferta", vehiculos, onIrARentacar })
         : React.createElement(MsExperiencias, { p, t, ancla: "ms-oferta", tours, onSelectTour, currency }),
@@ -8968,7 +9154,7 @@ function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrA
         rubro !== "flota" && vehiculos.length
           ? React.createElement(MsFlota, { p, t, vehiculos, onIrARentacar }) : null,
         rubro !== "habitaciones" && hotel
-          ? React.createElement(MsHabitaciones, { p, t, hotel, onAbrir: setHotelAbierto }) : null);
+          ? React.createElement(MsHabitaciones, { p, t, hotel, onAbrir: abrirHotel }) : null);
       return null;
     }),
 
@@ -8976,7 +9162,8 @@ function ProviderMicrosite({ provider, onBack, onSelectTour, onSelectAloj, onIrA
     React.createElement(MsPie, { p, t, onBack, onOpenLegal }),
 
     hotelAbierto ? React.createElement(HotelBookingPage, {
-      hotel: hotelAbierto, onClose: () => setHotelAbierto(null)
+      hotel: hotelAbierto, fechas: fechasHotel,
+      onClose: () => { setHotelAbierto(null); setFechasHotel(null); }
     }) : null);
 }
 
@@ -9540,12 +9727,16 @@ function temaDe(p){
 
 /* Las secciones que el negocio puede quitar. La portada y su rubro principal
    no están aquí: son lo que vende, siempre van. */
+/* El orden de aquí es el que vale cuando el dueño no ha puesto el suyo.
+   "Quiénes somos" bajó al final: quien entra a una posada viene a ver si
+   hay sitio y cuánto cuesta, y la historia del negocio es lo que lee
+   después de decidir, no antes. En la portada le queda su frase. */
 const SECCIONES_MICROSITIO = [
-  { id: "nosotros",  label: "Quiénes somos" },
   { id: "galeria",   label: "Galería de fotos" },
   { id: "catalogo",  label: "Resto del catálogo" },
   { id: "resenas",   label: "Reseñas" },
-  { id: "ubicacion", label: "Cómo llegar" }
+  { id: "ubicacion", label: "Cómo llegar" },
+  { id: "nosotros",  label: "Quiénes somos" }
 ];
 
 function seccionVisible(p, id){
