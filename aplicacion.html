@@ -517,6 +517,18 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
   0%{transform:translate3d(0,0,0) scale(1);opacity:1}
   100%{transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(.26);opacity:0}
 }
+/* Y el camino de vuelta: las mismas piezas, al revés. Entran de fuera, se
+   enderezan y se cierran sobre la portada. Lo que se rompió se arma. */
+.tg-fragmentos.armando i{animation-name:tgPiezaVuelve;
+  animation-timing-function:cubic-bezier(.22,.9,.3,1)}
+@keyframes tgPiezaVuelve{
+  0%{transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(.26);opacity:0}
+  100%{transform:translate3d(0,0,0) scale(1);opacity:1}
+}
+/* Al armar, el último cuadro tiene que quedarse puesto: si las piezas se
+   quitan antes de que la portada esté debajo, se ve el salto. */
+.tg-fragmentos.armando{background:transparent}
+
 /* Sin movimiento: ni piezas ni cuadrícula, solo un fundido. */
 .tg-fragmentos.tg-plano{background:var(--tg-azul);
   animation:tgDesvanece .3s linear forwards}
@@ -585,7 +597,31 @@ article img, .rounded-xl > div > img{ transition:transform .55s cubic-bezier(.2,
 .tg-mun-op[aria-pressed="true"]{background:rgba(255,138,51,.2)}
 .tg-mun-op i{font-style:normal;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.92)}
 .tg-mun-op em{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.45)}
+/* La capital del estado abre la lista y lo dice: es a donde llega casi
+   todo el mundo, y verla de primera ahorra buscarla. */
+.tg-mun-op.capital{grid-column:1/-1;background:rgba(255,138,51,.08)}
+.tg-mun-op u{margin-left:auto;text-decoration:none;flex:none;
+  font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:#FFB27A}
+@media(max-width:860px){.tg-mun-op.capital{grid-column:auto}}
 .tg-mun-todo{margin-bottom:20px}
+
+/* Escribir en vez de recorrer. Vive sobre el panel oscuro, así que el campo
+   es un hueco en él, no una caja blanca pegada encima. */
+.tg-busca{display:flex;align-items:center;gap:9px;margin:0 0 10px;
+  padding:0 12px;height:46px;border-radius:12px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  color:rgba(255,255,255,.55);transition:border-color .16s ease}
+.tg-busca:focus-within{border-color:#FF8A33;color:rgba(255,255,255,.8)}
+.tg-busca input{flex:1;min-width:0;background:none;border:0;outline:none;
+  color:#fff;font-size:14px;font-family:inherit}
+.tg-busca input::placeholder{color:rgba(255,255,255,.4)}
+.tg-busca input::-webkit-search-cancel-button{display:none}
+.tg-busca button{display:flex;align-items:center;justify-content:center;
+  flex:none;width:26px;height:26px;border:0;border-radius:50%;cursor:pointer;
+  background:rgba(255,255,255,.12);color:#fff}
+.tg-zona-aviso{font-size:13px;color:rgba(255,255,255,.45);margin:0 0 20px;
+  grid-column:1/-1;padding:10px 11px}
 
 /* La lista y el mapa, uno al lado del otro: señalar un nombre señala el
    punto, y al revés. Lo de abajo —micrositios y catálogo— no se entera de
@@ -858,6 +894,38 @@ html.tg-esperando #tg-espera{display:flex}
 .tg-estados.chico .tg-estado i{margin-top:0;margin-left:8px;font-size:9px;padding:2px 7px;vertical-align:middle}
 
 
+/* Las tres puertas del estado. Son la decisión que sigue a elegir el
+   estado, así que pesan: una fila de bloques anchos, con su icono y su
+   flecha, no fichas sueltas entre otras tantas. */
+.tg-puertas-lab{margin:26px 0 11px;font-size:11px;font-weight:800;
+  letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.tg-puertas{display:grid;gap:10px;margin-bottom:8px}
+.tg-puerta{display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  padding:15px 16px;border-radius:16px;cursor:pointer;color:#fff;
+  background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.14);
+  transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.tg-puerta:hover{background:rgba(255,255,255,.12);border-color:rgba(160,200,255,.5);
+  transform:translateY(-2px)}
+.tg-puerta:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(120,170,255,.75)}
+.tg-puerta-ic{display:flex;align-items:center;justify-content:center;flex:none;
+  width:46px;height:46px;border-radius:13px;
+  background:linear-gradient(140deg,#1F6FE5,#0D47A8);color:#fff}
+.tg-puerta:nth-child(2) .tg-puerta-ic{background:linear-gradient(140deg,#FF8A33,#E2561B)}
+.tg-puerta:nth-child(3) .tg-puerta-ic{background:linear-gradient(140deg,#4FD1A0,#1C9674)}
+.tg-puerta-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tg-puerta-tx b{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.tg-puerta-tx em{font-style:normal;font-size:12.5px;color:rgba(255,255,255,.55)}
+.tg-puerta-fl{margin-left:auto;flex:none;color:rgba(255,255,255,.4);
+  transition:transform .18s ease,color .18s ease}
+.tg-puerta:hover .tg-puerta-fl{transform:translateX(4px);color:#fff}
+@media(prefers-reduced-motion:reduce){
+  .tg-puerta,.tg-puerta-fl{transition:none}
+  .tg-puerta:hover{transform:none}
+  .tg-puerta:hover .tg-puerta-fl{transform:none}
+}
+
+.tg-capas-lab{margin:22px 0 9px;font-size:11px;font-weight:800;
+  letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.35)}
 .tg-mapa-capas{display:flex;flex-wrap:wrap;gap:9px}
 .tg-capa{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:rgba(255,255,255,.82);
   background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:9px 16px;cursor:pointer;
@@ -887,6 +955,32 @@ html.tg-esperando #tg-espera{display:flex}
 .tg-mapa-lienzo.edo-trujillo{border-color:rgba(236,190,122,.22);
   box-shadow:0 24px 70px rgba(0,0,0,.5),inset 0 0 90px rgba(160,110,30,.14)}
 .tg-svg{display:block;width:100%;height:auto;max-height:70vh;touch-action:manipulation}
+
+/* El mapa de OpenStreetMap vive dentro de la misma caja que tenía el dibujo,
+   pero necesita una altura suya: Leaflet no crece con su contenido. */
+.tg-osm{width:100%;height:min(66vh,540px);min-height:330px;background:#0B1B33}
+@media(max-width:900px){.tg-osm{height:52vh;min-height:300px}}
+.tg-res-mapa .tg-osm{height:min(60vh,470px)}
+.tg-osm-espera{position:absolute;inset:0;z-index:401;display:flex;
+  align-items:center;justify-content:center;margin:0;pointer-events:none;
+  background:#0B1B33;color:rgba(255,255,255,.6);font-size:13px;font-weight:600}
+.leaflet-container{font-family:inherit;background:#0B1B33}
+.leaflet-control-attribution{font-size:10px;background:rgba(255,255,255,.82)}
+/* El nombre de una ciudad tiene que leerse sobre un mapa de calle, que es
+   claro y lleno: letra oscura con reborde claro, no una burbuja más. */
+.tg-osm-ciudad,.tg-osm-sitio{background:rgba(255,255,255,.94);border:none;
+  box-shadow:0 2px 8px rgba(13,30,60,.22);color:#13294B;
+  font-size:11.5px;font-weight:800;padding:3px 7px;border-radius:7px;white-space:nowrap}
+.tg-osm-ciudad::before,.tg-osm-sitio::before{display:none}
+.tg-osm-sitio{font-size:12.5px}
+.tg-osm-pin-caja{background:none;border:none}
+.tg-osm-pin{display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:50%;
+  background:#E2561B;color:#fff;border:2.5px solid #fff;
+  box-shadow:0 3px 10px rgba(13,30,60,.45);
+  font-size:12.5px;font-weight:800;transition:transform .18s ease}
+.tg-osm-pin-caja.vivo .tg-osm-pin{transform:scale(1.28);background:#0052CC}
+@media(prefers-reduced-motion:reduce){.tg-osm-pin{transition:none}}
 
 /* Dos estados pegados con el mismo azul se leen como un solo territorio.
    El dibujo es idéntico —mismo trazo, mismas opacidades—; lo único que
@@ -1114,7 +1208,8 @@ const {
   useState,
   useMemo,
   useEffect,
-  useRef
+  useRef,
+  useCallback
 } = React;
 
 /* ==========================================================================  
@@ -1248,6 +1343,24 @@ function marcarOrigenDelClic(ev){
    se resuelve una vez y no en cada pintado. */
 const ES_TACTIL = typeof window !== "undefined" && window.matchMedia
   ? window.matchMedia("(hover: none)").matches : false;
+
+/* El mapa de la portada vive abajo y el panel que abre los caminos arriba,
+   en el hero. Las tres puertas grandes del mapa tienen que abrir exactamente
+   lo mismo que las dos tarjetas de arriba, así que el panel deja aquí su
+   función al montarse y el mapa la recoge. Un solo sitio, y nadie tiene que
+   pasar un callback por cinco componentes que no lo usan. */
+const CAMINOS_BUS = { abrir: null };
+
+/* Las tres puertas, ya con un estado elegido. Son las mismas de siempre:
+   cama, plan y carro. */
+const PUERTAS_ESTADO = [
+  { id: "alojamientos", titulo: "Dónde dormir", icono: Bed,
+    pie: "Posadas, hoteles y cabañas" },
+  { id: "experiencias", titulo: "Qué hacer", icono: Compass,
+    pie: "Tours, rutas y salidas de un día" },
+  { id: "rentacar", titulo: "Cómo moverte", icono: Car,
+    pie: "Vehículos y traslados" }
+];
 
 const CAMINOS = [
   { id: "alojamientos", titulo: "Dónde dormir", icono: Bed, tono: "azul",
@@ -4445,6 +4558,7 @@ function SearchTabsBox({
   const [hotelAbierto, setHotelAbierto] = useState(null);
   /* El camino de elegir zona: primero el mapa, después los resultados. */
   const [zona, setZona] = useState(null);          // "alojamientos" | "experiencias"
+  const [zonaEdo, setZonaEdo] = useState(null);    // el estado del que se viene, si se viene de uno
   const [resultados, setResultados] = useState(null);
 
   /* La sección de vehículos también se abre desde fuera (por ejemplo, desde
@@ -4461,12 +4575,24 @@ function SearchTabsBox({
   /* Dos puertas, no tres. Movilidad se fue al menú de arriba: quien alquila
      un carro ya sabe que viene a eso, mientras que quien llega por primera
      vez solo tiene que decidir entre cama y plan. */
-  const abrirCamino = (id, ev) => {
+  const abrirCamino = (id, ev, estadoInicial) => {
     setCategory(id);
     setResultados(null);
     marcarOrigenDelClic(ev);
+    setZonaEdo(estadoInicial || null);
     setZona(id);
   };
+
+  /* El mapa de más abajo abre los mismos caminos, y además el de vehículos,
+     que no tiene tarjeta en la portada porque quien alquila un carro ya
+     sabe a qué viene. */
+  useEffect(() => {
+    CAMINOS_BUS.abrir = (id, ev, estadoInicial) => {
+      if (id === "rentacar") { marcarOrigenDelClic(ev); setRentacarAbierto({}); return; }
+      abrirCamino(id, ev, estadoInicial);
+    };
+    return () => { CAMINOS_BUS.abrir = null; };
+  });
 
   return /*#__PURE__*/React.createElement("div", { className: "w-full" },
     /*#__PURE__*/React.createElement("div", { className: "tg-panel" },
@@ -4526,6 +4652,7 @@ function SearchTabsBox({
 
     zona && /*#__PURE__*/React.createElement(PantallaZona, {
       modo: zona,
+      estadoInicial: zonaEdo,
       onCerrar: () => setZona(null),
       onElegido: eleccion => {
         /* Si eligió un alojamiento concreto en el buscador, se va derecho a
@@ -5164,6 +5291,9 @@ const MAPA_PATHS = ESTADOS_MAPA.flatMap(e => e.geo.map(m => ({
   n: m.n, cap: m.cap, estado: e.id,
   clave: e.id + ":" + m.n,
   cx: mx(m.cp[0]), cy: my(m.cp[1]),
+  /* Lo mismo en grados, tal como viene de OpenStreetMap: el mapa de
+     verdad no entiende nuestra proyección. `b` es [oeste,sur,este,norte]. */
+  clng: m.cp[0], clat: m.cp[1], b: m.b, anillos: m.r,
   caja: [mx(m.b[0]), my(m.b[3]), mx(m.b[2]), my(m.b[1])],   // x0,y0,x1,y1
   d: m.r.map(r => "M" + r.map(p => mx(p[0]).toFixed(1) + " " + my(p[1]).toFixed(1)).join("L") + "Z").join(" ")
 })));
@@ -5529,6 +5659,26 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
             !estadoSel && /*#__PURE__*/React.createElement("span", null, e.frase),
             !e.abierto && /*#__PURE__*/React.createElement("i", null, "Próximamente")))),
 
+        /* Elegido el estado, lo que sigue es grande: son las tres cosas que
+           alguien viene a hacer, y hasta aquí eran tres fichas pequeñas
+           entre otras tantas. */
+        estadoActual && /*#__PURE__*/React.createElement("p", { className: "tg-puertas-lab" },
+          "En ", estadoActual.nombre, ", ¿qué buscas?"),
+        estadoActual && /*#__PURE__*/React.createElement("div", { className: "tg-puertas" },
+          PUERTAS_ESTADO.map(o => /*#__PURE__*/React.createElement("button", {
+            key: o.id,
+            className: "tg-puerta",
+            onClick: ev => CAMINOS_BUS.abrir && CAMINOS_BUS.abrir(o.id, ev, estadoSel)
+          },
+            /*#__PURE__*/React.createElement("span", { className: "tg-puerta-ic" },
+              /*#__PURE__*/React.createElement(o.icono, { size: 23 })),
+            /*#__PURE__*/React.createElement("span", { className: "tg-puerta-tx" },
+              /*#__PURE__*/React.createElement("b", null, o.titulo),
+              /*#__PURE__*/React.createElement("em", null, o.pie)),
+            /*#__PURE__*/React.createElement(ChevronRight, { size: 20, className: "tg-puerta-fl" })))),
+
+        estadoActual && estadoActual.abierto && /*#__PURE__*/React.createElement("p", { className: "tg-capas-lab" },
+          "O míralo en el mapa"),
         estadoActual && estadoActual.abierto && /*#__PURE__*/React.createElement("div", { className: "tg-mapa-capas" },
           MAPA_CAPAS.map(c => /*#__PURE__*/React.createElement("button", {
             key: c.id,
@@ -5754,6 +5904,241 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
 /* El mapa de la pantalla de zona. Es el mismo dibujo de la portada, sin
    capas ni pines: aquí solo sirve para elegir, y lo que se elige aquí queda
    escrito en el buscador de al lado. */
+/* ==========================================================================
+   EL MAPA DE VERDAD
+   Hasta aquí el mapa era un dibujo nuestro. Sirve para elegir a dónde vas,
+   pero no para ubicarte: no están los pueblos, ni el resto de las vías, ni
+   nada de lo que alguien reconoce al mirar un mapa. Esto es OpenStreetMap
+   con Leaflet encima —gratis, sin clave de pago— y nuestros municipios
+   dibujados por arriba, que es lo que el mapa de calle no trae.
+
+   Leaflet no viaja con la página: pesa, y la portada no lo necesita. Se
+   pide la primera vez que alguien abre un camino. Si no llega —sin
+   internet, CDN caído— el dibujo de antes queda de respaldo y nadie se
+   queda sin mapa.
+   ========================================================================== */
+const LEAFLET_BASE = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/";
+let leafletPromesa = null;
+
+function cargarLeaflet() {
+  if (typeof window === "undefined") return Promise.reject(new Error("sin ventana"));
+  if (window.L && window.L.map) return Promise.resolve(window.L);
+  if (leafletPromesa) return leafletPromesa;
+  leafletPromesa = new Promise((cumple, falla) => {
+    if (!document.getElementById("tg-leaflet-css")) {
+      const hoja = document.createElement("link");
+      hoja.id = "tg-leaflet-css";
+      hoja.rel = "stylesheet";
+      hoja.href = LEAFLET_BASE + "leaflet.min.css";
+      document.head.appendChild(hoja);
+    }
+    const guion = document.createElement("script");
+    guion.src = LEAFLET_BASE + "leaflet.js";
+    guion.async = true;
+    guion.onload = () => (window.L && window.L.map)
+      ? cumple(window.L) : falla(new Error("Leaflet llegó vacío"));
+    guion.onerror = () => falla(new Error("Leaflet no cargó"));
+    document.head.appendChild(guion);
+  });
+  leafletPromesa.catch(() => { leafletPromesa = null; });
+  return leafletPromesa;
+}
+
+/* La capital de cada municipio: nadie reconoce "Jáuregui", todo el mundo
+   reconoce "La Grita". Son las ciudades que van marcadas en el mapa. */
+function capitalesDe(estadoId) {
+  return MAPA_PATHS.filter(m => m.estado === estadoId).map(m => ({
+    clave: m.clave, muni: m.n, nombre: m.cap || m.n, lat: m.clat, lng: m.clng
+  }));
+}
+
+function limitesDe(estado, sitio, puntos) {
+  if (sitio && sitio.clave) {
+    const m = MAPA_PATHS.find(p => p.clave === sitio.clave);
+    if (m) return [[m.b[1], m.b[0]], [m.b[3], m.b[2]]];
+  }
+  /* Con cosas publicadas, el mapa se encuadra sobre ellas: enseñar el
+     estado entero deja los cuatro puntos amontonados en una esquina. Un
+     margen mínimo evita que un solo punto meta el mapa en una calle. */
+  const con = (puntos || []).filter(x => x.lat != null && x.lng != null);
+  if (con.length) {
+    let s = 90, o = 180, n = -90, e = -180;
+    con.forEach(x => {
+      s = Math.min(s, x.lat); n = Math.max(n, x.lat);
+      o = Math.min(o, x.lng); e = Math.max(e, x.lng);
+    });
+    const faltaY = Math.max(0, 0.18 - (n - s)) / 2;
+    const faltaX = Math.max(0, 0.18 - (e - o)) / 2;
+    return [[s - faltaY, o - faltaX], [n + faltaY, e + faltaX]];
+  }
+  const lista = estado ? MAPA_PATHS.filter(m => m.estado === estado) : MAPA_PATHS;
+  let s = 90, o = 180, n = -90, e = -180;
+  lista.forEach(m => {
+    o = Math.min(o, m.b[0]); s = Math.min(s, m.b[1]);
+    e = Math.max(e, m.b[2]); n = Math.max(n, m.b[3]);
+  });
+  return [[s, o], [n, e]];
+}
+
+function MapaReal(props) {
+  const { estado, sitio, conMunicipios, onMunicipio, puntos, resaltado, onPunto } = props;
+  const cajaRef = useRef(null);
+  const mapaRef = useRef(null);
+  const capasRef = useRef({});
+  const marcasRef = useRef({});
+  const [listo, setListo] = useState(false);
+  const [falla, setFalla] = useState(false);
+
+  /* El mapa se crea una vez. Leaflet guarda su estado por dentro, así que
+     lo que cambia después se le dice capa a capa, no volviéndolo a montar. */
+  useEffect(() => {
+    let vivo = true;
+    cargarLeaflet().then(L => {
+      if (!vivo || !cajaRef.current || mapaRef.current) return;
+      const m = L.map(cajaRef.current, {
+        zoomControl: true, attributionControl: true,
+        scrollWheelZoom: false,      // la rueda es para bajar por la página
+        tap: true
+      });
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18, minZoom: 6,
+        attribution: '&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(m);
+      m.fitBounds(limitesDe(estado, sitio, puntos), { padding: [24, 24] });
+      capasRef.current.muns = L.layerGroup().addTo(m);
+      capasRef.current.ciudades = L.layerGroup().addTo(m);
+      capasRef.current.pines = L.layerGroup().addTo(m);
+      mapaRef.current = m;
+      setListo(true);
+      /* La caja nace con el ancho que tenga el panel; si el panel aún se
+         estaba abriendo, Leaflet mide mal y salen franjas grises. */
+      setTimeout(() => { try { m.invalidateSize(); } catch (e) {} }, 220);
+    }).catch(() => { if (vivo) setFalla(true); });
+    return () => {
+      vivo = false;
+      if (mapaRef.current) { try { mapaRef.current.remove(); } catch (e) {} mapaRef.current = null; }
+    };
+  }, []);
+
+  /* A dónde mira. Lo mismo que hacía el dibujo: el municipio si lo hay, si
+     no el estado, si no los tres juntos. */
+  useEffect(() => {
+    const m = mapaRef.current;
+    if (!m || !listo) return;
+    try { m.flyToBounds(limitesDe(estado, sitio, puntos), { padding: [24, 24], duration: .7 }); }
+    catch (e) { try { m.fitBounds(limitesDe(estado, sitio, puntos), { padding: [24, 24] }); } catch (e2) {} }
+  }, [estado, sitio, puntos, listo]);
+
+  /* Los municipios del estado, por encima del mapa de calle: es lo que el
+     mapa de OpenStreetMap no dibuja y lo que aquí se está eligiendo. */
+  useEffect(() => {
+    const L = window.L, m = mapaRef.current;
+    if (!L || !m || !listo) return;
+    const capa = capasRef.current.muns;
+    capa.clearLayers();
+    if (!estado) return;
+    const tinte = COLOR_ESTADO[estado] || "#4C9AFF";
+    MAPA_PATHS.filter(x => x.estado === estado).forEach(x => {
+      const elegido = !!(sitio && sitio.clave === x.clave);
+      const p = L.polygon(x.anillos.map(r => r.map(c => [c[1], c[0]])), {
+        color: tinte, weight: elegido ? 2.6 : 1,
+        opacity: elegido ? .95 : .45,
+        fillColor: tinte, fillOpacity: elegido ? .14 : .04,
+        interactive: !!conMunicipios
+      });
+      if (conMunicipios) {
+        p.bindTooltip(x.cap && x.cap !== x.n ? x.n + " (" + x.cap + ")" : x.n,
+                      { sticky: true });
+        p.on("click", () => onMunicipio && onMunicipio(x));
+      }
+      p.addTo(capa);
+    });
+  }, [estado, sitio, listo, conMunicipios, onMunicipio]);
+
+  /* Las ciudades: la capital de cada municipio del estado, y cuando no hay
+     estado elegido, la capital de cada uno de los tres. */
+  useEffect(() => {
+    const L = window.L, m = mapaRef.current;
+    if (!L || !m || !listo) return;
+    const capa = capasRef.current.ciudades;
+    capa.clearLayers();
+    const marcar = (c, grande) => {
+      L.circleMarker([c.lat, c.lng], {
+        radius: grande ? 7 : 4.5, color: "#fff", weight: grande ? 2.4 : 1.6,
+        fillColor: "#13294B", fillOpacity: .9, interactive: !!(conMunicipios && c.clave)
+      })
+        .bindTooltip(c.nombre, {
+          permanent: grande, direction: "top", className: "tg-osm-ciudad",
+          offset: [0, grande ? -9 : -6]
+        })
+        .on("click", () => {
+          if (!conMunicipios || !c.clave) return;
+          const x = MAPA_PATHS.find(p => p.clave === c.clave);
+          if (x && onMunicipio) onMunicipio(x);
+        })
+        .addTo(capa);
+    };
+    if (estado) {
+      const principal = (CIUDADES_PRINCIPALES.find(c => c.estado === estado) || {}).nombre;
+      capitalesDe(estado).forEach(c => marcar(c, c.nombre === principal));
+    } else {
+      CIUDADES_PRINCIPALES.forEach(c => marcar(c, true));
+    }
+  }, [estado, listo, conMunicipios, onMunicipio]);
+
+  /* Lo publicado: cada alojamiento o experiencia con coordenada real. Los
+     que no la tienen no se inventan — se quedan fuera del mapa y siguen
+     estando en la lista de al lado. */
+  useEffect(() => {
+    const L = window.L, m = mapaRef.current;
+    if (!L || !m || !listo) return;
+    const capa = capasRef.current.pines;
+    capa.clearLayers();
+    marcasRef.current = {};
+    (puntos || []).forEach((pt, i) => {
+      if (pt.lat == null || pt.lng == null) return;
+      const icono = L.divIcon({
+        className: "tg-osm-pin-caja",
+        html: '<span class="tg-osm-pin"><b>' + (i + 1) + '</b></span>',
+        iconSize: [30, 30], iconAnchor: [15, 15]
+      });
+      const marca = L.marker([pt.lat, pt.lng], { icon: icono, title: pt.nombre })
+        .bindTooltip(pt.nombre, { direction: "top", offset: [0, -14], className: "tg-osm-sitio" })
+        .on("click", () => onPunto && onPunto(pt))
+        .addTo(capa);
+      marcasRef.current[pt.id] = marca;
+    });
+  }, [puntos, listo, onPunto]);
+
+  /* Señalar desde la lista: el mapa va a ese punto y le abre el nombre. */
+  useEffect(() => {
+    const m = mapaRef.current;
+    if (!m || !listo) return;
+    Object.keys(marcasRef.current).forEach(id => {
+      const marca = marcasRef.current[id];
+      const el = marca.getElement && marca.getElement();
+      if (el) el.classList.toggle("vivo", id === resaltado);
+      if (id === resaltado) { try { marca.openTooltip(); } catch (e) {} }
+      else { try { marca.closeTooltip(); } catch (e) {} }
+    });
+    const viva = resaltado && marcasRef.current[resaltado];
+    if (viva) { try { m.flyTo(viva.getLatLng(), Math.max(m.getZoom(), 12), { duration: .6 }); } catch (e) {} }
+  }, [resaltado, listo]);
+
+  /* Sin Leaflet, el dibujo de siempre: el viajero no se queda sin mapa. */
+  if (falla) return /*#__PURE__*/React.createElement(MapaZonas, props);
+
+  return /*#__PURE__*/React.createElement("div", {
+    className: "tg-mapa-lienzo" + (estado ? " " + claseEstado(estado) : "")
+  },
+    /*#__PURE__*/React.createElement("div", {
+      ref: cajaRef, className: "tg-osm",
+      role: "application", "aria-label": "Mapa de " + (estado ? nombreEstado(estado) : "los Andes venezolanos")
+    }),
+    !listo && /*#__PURE__*/React.createElement("p", { className: "tg-osm-espera" },
+      "Cargando el mapa…"));
+}
+
 function MapaZonas({ estado, sitio, conMunicipios, onEstado, onMunicipio,
                      puntos, resaltado, onPunto }) {
   const svgRef = useRef(null);
@@ -6021,7 +6406,10 @@ function conCapital(municipio, estadoId){
 
 function ResultadosZona({ modo, estado, sitio, onCerrar, onVolverAElegir,
                           onSelectTour, onSelectAloj, onAbrirHotel, onSelectProvider, currency }) {
-  useCerrarConAtras(onCerrar);
+  /* Igual que al elegir zona: salir de aquí hacia la portada la rearma. */
+  const [armando, setArmando] = useState(false);
+  const salir = useCallback(() => setArmando(true), []);
+  useCerrarConAtras(salir);
   const [cat, setCat] = useState("");
   const [tramo, setTramo] = useState("");
   /* El filtro del catálogo de abajo es suyo y de nadie más: tocar el mapa
@@ -6117,6 +6505,7 @@ function ResultadosZona({ modo, estado, sitio, onCerrar, onVolverAElegir,
     className: "fixed inset-0 overflow-y-auto", style: { zIndex: 108, background: "#FBFAF8" },
     role: "dialog", "aria-modal": "true"
   },
+    armando && /*#__PURE__*/React.createElement(Desfragmentar, { modo: "armar", onFin: onCerrar }),
     /*#__PURE__*/React.createElement("div", {
       className: "sticky top-0 z-10 border-b",
       style: { background: "rgba(251,250,248,.92)", backdropFilter: "blur(14px)", borderColor: "#E7E4DE" }
@@ -6133,12 +6522,12 @@ function ResultadosZona({ modo, estado, sitio, onCerrar, onVolverAElegir,
         /*#__PURE__*/React.createElement("p", {
           className: "text-[10px] font-bold uppercase text-slate-400",
           style: { letterSpacing: ".18em" }
-        }, modo === "alojamientos" ? "Dónde dormir" : "Qué vivir"),
+        }, modo === "alojamientos" ? "Dónde dormir" : "Qué hacer"),
         /*#__PURE__*/React.createElement("h2", {
           className: "text-[17px] font-bold text-slate-900 leading-tight truncate"
         }, donde)),
       /*#__PURE__*/React.createElement("button", {
-        onClick: onCerrar, "aria-label": "Cerrar",
+        onClick: salir, "aria-label": "Cerrar y volver a la portada",
         className: "ml-auto shrink-0 w-9 h-9 rounded-full border flex items-center justify-center text-slate-500 hover:text-slate-900",
         style: { borderColor: "#E7E4DE", background: "#fff" }
       }, /*#__PURE__*/React.createElement(X, { size: 18 })))),
@@ -6197,7 +6586,7 @@ function ResultadosZona({ modo, estado, sitio, onCerrar, onVolverAElegir,
                       nombreEstado(estado) + ".")),
 
               /*#__PURE__*/React.createElement("div", { className: "tg-res-mapa" },
-                /*#__PURE__*/React.createElement(MapaZonas, {
+                /*#__PURE__*/React.createElement(MapaReal, {
                   estado: estado, sitio: sitio, conMunicipios: false,
                   puntos: puntos, resaltado: resaltado,
                   onPunto: pt => setResaltado(pt.id),
@@ -6336,7 +6725,8 @@ const PIEZA_IDEAL = 26;      // px
 const PIEZAS_MAX_MOVIL = 600;
 const PIEZAS_MAX_ANCHO = 1800;
 
-function Desfragmentar({ onFin }) {
+function Desfragmentar({ onFin, modo }) {
+  const armando = modo === "armar";
   const quieto = typeof window !== "undefined" && window.matchMedia
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -6373,7 +6763,10 @@ function Desfragmentar({ onFin }) {
           dx: Math.round(vx * empuje) + "px",
           dy: Math.round(vy * empuje - 40) + "px",
           rot: Math.round((vx - vy) * 55) + "deg",
-          esp: ((d / lejos) * 0.26).toFixed(3) + "s"
+          /* Al romper, el escalón nace en el punto tocado y avanza hacia
+             fuera; al armar va al revés, las de fuera llegan primero y la
+             del centro es la última en cerrar. */
+          esp: ((armando ? (1 - d / lejos) : (d / lejos)) * 0.26).toFixed(3) + "s"
         });
       }
       return { lado: lado, W: W, H: H, piezas: piezas };
@@ -6382,7 +6775,7 @@ function Desfragmentar({ onFin }) {
          debajo ya está puesta y el viajero no pierde nada. */
       return null;
     }
-  }, [quieto]);
+  }, [quieto, armando]);
 
   useEffect(() => {
     /* 260 ms de escalonado + 620 de vuelo. Si no hay efecto, lo justo para
@@ -6398,7 +6791,7 @@ function Desfragmentar({ onFin }) {
      mismo claro del fondo, que es lo que el viajero está mirando. */
   const fondo = "linear-gradient(176deg,#E8F1FC,#F4F8FD)";
   return /*#__PURE__*/React.createElement("div", {
-    className: "tg-fragmentos", "aria-hidden": "true"
+    className: "tg-fragmentos" + (armando ? " armando" : ""), "aria-hidden": "true"
   }, plan.piezas.map((p, i) => /*#__PURE__*/React.createElement("i", {
     key: i,
     style: {
@@ -6420,10 +6813,10 @@ function Desfragmentar({ onFin }) {
    ========================================================================== */
 const ZONA_TEXTOS = {
   alojamientos: { titulo: "¿Dónde quieres dormir?",
-                  pie: "Elige el estado y después el municipio. Nada que escribir.",
+                  pie: "Elige el estado y después el municipio: escríbelo o tócalo en la lista.",
                   boton: "Ver alojamientos" },
-  experiencias: { titulo: "¿Qué quieres vivir?",
-                  pie: "Elige el estado y te enseñamos todo lo que hay para hacer ahí.",
+  experiencias: { titulo: "¿Qué quieres hacer?",
+                  pie: "Elige el estado. Si ya sabes el municipio, dilo; si no, te enseñamos todo.",
                   boton: "Ver experiencias" }
 };
 
@@ -6431,35 +6824,59 @@ function sinTildes(t) {
   return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
-function PantallaZona({ modo, onCerrar, onElegido }) {
-  useCerrarConAtras(onCerrar);
+function PantallaZona({ modo, estadoInicial, onCerrar, onElegido }) {
   const t = ZONA_TEXTOS[modo] || ZONA_TEXTOS.experiencias;
   const [rompiendo, setRompiendo] = useState(true);
-  const [estado, setEstado] = useState(null);
+  /* Volver a la portada no es cerrar una ventana: es deshacer lo que la
+     abrió. Las mismas piezas, al revés, y cuando acaban de cerrarse la
+     pantalla se quita de debajo. */
+  const [armando, setArmando] = useState(false);
+  const salir = useCallback(() => setArmando(true), []);
+  useCerrarConAtras(salir);
+  /* Si se viene del mapa, el estado ya está dicho: empezar de cero sería
+     preguntarlo dos veces. */
+  const [estado, setEstado] = useState(estadoInicial || null);
   const [sitio, setSitio] = useState(null);      // { tipo, nombre, clave, estado }
-  const conMunicipios = modo === "alojamientos";
+  const [busca, setBusca] = useState("");
+  /* Los dos caminos preguntan ya por el municipio. En experiencias es
+     opcional —quien no lo sabe sigue viendo el estado entero— pero quien sí
+     lo sabe no tiene por qué pasar por una lista de cuarenta tarjetas. */
+  const conMunicipios = true;
+  const municipioOpcional = modo !== "alojamientos";
 
   useEffect(() => {
-    const onKey = e => { if (e.key === "Escape") onCerrar(); };
+    const onKey = e => { if (e.key === "Escape") salir(); };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
-  }, [onCerrar]);
+  }, [salir]);
 
   /* Los municipios del estado elegido, con su capital. Salen del mismo
      dibujo que el mapa, para que tocar la lista y tocar el mapa lleven
      exactamente al mismo sitio. */
   const municipios = useMemo(() => {
     if (!estado) return [];
+    /* La capital del estado va siempre de primera: es a donde llega la
+       mayoría y donde está casi todo lo publicado. Lo demás, alfabético. */
+    const principal = (CIUDADES_PRINCIPALES.find(c => c.estado === estado) || {}).nombre;
+    const q = sinTildes(busca.trim());
     return MAPA_PATHS.filter(m => m.estado === estado)
-      .slice().sort((a, b) => a.n.localeCompare(b.n));
-  }, [estado]);
+      .filter(m => !q || sinTildes(m.n).includes(q) || sinTildes(m.cap || "").includes(q))
+      .slice()
+      .sort((a, b) => {
+        const ca = a.cap === principal, cb = b.cap === principal;
+        if (ca !== cb) return ca ? -1 : 1;
+        return a.n.localeCompare(b.n);
+      });
+  }, [estado, busca]);
+  const capitalDelEstado = (CIUDADES_PRINCIPALES.find(c => c.estado === estado) || {}).nombre;
 
   const edo = ESTADOS_MAPA.find(e => e.id === estado);
 
   return enCapa(/*#__PURE__*/React.createElement("div", { className: "tg-zona", role: "dialog",
       "aria-modal": "true", "aria-label": t.titulo },
     rompiendo && /*#__PURE__*/React.createElement(Desfragmentar, { onFin: () => setRompiendo(false) }),
+    armando && /*#__PURE__*/React.createElement(Desfragmentar, { modo: "armar", onFin: onCerrar }),
 
     /*#__PURE__*/React.createElement("div", { className: "tg-zona-in" },
       /*#__PURE__*/React.createElement("div", { className: "tg-zona-cab" },
@@ -6468,7 +6885,7 @@ function PantallaZona({ modo, onCerrar, onElegido }) {
           /*#__PURE__*/React.createElement("h2", null, t.titulo),
           /*#__PURE__*/React.createElement("p", null, t.pie)),
         /*#__PURE__*/React.createElement("button", {
-          className: "tg-zona-salir", onClick: onCerrar, "aria-label": "Cerrar y volver"
+          className: "tg-zona-salir", onClick: salir, "aria-label": "Cerrar y volver a la portada"
         }, /*#__PURE__*/React.createElement(X, { size: 19 }))),
 
       /*#__PURE__*/React.createElement("div", { className: "tg-zona-cols" },
@@ -6482,7 +6899,7 @@ function PantallaZona({ modo, onCerrar, onElegido }) {
             ESTADOS_MAPA.map(e => /*#__PURE__*/React.createElement("button", {
               key: e.id,
               "aria-pressed": estado === e.id,
-              onClick: () => { setEstado(e.id); setSitio(null); },
+              onClick: () => { setEstado(e.id); setSitio(null); setBusca(""); },
               className: "tg-edo-op"
             },
               /*#__PURE__*/React.createElement("span", {
@@ -6491,24 +6908,46 @@ function PantallaZona({ modo, onCerrar, onElegido }) {
                 /*#__PURE__*/React.createElement("b", null, e.nombre),
                 /*#__PURE__*/React.createElement("span", null, e.geo.length + " municipios"))))),
 
-          conMunicipios && /*#__PURE__*/React.createElement("p",
+          /*#__PURE__*/React.createElement("p",
             { className: "tg-paso" + (sitio ? " listo" : "") },
             /*#__PURE__*/React.createElement("b", null, "2"),
-            /*#__PURE__*/React.createElement("span", null, "El municipio")),
+            /*#__PURE__*/React.createElement("span", null,
+              municipioOpcional ? "El municipio, si ya lo sabes" : "El municipio")),
 
-          conMunicipios && !estado && /*#__PURE__*/React.createElement("p", {
-            style: { fontSize: "13px", color: "rgba(255,255,255,.45)", margin: "0 0 20px" }
-          }, "Primero el estado."),
+          !estado && /*#__PURE__*/React.createElement("p", { className: "tg-zona-aviso" },
+            "Primero el estado."),
 
-          conMunicipios && estado && /*#__PURE__*/React.createElement("div", { className: "tg-muns" },
+          /* Escribir o tocar. Con 29 municipios la lista ya es larga, y
+             quien sabe que va a La Grita no debería recorrerla entera.
+             Busca por los dos nombres: el del municipio y el de su capital,
+             que es el que la gente dice. */
+          estado && /*#__PURE__*/React.createElement("div", { className: "tg-busca" },
+            /*#__PURE__*/React.createElement(Search, { size: 16, "aria-hidden": "true" }),
+            /*#__PURE__*/React.createElement("input", {
+              type: "search", value: busca, onChange: e => setBusca(e.target.value),
+              placeholder: "Escribe un municipio o una ciudad…",
+              "aria-label": "Buscar municipio o ciudad"
+            }),
+            busca && /*#__PURE__*/React.createElement("button", {
+              type: "button", onClick: () => setBusca(""), "aria-label": "Borrar lo escrito"
+            }, /*#__PURE__*/React.createElement(X, { size: 15 }))),
+
+          estado && /*#__PURE__*/React.createElement("div", { className: "tg-muns" },
+            municipios.length === 0 && /*#__PURE__*/React.createElement("p", { className: "tg-zona-aviso" },
+              "Ningún municipio de " + edo.nombre + " se llama así."),
             municipios.map(m => /*#__PURE__*/React.createElement("button", {
               key: m.clave,
               "aria-pressed": !!(sitio && sitio.clave === m.clave),
-              onClick: () => setSitio({ tipo: "municipio", nombre: m.n, estado: m.estado, clave: m.clave }),
-              className: "tg-mun-op"
+              onClick: () => setSitio(
+                sitio && sitio.clave === m.clave
+                  ? null
+                  : { tipo: "municipio", nombre: m.n, estado: m.estado, clave: m.clave }),
+              className: "tg-mun-op" + (m.cap === capitalDelEstado ? " capital" : "")
             },
               /*#__PURE__*/React.createElement("i", null, m.n),
-              m.cap && m.cap !== m.n && /*#__PURE__*/React.createElement("em", null, "(" + m.cap + ")")))),
+              m.cap && m.cap !== m.n && /*#__PURE__*/React.createElement("em", null, "(" + m.cap + ")"),
+              m.cap === capitalDelEstado && /*#__PURE__*/React.createElement("u", null,
+                "Capital del estado")))),
 
           /*#__PURE__*/React.createElement("button", {
             className: "tg-zona-ir", disabled: !estado,
@@ -6516,9 +6955,9 @@ function PantallaZona({ modo, onCerrar, onElegido }) {
           }, !estado ? "Elige un estado"
                : t.boton + " en " + (sitio ? sitio.nombre : edo.nombre))),
 
-        /*#__PURE__*/React.createElement(MapaZonas, {
+        /*#__PURE__*/React.createElement(MapaReal, {
           estado: estado, sitio: sitio, conMunicipios: conMunicipios,
-          onEstado: id => { setEstado(id); setSitio(null); },
+          onEstado: id => { setEstado(id); setSitio(null); setBusca(""); },
           onMunicipio: m => setSitio({ tipo: "municipio", nombre: m.n, estado: m.estado, clave: m.clave })
         })))));
 }
