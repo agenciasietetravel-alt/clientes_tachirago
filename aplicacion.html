@@ -1161,6 +1161,116 @@ html.tg-esperando #tg-espera{display:flex}
   .tg-pin circle:first-child{animation:none}
 }
 
+/* ==========================================================================
+   PORTADA DE SOLO EXPERIENCIAS
+   Una portada que va de una pregunta: ¿a qué estado vas? Hasta que esa
+   pregunta no se responde no hay nada que enseñar, y en cuanto se responde
+   aparece todo lo que se puede hacer allí. El aire, el titular grande y la
+   barra blanca flotando son de catálogo de viajes; la decisión, nuestra.
+   ========================================================================== */
+.tg-gyg{background:linear-gradient(176deg,#E8F1FC 0%,#F6FAFE 70%,#FFFFFF 100%);
+  padding:64px 20px 48px;text-align:center;position:relative}
+@media(max-width:640px){.tg-gyg{padding:40px 16px 34px}}
+.tg-gyg-in{max-width:980px;margin:0 auto}
+.tg-gyg h1{margin:0;font-size:clamp(32px,4.9vw,56px);font-weight:800;
+  letter-spacing:-.03em;line-height:1.04;color:#13294B;text-wrap:balance}
+.tg-gyg h1 b{color:#E2561B;font-weight:800}
+.tg-gyg-sub{margin:16px auto 0;max-width:56ch;font-size:16px;line-height:1.6;color:#46608A}
+@media(max-width:640px){.tg-gyg-sub{font-size:14.5px}}
+
+/* La barra: el sitio donde se decide. Blanca, flotando, con las tres
+   opciones dentro; no es un buscador que hay que rellenar. */
+.tg-barra{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  justify-content:center;margin:32px auto 0;max-width:760px;
+  background:#fff;border:1px solid #DCE7F6;border-radius:999px;padding:10px 14px;
+  box-shadow:0 14px 40px rgba(19,41,75,.14)}
+@media(max-width:720px){.tg-barra{border-radius:22px;padding:14px;gap:8px}}
+.tg-barra-lab{font-size:13px;font-weight:800;color:#13294B;padding:0 8px 0 10px;
+  white-space:nowrap}
+@media(max-width:720px){.tg-barra-lab{width:100%;text-align:center;padding:0 0 2px}}
+.tg-edo-btn{display:inline-flex;align-items:center;gap:9px;flex:1 1 150px;
+  justify-content:center;min-height:52px;padding:0 20px;border-radius:999px;
+  cursor:pointer;font-family:inherit;font-size:16px;font-weight:800;
+  letter-spacing:-.01em;color:#13294B;background:#F2F7FD;border:1.5px solid #DCE7F6;
+  transition:background .17s ease,border-color .17s ease,color .17s ease,transform .17s ease}
+@media(max-width:720px){.tg-edo-btn{min-height:48px;font-size:15px;flex:1 1 100px}}
+.tg-edo-btn i{width:11px;height:11px;border-radius:50%;flex:none;
+  background:var(--c,#1F6FE5);transition:background .17s ease}
+.tg-edo-btn:hover{background:#E9F1FC;border-color:var(--c,#1F6FE5);transform:translateY(-1px)}
+.tg-edo-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(31,111,229,.35)}
+.tg-edo-btn.on{background:var(--c,#1F6FE5);border-color:var(--c,#1F6FE5);color:#fff}
+.tg-edo-btn.on i{background:#fff}
+.tg-edo-btn em{font-style:normal;font-size:11.5px;font-weight:700;opacity:.72}
+@media(prefers-reduced-motion:reduce){.tg-edo-btn{transition:none}
+  .tg-edo-btn:hover{transform:none}}
+.tg-gyg-pie{margin:18px 0 0;font-size:13px;color:#6B819E}
+
+/* Lo que aparece al elegir estado. */
+.tg-tabla{max-width:1180px;margin:0 auto;padding:40px 20px 8px}
+@media(max-width:640px){.tg-tabla{padding:28px 16px 4px}}
+.tg-tabla-cab{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.tg-tabla-cab h2{margin:0;font-size:clamp(22px,2.6vw,30px);font-weight:800;
+  letter-spacing:-.025em;color:#13294B}
+.tg-tabla-cab span{font-size:13.5px;font-weight:600;color:#6B819E}
+.tg-tabla-p{margin:0 0 20px;font-size:14.5px;color:#46608A;max-width:62ch}
+.tg-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+.tg-chip{min-height:38px;padding:0 16px;border-radius:999px;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:700;color:#36506F;
+  background:#fff;border:1.5px solid #DCE7F6;transition:background .16s,border-color .16s,color .16s}
+.tg-chip:hover{background:#F2F7FD;border-color:#8FB8F5}
+.tg-chip.on{background:#13294B;border-color:#13294B;color:#fff}
+.tg-chip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(31,111,229,.3)}
+
+.tg-rejilla{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+@media(max-width:1024px){.tg-rejilla{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}}
+@media(max-width:760px){.tg-rejilla{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}}
+@media(max-width:430px){.tg-rejilla{grid-template-columns:1fr}}
+
+/* La tarjeta: foto grande arriba, y debajo solo lo que decide una compra.
+   Sin caja ni borde —la foto es el borde—, como en los catálogos de tours. */
+.tg-tar{display:flex;flex-direction:column;text-align:left;width:100%;
+  background:none;border:0;padding:0;cursor:pointer;font-family:inherit;
+  border-radius:14px;transition:transform .18s ease}
+.tg-tar:hover{transform:translateY(-3px)}
+.tg-tar:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(31,111,229,.4);border-radius:14px}
+.tg-tar-foto{position:relative;width:100%;aspect-ratio:4/3;border-radius:14px;
+  overflow:hidden;background:#E9EFF7}
+.tg-tar-foto img{width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .4s ease}
+.tg-tar:hover .tg-tar-foto img{transform:scale(1.045)}
+.tg-tar-sello{position:absolute;top:10px;left:10px;z-index:2;
+  font-size:10.5px;font-weight:800;letter-spacing:.02em;color:#fff;
+  background:rgba(19,41,75,.88);border-radius:7px;padding:5px 9px}
+.tg-tar-cuerpo{padding:12px 2px 0}
+.tg-tar-mun{font-size:11.5px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:#C2510C;margin:0 0 5px}
+.tg-tar h3{margin:0;font-size:15.5px;font-weight:700;line-height:1.35;
+  color:#13294B;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden}
+.tg-tar-meta{margin:6px 0 0;font-size:12.5px;color:#6B819E}
+.tg-tar-pie{display:flex;align-items:center;gap:10px;margin-top:9px;flex-wrap:wrap}
+.tg-tar-estr{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:#6B819E}
+.tg-tar-estr b{color:#13294B;font-weight:800}
+.tg-tar-precio{margin-left:auto;font-size:12.5px;color:#6B819E;white-space:nowrap}
+.tg-tar-precio b{font-size:17px;font-weight:800;color:#13294B;letter-spacing:-.02em}
+@media(prefers-reduced-motion:reduce){
+  .tg-tar,.tg-tar-foto img{transition:none}
+  .tg-tar:hover{transform:none}
+  .tg-tar:hover .tg-tar-foto img{transform:none}
+}
+
+/* Cuando el estado elegido todavía no tiene nada publicado hay que decirlo
+   con todas las letras, no enseñar una rejilla vacía. */
+.tg-vacio{border:1.5px dashed #CFDFF4;border-radius:18px;background:#F7FBFF;
+  padding:32px 26px;text-align:center}
+.tg-vacio b{display:block;font-size:18px;font-weight:800;color:#13294B;margin-bottom:7px}
+.tg-vacio p{margin:0 auto;max-width:52ch;font-size:14px;line-height:1.6;color:#46608A}
+.tg-vacio-ir{margin-top:18px;min-height:46px;padding:0 22px;border:0;border-radius:12px;
+  cursor:pointer;background:#0052CC;color:#fff;font-family:inherit;
+  font-size:14.5px;font-weight:800}
+.tg-vacio-ir:hover{background:#003D99}
+.tg-elige{max-width:1180px;margin:0 auto;padding:46px 20px 10px;text-align:center}
+.tg-elige p{margin:0;font-size:15px;color:#6B819E}
 </style>  
 </head>  
 <body>  
@@ -5606,7 +5716,7 @@ function dibujoDe(m, detalle) {
   return (detalle && detalle.estado === m.estado && detalle.porMun[m.n]) || m.d;
 }
 
-function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir }) {
+function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir, estadoExterno }) {
   const [capaElegida, setCapaElegida] = useState(null);
   /* Buscar arriba es filtrar: si el viajero pidió alojamientos en Junín, el
      mapa enciende esa capa solo. La elección manual de abajo manda. */
@@ -5777,6 +5887,12 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
     setMunSel("");
     setMunicipioFiltro("");
   };
+
+  /* Si arriba ya se eligió un estado, el mapa no puede estar enseñando otro:
+     sería preguntar dos veces lo mismo y contestarse distinto. */
+  useEffect(() => {
+    if (estadoExterno !== undefined && estadoExterno !== estadoSel) elegirEstado(estadoExterno);
+  }, [estadoExterno]);
 
   /* Tocar un estado que no es el elegido lo pone de protagonista; tocar un
      municipio del estado que ya está delante entra en él. */
@@ -7165,24 +7281,47 @@ function HomeScreen({
   onSelectAloj,  
   onSelectProvider,  
   currency  
-}) {  
-  return /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement(Hero, {  
+}) {
+  /* En la versión de solo experiencias la portada es una pregunta: a qué
+     estado vas. La respuesta manda sobre lo que se enseña debajo, y también
+     sobre el mapa, para que los dos digan lo mismo. */
+  const [estadoElegido, setEstadoElegido] = useState(null);
+
+  const mapa = /*#__PURE__*/React.createElement(MapaTachira, {
+    municipioFiltro: municipioFiltro,
+    setMunicipioFiltro: setMunicipioFiltro,
+    category: category,
+    estadoExterno: SOLO_EXPERIENCIAS ? estadoElegido : undefined,
+    onAbrir: p => {
+      if (p.tipo === "experiencia") onSelectTour(p.dato);
+      else if (p.tipo === "alojamiento") onSelectAloj(p.dato);
+      else if (p.tipo === "hotel") onSelectProvider(p.dato);
+    }
+  });
+  const unete = /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-4 pb-12" },
+    /*#__PURE__*/React.createElement(UneteSection, { onRegistrar: abrirPortalProveedores }));
+
+  if (SOLO_EXPERIENCIAS) return /*#__PURE__*/React.createElement("main", null,
+    /*#__PURE__*/React.createElement(PortadaExperiencias, {
+      estado: estadoElegido,
+      onEstado: setEstadoElegido,
+      onAbrirTour: onSelectTour,
+      currency: currency
+    }),
+    mapa,
+    /*#__PURE__*/React.createElement(EliteProvidersSection, { onSelectProvider: onSelectProvider }),
+    /*#__PURE__*/React.createElement(AuthorityMarquee, null),
+    unete);
+
+  return /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement(Hero, {
     category: category,  
     setCategory: setCategory,  
     setMunicipioFiltro: setMunicipioFiltro,
     onAbrirTour: onSelectTour,
     onAbrirAlojamiento: onSelectAloj,
     onAbrirProveedor: onSelectProvider
-  }), /*#__PURE__*/React.createElement(AuthorityMarquee, null), /*#__PURE__*/React.createElement(MapaTachira, {
-    municipioFiltro: municipioFiltro,
-    setMunicipioFiltro: setMunicipioFiltro,
-    category: category,
-    onAbrir: p => {
-      if (p.tipo === "experiencia") onSelectTour(p.dato);
-      else if (p.tipo === "alojamiento") onSelectAloj(p.dato);
-      else if (p.tipo === "hotel") onSelectProvider(p.dato);
-    }
-  }), /*#__PURE__*/React.createElement(FeaturedToursSection, {  
+  }), /*#__PURE__*/React.createElement(AuthorityMarquee, null), mapa,
+  /*#__PURE__*/React.createElement(FeaturedToursSection, {  
     onSelectTour: onSelectTour,  
     currency: currency  
   }), /*#__PURE__*/React.createElement(EliteProvidersSection, {  
@@ -7193,13 +7332,147 @@ function HomeScreen({
     currency: currency,
     municipioFiltro: municipioFiltro,
     setMunicipioFiltro: setMunicipioFiltro
-  }), /*#__PURE__*/React.createElement("div", { className: "max-w-6xl mx-auto px-4 pb-12" },
-    /*#__PURE__*/React.createElement(UneteSection, { onRegistrar: abrirPortalProveedores })));
+  }), unete);
 }
 
 /* ==========================================================================  
    BLOQUES DE DETALLE DE TOUR (estilo GetYourGuide, reutilizables)  
    ========================================================================== */
+
+
+/* ==========================================================================
+   LA PORTADA DE SOLO EXPERIENCIAS
+   La pregunta va primero y es una sola: a qué estado vas. Hasta que no se
+   responde no hay catálogo que enseñar —enseñarlo todo revuelto es lo que
+   hace que nadie sepa por dónde empezar—; en cuanto se responde, aparece
+   todo lo que se puede hacer allí.
+   ========================================================================== */
+
+function BarraEstados({ estado, onEstado }) {
+  return /*#__PURE__*/React.createElement("div", { className: "tg-barra", role: "group",
+      "aria-label": "Elige el estado al que vas" },
+    /*#__PURE__*/React.createElement("span", { className: "tg-barra-lab" }, "¿A qué estado vas?"),
+    ESTADOS_MAPA.map(e => /*#__PURE__*/React.createElement("button", {
+      key: e.id,
+      onClick: () => onEstado(estado === e.id ? null : e.id),
+      "aria-pressed": estado === e.id,
+      className: "tg-edo-btn" + (estado === e.id ? " on" : ""),
+      style: { "--c": COLOR_ESTADO[e.id] }
+    },
+      /*#__PURE__*/React.createElement("i", { "aria-hidden": "true" }),
+      e.nombre)));
+}
+
+function TarjetaExp({ x, onAbrir, currency }) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "tg-tar", onClick: () => onAbrir(x),
+    "aria-label": x.title + (x.municipio ? ", en " + x.municipio : "")
+  },
+    /*#__PURE__*/React.createElement("div", { className: "tg-tar-foto" },
+      x.proveedor && /*#__PURE__*/React.createElement("span", { className: "tg-tar-sello" },
+        x.proveedor),
+      /*#__PURE__*/React.createElement("img", {
+        src: x.img || IMAGES.respaldo, alt: "", loading: "lazy", decoding: "async" })),
+    /*#__PURE__*/React.createElement("div", { className: "tg-tar-cuerpo" },
+      x.municipio && /*#__PURE__*/React.createElement("p", { className: "tg-tar-mun" }, x.municipio),
+      /*#__PURE__*/React.createElement("h3", null, x.title),
+      /*#__PURE__*/React.createElement("p", { className: "tg-tar-meta" }, x.duration),
+      /*#__PURE__*/React.createElement("div", { className: "tg-tar-pie" },
+        /* Sin reseñas no se pintan estrellas: un cero parece una mala nota
+           cuando lo que pasa es que la publicación es nueva. */
+        x.rating
+          ? /*#__PURE__*/React.createElement("span", { className: "tg-tar-estr" },
+              /*#__PURE__*/React.createElement(Star, { size: 14,
+                className: "fill-[#FF6B00] text-[#FF6B00]" }),
+              /*#__PURE__*/React.createElement("b", null, x.rating),
+              "(" + Number(x.reviews || 0).toLocaleString("es-VE") + ")")
+          : /*#__PURE__*/React.createElement("span", { className: "tg-tar-estr" },
+              "Aún sin reseñas"),
+        /*#__PURE__*/React.createElement("span", { className: "tg-tar-precio" },
+          "Desde ", /*#__PURE__*/React.createElement("b", null,
+            money(Number(x.precioUSD || 0), currency))))));
+}
+
+function ExperienciasDelEstado({ estado, onAbrirTour, currency, onOtroEstado }) {
+  const [cat, setCat] = useState(null);
+  const edo = ESTADOS_MAPA.find(e => e.id === estado);
+  /* El estado del listado viene de la base con su nombre, no con el
+     identificador del mapa: `delEstado` es quien sabe casarlos, y es el
+     mismo que usa la pantalla de resultados. */
+  const todas = useMemo(
+    () => ordenarCatalogo((CARDS_BY_CATEGORY.experiencias || [])
+      .filter(x => delEstado(x, estado))),
+    [estado]);
+  /* Los municipios con algo publicado son el filtro útil: una categoría que
+     no existe en este estado no debería ofrecerse. */
+  const muns = useMemo(() => {
+    const v = [];
+    todas.forEach(x => { if (x.municipio && v.indexOf(x.municipio) < 0) v.push(x.municipio); });
+    return v.sort((a, b) => a.localeCompare(b));
+  }, [todas]);
+  useEffect(() => { setCat(null); }, [estado]);
+  const lista = cat ? todas.filter(x => x.municipio === cat) : todas;
+  if (!edo) return null;
+
+  return /*#__PURE__*/React.createElement("section", { className: "tg-tabla", id: "que-hacer" },
+    /*#__PURE__*/React.createElement("div", { className: "tg-tabla-cab" },
+      /*#__PURE__*/React.createElement("h2", null, "Qué hacer en ", edo.nombre),
+      todas.length > 0 && /*#__PURE__*/React.createElement("span", null,
+        todas.length === 1 ? "1 experiencia publicada"
+                           : todas.length + " experiencias publicadas")),
+
+    todas.length === 0
+      ? /*#__PURE__*/React.createElement("div", { className: "tg-vacio" },
+          /*#__PURE__*/React.createElement("b", null,
+            "Todavía no hay experiencias publicadas en " + edo.nombre),
+          /*#__PURE__*/React.createElement("p", null,
+            "Estamos abriendo el estado: en cuanto un operador local publique su " +
+            "primera salida, aparece aquí. Mientras tanto, mira lo que hay en los " +
+            "otros estados."),
+          /*#__PURE__*/React.createElement("button", {
+            className: "tg-vacio-ir", onClick: onOtroEstado
+          }, "Ver otro estado"))
+      : /*#__PURE__*/React.createElement(React.Fragment, null,
+          /*#__PURE__*/React.createElement("p", { className: "tg-tabla-p" },
+            "Todo lo que hoy se puede reservar en " + edo.nombre +
+            ", con el operador que lo presta y su precio final."),
+          muns.length > 1 && /*#__PURE__*/React.createElement("div", { className: "tg-chips" },
+            /*#__PURE__*/React.createElement("button", {
+              className: "tg-chip" + (cat ? "" : " on"),
+              onClick: () => setCat(null), "aria-pressed": !cat
+            }, "Todo el estado"),
+            muns.map(m => /*#__PURE__*/React.createElement("button", {
+              key: m, className: "tg-chip" + (cat === m ? " on" : ""),
+              onClick: () => setCat(cat === m ? null : m), "aria-pressed": cat === m
+            }, conCapital(m, estado)))),
+          /*#__PURE__*/React.createElement("div", { className: "tg-rejilla" },
+            lista.map(x => /*#__PURE__*/React.createElement(TarjetaExp, {
+              key: x.id, x: x, onAbrir: onAbrirTour, currency: currency })))));
+}
+
+function PortadaExperiencias({ estado, onEstado, onAbrirTour, currency }) {
+  return /*#__PURE__*/React.createElement(React.Fragment, null,
+    /*#__PURE__*/React.createElement("section", { className: "tg-gyg" },
+      /*#__PURE__*/React.createElement("div", { className: "tg-gyg-in" },
+        /*#__PURE__*/React.createElement("h1", null,
+          "Experiencias por las que vale la pena subir a los ",
+          /*#__PURE__*/React.createElement("b", null, "Andes")),
+        /*#__PURE__*/React.createElement("p", { className: "tg-gyg-sub" },
+          "Tours, caminatas, páramos y cascadas con operadores locales de " +
+          "Mérida, Táchira y Trujillo. Elige tu estado y mira todo lo que " +
+          "puedes hacer allí."),
+        /*#__PURE__*/React.createElement(BarraEstados, { estado: estado, onEstado: onEstado }),
+        /*#__PURE__*/React.createElement("p", { className: "tg-gyg-pie" },
+          "Pago protegido · Confirmación por WhatsApp · Operadores verificados"))),
+
+    estado
+      ? /*#__PURE__*/React.createElement(ExperienciasDelEstado, {
+          estado: estado, onAbrirTour: onAbrirTour, currency: currency,
+          onOtroEstado: () => onEstado(null) })
+      : /*#__PURE__*/React.createElement("div", { className: "tg-elige" },
+          /*#__PURE__*/React.createElement("p", null,
+            "Elige un estado ahí arriba y aquí aparece todo lo que puedes hacer en él.")));
+}
 
 function ImageGrid({
   mainImg
