@@ -1070,27 +1070,27 @@ html.tg-esperando #tg-espera{display:flex}
    El dibujo es idéntico —mismo trazo, mismas opacidades—; lo único que
    cambia por estado es el tono, y vive en estas variables. */
 .tg-mun{--mf:31,111,229;--mv:31,111,229;--ms:31,111,229;--msv:13,71,168;--msa:13,71,168;
-  --ma:.08;--msl:.38;
+  --ma:.26;--msl:.72;
   fill:rgba(var(--mf),var(--ma));stroke:rgba(var(--ms),var(--msl));stroke-width:1.1;vector-effect:non-scaling-stroke;cursor:pointer;
   transition:fill .22s,stroke .22s}
 /* Mérida lleva más fuerza que el azul: con la misma opacidad los dos tonos
    se confunden de lejos, que es justo lo que había que evitar. */
-.tg-mun.edo-merida{--mf:18,140,104;--mv:18,140,104;--ms:18,140,104;--msv:12,110,82;--msa:12,110,82;
-  --ma:.10;--msl:.42}
-.tg-mun.edo-trujillo{--mf:201,130,26;--mv:201,130,26;--ms:201,130,26;--msv:160,101,16;--msa:160,101,16;
-  --ma:.10;--msl:.42}
-.tg-mun.tiene{fill:rgba(var(--mv),.19);stroke:rgba(var(--msv),.6)}
-.tg-mun:hover{fill:rgba(var(--mf),calc(var(--ma) + .15))}
-.tg-mun.elegido{stroke-width:2.2}
+.tg-mun.edo-merida{--mf:17,150,110;--mv:17,150,110;--ms:17,150,110;--msv:10,104,76;--msa:10,104,76;
+  --ma:.3;--msl:.76}
+.tg-mun.edo-trujillo{--mf:216,138,24;--mv:216,138,24;--ms:216,138,24;--msv:158,98,12;--msa:158,98,12;
+  --ma:.3;--msl:.76}
+.tg-mun.tiene{fill:rgba(var(--mv),.44);stroke:rgba(var(--msv),.85)}
+.tg-mun:hover{fill:rgba(var(--mf),calc(var(--ma) + .22))}
+.tg-mun.elegido{stroke-width:2.6}
 /* El estado que no está elegido se apaga: se sigue viendo, no estorba. */
-.tg-mun.lejos{fill:rgba(var(--mf),calc(var(--ma) * .6));stroke:rgba(var(--ms),calc(var(--msl) * .52))}
-.tg-mun.vecino{fill:rgba(var(--mf),.2);stroke:rgba(var(--msa),.65)}
-.tg-edo-rotulo{fill:rgba(31,111,229,.26);font-weight:800;text-anchor:middle;pointer-events:none}
-.tg-edo-rotulo.edo-merida{fill:rgba(18,140,104,.3)}
-.tg-edo-rotulo.edo-trujillo{fill:rgba(201,130,26,.32)}
+.tg-mun.lejos{fill:rgba(var(--mf),calc(var(--ma) * .45));stroke:rgba(var(--ms),calc(var(--msl) * .45))}
+.tg-mun.vecino{fill:rgba(var(--mf),.42);stroke:rgba(var(--msa),.9)}
+.tg-edo-rotulo{fill:rgba(13,71,168,.6);font-weight:800;text-anchor:middle;pointer-events:none}
+.tg-edo-rotulo.edo-merida{fill:rgba(10,104,76,.62)}
+.tg-edo-rotulo.edo-trujillo{fill:rgba(150,92,10,.64)}
 .tg-luz.lejos{opacity:.3}
-.tg-luz.edo-merida{fill:rgba(18,140,104,.65)}
-.tg-luz.edo-trujillo{fill:rgba(201,130,26,.7)}
+.tg-luz.edo-merida{fill:rgba(17,150,110,.9)}
+.tg-luz.edo-trujillo{fill:rgba(216,138,24,.92)}
 
 /* La ciudad principal: un punto con aro y su nombre, siempre escrito. */
 .tg-capital{pointer-events:none}
@@ -1125,17 +1125,17 @@ html.tg-esperando #tg-espera{display:flex}
   vector-effect:non-scaling-stroke}
 .tg-via{fill:none;stroke-linecap:round;stroke-linejoin:round;
   vector-effect:non-scaling-stroke}
-.tg-via-base.r1{stroke-width:4.6} .tg-via.r1{stroke:#E0912E;stroke-width:2.4}
-.tg-via-base.r2{stroke-width:3.4} .tg-via.r2{stroke:rgba(224,145,46,.6);stroke-width:1.7}
-.tg-via-base.r3{stroke-width:2.6} .tg-via.r3{stroke:rgba(19,41,75,.3);stroke-width:1.1}
-.tg-rio{fill:none;stroke:rgba(44,142,214,.45);stroke-width:1.15;stroke-linecap:round;
+.tg-via-base.r1{stroke-width:4.8} .tg-via.r1{stroke:#D97706;stroke-width:2.6}
+.tg-via-base.r2{stroke-width:3.6} .tg-via.r2{stroke:rgba(217,119,6,.82);stroke-width:1.9}
+.tg-via-base.r3{stroke-width:2.8} .tg-via.r3{stroke:rgba(19,41,75,.45);stroke-width:1.2}
+.tg-rio{fill:none;stroke:rgba(44,142,214,.7);stroke-width:1.15;stroke-linecap:round;
   vector-effect:non-scaling-stroke;pointer-events:none}
-.tg-pueblo{fill:rgba(19,41,75,.45);pointer-events:none}
+.tg-pueblo{fill:rgba(19,41,75,.7);pointer-events:none}
 .tg-pueblo.grande{fill:#C2510C}
 .tg-pueblo-txt{fill:rgba(19,41,75,.72);font-weight:600;text-anchor:middle;paint-order:stroke;
   stroke:#fff;stroke-linejoin:round;pointer-events:none}
 .tg-pueblo-txt.vivo{fill:#13294B}
-.tg-luz{fill:rgba(31,111,229,.5)}
+.tg-luz{fill:rgba(31,111,229,.85)}
 .tg-luz.viva{fill:#E2561B}
 .tg-rotulo{fill:#13294B;font-weight:700;text-anchor:middle;paint-order:stroke;stroke:#fff;
   stroke-linejoin:round;pointer-events:none}
@@ -5887,8 +5887,8 @@ function MapaTachira({ municipioFiltro, setMunicipioFiltro, category, onAbrir })
         },
           /*#__PURE__*/React.createElement("defs", null,
             /*#__PURE__*/React.createElement("radialGradient", { id: "mg-fondo", cx: "50%", cy: "38%", r: "72%" },
-              /*#__PURE__*/React.createElement("stop", { offset: "0%", stopColor: "#FBFCFE" }),
-              /*#__PURE__*/React.createElement("stop", { offset: "100%", stopColor: "#DFE9F6" })),
+              /*#__PURE__*/React.createElement("stop", { offset: "0%", stopColor: "#FFFFFF" }),
+              /*#__PURE__*/React.createElement("stop", { offset: "100%", stopColor: "#D7E4F4" })),
             /*#__PURE__*/React.createElement("filter", { id: "mg-glow", x: "-80%", y: "-80%", width: "260%", height: "260%" },
               /*#__PURE__*/React.createElement("feGaussianBlur", { stdDeviation: "7", result: "b" }),
               /*#__PURE__*/React.createElement("feMerge", null,
