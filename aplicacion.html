@@ -1271,6 +1271,81 @@ html.tg-esperando #tg-espera{display:flex}
 .tg-vacio-ir:hover{background:#003D99}
 .tg-elige{max-width:1180px;margin:0 auto;padding:46px 20px 10px;text-align:center}
 .tg-elige p{margin:0;font-size:15px;color:#6B819E}
+/* ==========================================================================
+   LA CABECERA DE UNA FICHA
+   Lo primero que se mira antes de reservar, en el orden en que se mira:
+   quién responde por esto, qué es, cómo lo puntuaron, quién lo opera, las
+   fotos, y el precio a la derecha sin tener que buscarlo.
+   ========================================================================== */
+.tg-ficha-cert{display:inline-flex;align-items:center;gap:7px;margin:14px 0 0;
+  font-size:13.5px;font-weight:700;color:#13294B}
+.tg-ficha-cert svg{color:#0F9D58;flex:none}
+.tg-ficha-h1{margin:8px 0 0;font-size:clamp(26px,3.6vw,40px);font-weight:800;
+  letter-spacing:-.03em;line-height:1.08;color:#13294B;text-wrap:balance}
+.tg-ficha-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-top:12px;font-size:14px;color:#46608A}
+.tg-ficha-badge{font-size:11.5px;font-weight:800;letter-spacing:.02em;color:#fff;
+  background:#13294B;border-radius:7px;padding:5px 9px}
+.tg-ficha-nota{display:inline-flex;align-items:center;gap:6px}
+.tg-ficha-nota b{color:#13294B;font-weight:800;font-size:15px}
+.tg-ficha-res{color:#13294B;font-weight:700;text-decoration:underline;
+  text-underline-offset:3px;background:none;border:0;padding:0;cursor:pointer;
+  font-family:inherit;font-size:14px}
+.tg-ficha-sep{color:#C3D2E6}
+/* En estrecho la fila se parte y el punto se queda solo al final de una
+   línea, con pinta de error. Entre líneas no separa nada: sobra. */
+@media(max-width:720px){.tg-ficha-sep{display:none}}
+.tg-ficha-prov b{color:#0052CC;font-weight:700}
+.tg-ficha-acc{margin-left:auto;display:inline-flex;align-items:center;gap:8px;
+  background:none;border:0;padding:6px 2px;cursor:pointer;font-family:inherit;
+  font-size:14px;font-weight:700;color:#13294B;text-decoration:underline;
+  text-underline-offset:3px}
+.tg-ficha-acc:hover{color:#0052CC}
+.tg-ficha-acc:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(31,111,229,.35);border-radius:8px}
+@media(max-width:720px){.tg-ficha-acc{margin-left:0}}
+
+/* El mosaico: una grande a la izquierda y las demás en cuadrícula. Si el
+   negocio solo subió una foto, es una sola y ancha —rellenar con fotos de
+   otro sitio sería enseñar algo que no es suyo. */
+.tg-mosaico{display:grid;gap:8px;margin-top:20px;border-radius:16px;overflow:hidden;
+  grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;height:clamp(260px,38vw,440px)}
+.tg-mosaico.una{grid-template-columns:1fr}
+.tg-mosaico>button{position:relative;padding:0;border:0;background:#E9EFF7;
+  cursor:pointer;overflow:hidden;display:block}
+.tg-mosaico>button:first-child{grid-column:span 2;grid-row:span 2}
+.tg-mosaico.una>button:first-child{grid-column:span 1;grid-row:span 1}
+.tg-mosaico img{width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .4s ease}
+.tg-mosaico>button:hover img{transform:scale(1.04)}
+.tg-mosaico>button:focus-visible{outline:none;box-shadow:inset 0 0 0 3px #0052CC}
+@media(max-width:760px){
+  .tg-mosaico{grid-template-columns:repeat(2,minmax(0,1fr));height:auto;
+    grid-auto-rows:minmax(0,1fr)}
+  .tg-mosaico>button:first-child{grid-column:span 2;aspect-ratio:16/10}
+  .tg-mosaico>button:not(:first-child){aspect-ratio:4/3}
+}
+.tg-mosaico-todo{position:absolute;right:12px;bottom:12px;z-index:2;
+  display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 15px;
+  border-radius:10px;border:0;cursor:pointer;font-family:inherit;
+  font-size:13px;font-weight:800;color:#13294B;background:rgba(255,255,255,.95);
+  box-shadow:0 3px 12px rgba(19,41,75,.25)}
+.tg-mosaico-todo:hover{background:#fff}
+@media(prefers-reduced-motion:reduce){.tg-mosaico img{transition:none}
+  .tg-mosaico>button:hover img{transform:none}}
+
+/* La franja de reserva, con el precio en negro sobre blanco: el naranja de
+   antes gritaba más que el propio número. */
+.tg-reserva-top{padding:20px 20px 4px}
+.tg-reserva-top span{display:block;font-size:13px;font-weight:600;color:#6B819E}
+.tg-reserva-top b{font-size:34px;font-weight:800;letter-spacing:-.035em;
+  color:#13294B;line-height:1.05}
+.tg-reserva-top em{font-style:normal;font-size:14px;font-weight:600;color:#46608A;
+  margin-left:7px}
+.tg-reserva-nota{display:flex;align-items:flex-start;gap:9px;margin-top:16px;
+  padding-top:15px;border-top:1px solid #EAF0F8}
+.tg-reserva-nota svg{color:#0F9D58;flex:none;margin-top:2px}
+.tg-reserva-nota b{display:block;font-size:14px;font-weight:800;color:#13294B}
+.tg-reserva-nota span{display:block;font-size:12.5px;line-height:1.5;color:#6B819E;margin-top:2px}
 </style>  
 </head>  
 <body>  
@@ -2856,6 +2931,24 @@ function useCerrarConAtras(cerrar) {
 
 /* Reúne en una sola forma lo que el negocio publicó, venga de la lista de
    proveedores verificados o del propio hotel. */
+/* Compartir entrega el enlace de esta ficha: primero el menú del aparato,
+   que es lo que la gente espera en el teléfono, y si no lo hay, al
+   portapapeles. Nada de un botón que no hace nada. */
+function compartirFicha(titulo) {
+  const url = window.location.href;
+  if (navigator.share) {
+    navigator.share({ title: titulo, url: url }).catch(() => {});
+    return;
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url)
+      .then(() => window.alert("Enlace copiado."))
+      .catch(() => window.prompt("Copia el enlace:", url));
+    return;
+  }
+  window.prompt("Copia el enlace:", url);
+}
+
 function perfilDeNegocio(fuente) {
   if (!fuente) return null;
   const e = ELITE_PROVIDERS.find(x =>
@@ -2877,6 +2970,10 @@ function perfilDeNegocio(fuente) {
     municipio: e.ubicacion || fuente.municipio || null,
     direccion: e.direccion || fuente.direccion || null,
     tipoNegocio: e.tipoNegocio || null,
+    /* Las fotos que subió el propio negocio. Son las únicas que puede
+       enseñar una ficha suya: rellenar con fotos de archivo sería enseñar
+       un sitio que no es el que se reserva. */
+    galeria: (e.galeriaPropia || []).map(f => f && f.url).filter(Boolean),
     descripcion
   };
 }
@@ -7474,6 +7571,39 @@ function PortadaExperiencias({ estado, onEstado, onAbrirTour, currency }) {
             "Elige un estado ahí arriba y aquí aparece todo lo que puedes hacer en él.")));
 }
 
+/* El mosaico de la ficha: la portada en grande y, al lado, las fotos que el
+   negocio subió a su página. Con una sola foto se enseña una sola, ancha. */
+function GaleriaFicha({ portada, galeria }) {
+  const [visor, setVisor] = useState(null);
+  const fotos = useMemo(() => {
+    const v = [];
+    [portada].concat(galeria || []).forEach(f => {
+      if (f && v.indexOf(f) < 0) v.push(f);
+    });
+    return v.slice(0, 5);
+  }, [portada, galeria]);
+  if (!fotos.length) return null;
+  const vistas = fotos.slice(0, 5);
+  return /*#__PURE__*/React.createElement(React.Fragment, null,
+    /*#__PURE__*/React.createElement("div", {
+      className: "tg-mosaico" + (vistas.length === 1 ? " una" : "")
+    }, vistas.map((f, i) => /*#__PURE__*/React.createElement("button", {
+      key: f + i, onClick: () => setVisor(i),
+      "aria-label": "Ver la foto " + (i + 1) + " de " + fotos.length
+    },
+      /*#__PURE__*/React.createElement("img", {
+        src: f, alt: "", loading: i ? "lazy" : "eager", decoding: "async" }),
+      /* El botón de ver todo va sobre la última, como en los catálogos, y
+         solo cuando hay más de una que ver. */
+      i === vistas.length - 1 && fotos.length > 1 && /*#__PURE__*/React.createElement("span", {
+        className: "tg-mosaico-todo"
+      }, "Ver todo (" + fotos.length + ")")))),
+    /*#__PURE__*/React.createElement(GalleryLightbox, {
+      photos: fotos, index: visor, onClose: () => setVisor(null),
+      onPrev: () => setVisor(i => (i - 1 + fotos.length) % fotos.length),
+      onNext: () => setVisor(i => (i + 1) % fotos.length) }));
+}
+
 function ImageGrid({
   mainImg
 }) {
@@ -8037,29 +8167,44 @@ function DetailScreenTour({
     onClick: () => { window.location.href = "/" + perfil.slug; },
     className: "tg-ver-prov"
   }, /*#__PURE__*/React.createElement(ShieldCheck, { size: 15 }), "Ver proveedor")),
-  /*#__PURE__*/React.createElement("div", {
-    className: "mt-3"  
-  }, /*#__PURE__*/React.createElement("span", {  
-    className: "inline-block bg-blue-50 text-[#0052CC] text-xs font-semibold px-2 py-1 rounded"  
-  }, "Mejor puntuación"), /*#__PURE__*/React.createElement("h1", {  
-    className: "text-2xl md:text-3xl font-bold text-slate-900 mt-2"  
-  }, tour.title), /*#__PURE__*/React.createElement("div", {  
-    className: "flex flex-wrap items-center gap-2 mt-2 text-sm"  
-  }, /*#__PURE__*/React.createElement(Star, {  
-    size: 16,  
-    className: "fill-[#FF6B00] text-[#FF6B00]"  
-  }), /*#__PURE__*/React.createElement("span", {  
-    className: "font-semibold text-slate-900"  
-  }, tour.rating), /*#__PURE__*/React.createElement("span", {  
-    className: "text-slate-500"  
-  }, "(", tour.reviews.toLocaleString("es-CO"), " reseñas)"), /*#__PURE__*/React.createElement("span", {  
-    className: "text-slate-300"  
-  }, "·"), /*#__PURE__*/React.createElement("span", {  
-    className: "text-slate-600"  
-  }, "Proveedor de la actividad: ", /*#__PURE__*/React.createElement("span", {
-    className: "text-[#0052CC] font-medium"
-  }, tour.proveedor || "Proveedor verificado")))), /*#__PURE__*/React.createElement(ImageGrid, {
-    mainImg: tour.img
+  /*#__PURE__*/React.createElement("div", null,
+    /* El sello solo se pone si de verdad lo hay: el proveedor tiene que
+       estar aprobado y tener su página. Un "verificado" sin verificación
+       detrás vale menos que no decir nada. */
+    perfil && perfil.slug && /*#__PURE__*/React.createElement("p", { className: "tg-ficha-cert" },
+      /*#__PURE__*/React.createElement(CheckCircle2, { size: 17 }),
+      "Operador verificado por Andes GOO!"),
+    /*#__PURE__*/React.createElement("h1", { className: "tg-ficha-h1" }, tour.title),
+    /*#__PURE__*/React.createElement("div", { className: "tg-ficha-meta" },
+      /* La medalla tampoco se regala: por debajo de 4,5 no es la mejor
+         puntuación de nada. */
+      tour.rating >= 4.5 && /*#__PURE__*/React.createElement("span", { className: "tg-ficha-badge" },
+        "Mejor puntuación"),
+      tour.rating
+        ? /*#__PURE__*/React.createElement(React.Fragment, null,
+            /*#__PURE__*/React.createElement("span", { className: "tg-ficha-nota" },
+              /*#__PURE__*/React.createElement(Star, { size: 17,
+                className: "fill-[#FF6B00] text-[#FF6B00]" }),
+              /*#__PURE__*/React.createElement("b", null, tour.rating)),
+            /*#__PURE__*/React.createElement("button", {
+              className: "tg-ficha-res",
+              onClick: () => {
+                const r = document.getElementById("resenas-ficha");
+                if (r) r.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }, Number(tour.reviews || 0).toLocaleString("es-VE") + " reseñas"))
+        : /*#__PURE__*/React.createElement("span", null, "Aún sin reseñas"),
+      /*#__PURE__*/React.createElement("span", { className: "tg-ficha-sep" }, "\u00b7"),
+      /*#__PURE__*/React.createElement("span", { className: "tg-ficha-prov" },
+        "Proveedor de la actividad: ",
+        /*#__PURE__*/React.createElement("b", null,
+          tour.proveedor || "Proveedor verificado")),
+      /* Compartir hace lo que dice: entrega el enlace de esta ficha. */
+      /*#__PURE__*/React.createElement("button", {
+        className: "tg-ficha-acc", onClick: () => compartirFicha(tour.title)
+      }, /*#__PURE__*/React.createElement(Download, { size: 16 }), "Compartir"))),
+  /*#__PURE__*/React.createElement(GaleriaFicha, {
+    portada: tour.img, galeria: perfil && perfil.galeria
   }),
   /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6"
@@ -8085,7 +8230,7 @@ function DetailScreenTour({
       }))),
   /*#__PURE__*/React.createElement("div", {
     className: "tg-reserva lg:sticky lg:top-24 h-fit"
-  }, /*#__PURE__*/React.createElement("div", { className: "tg-reserva-cab" },
+  }, /*#__PURE__*/React.createElement("div", { className: "tg-reserva-top" },
     /*#__PURE__*/React.createElement("span", null, "Desde"),
     /*#__PURE__*/React.createElement("b", null, "$", precioAdulto.toFixed(2)),
     /*#__PURE__*/React.createElement("em", null, "USD por persona")),
@@ -8153,20 +8298,19 @@ function DetailScreenTour({
   /* La excursión es de un día: el traslado se propone para esa misma fecha. */
   /*#__PURE__*/React.createElement(AgregarMovilidad, {
     desde: date, hasta: date, municipio: tour.municipio, onAgregar: onAddToCart
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mt-4 space-y-1.5"  
-  }, /*#__PURE__*/React.createElement("div", {  
-    className: "flex items-center gap-2 text-sm text-slate-600"  
-  }, /*#__PURE__*/React.createElement(CheckCircle2, {  
-    size: 16,  
-    className: "text-green-600 shrink-0"  
-  }), " Cancelación gratuita"), /*#__PURE__*/React.createElement("div", {  
-    className: "flex items-center gap-2 text-sm text-slate-600"  
-  }, /*#__PURE__*/React.createElement(CheckCircle2, {  
-    size: 16,  
-    className: "text-green-600 shrink-0"  
-  }), " Reserva ahora y paga después"))))),
-  /*#__PURE__*/React.createElement(ReviewsSection, null),
+  }), (() => {
+    /* Lo que de verdad pasa si se cancela, con la política que puso el
+       negocio. "Reserva ahora y paga después" se cae: aquí se confirma al
+       pagar, y decir lo contrario es prometer lo que no hay. */
+    const c = CANCELACION_TXT[tour.cancelacion] || CANCELACION_TXT.partial;
+    return /*#__PURE__*/React.createElement("div", { className: "tg-reserva-nota" },
+      /*#__PURE__*/React.createElement(CheckCircle2, { size: 19 }),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("b", null, c.label),
+        /*#__PURE__*/React.createElement("span", null, c.sub)));
+  })()))),
+  /*#__PURE__*/React.createElement("div", { id: "resenas-ficha" },
+    /*#__PURE__*/React.createElement(ReviewsSection, null)),
 
   /* En el móvil no hay columna derecha, y reservar quedaba enterrado bajo
      el itinerario. Aquí va fijo abajo, con el precio delante. */
