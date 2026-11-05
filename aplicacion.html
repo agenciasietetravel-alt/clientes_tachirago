@@ -1366,6 +1366,43 @@ html.tg-esperando #tg-espera{display:flex}
 .tg-reserva-nota svg{color:#0F9D58;flex:none;margin-top:2px}
 .tg-reserva-nota b{display:block;font-size:14px;font-weight:800;color:#13294B}
 .tg-reserva-nota span{display:block;font-size:12.5px;line-height:1.5;color:#6B819E;margin-top:2px}
+/* La franja de reserva, con los tres campos iguales: una fila por cosa que
+   hay que decidir, el icono delante y la flecha detrás. Antes eran tres
+   cosas distintas —dos contadores sueltos y dos campos— y parecían tres
+   formularios pegados. */
+.tg-rsv-campos{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+.tg-rsv-campo{display:flex;align-items:center;gap:11px;min-height:58px;
+  padding:0 14px;border:1.5px solid #DCE7F6;border-radius:13px;background:#fff;
+  transition:border-color .16s ease}
+.tg-rsv-campo:hover{border-color:#8FB8F5}
+.tg-rsv-campo:focus-within{border-color:#0052CC;box-shadow:0 0 0 3px rgba(0,82,204,.14)}
+.tg-rsv-campo>svg{color:#46608A;flex:none}
+.tg-rsv-campo label{display:block;font-size:11px;font-weight:800;
+  letter-spacing:.07em;text-transform:uppercase;color:#8198B5}
+.tg-rsv-campo .val{flex:1;min-width:0}
+.tg-rsv-campo input,.tg-rsv-campo select{width:100%;border:0;outline:none;
+  background:none;font-family:inherit;font-size:15px;font-weight:700;
+  color:#13294B;padding:0;appearance:none}
+.tg-rsv-campo select{cursor:pointer}
+.tg-rsv-campo .fl{flex:none;color:#9AAFC9}
+
+/* Los contadores de gente, dentro del mismo campo. */
+.tg-rsv-gente{display:flex;align-items:center;gap:8px;flex:none}
+.tg-rsv-gente button{width:32px;height:32px;border-radius:50%;cursor:pointer;
+  border:1.5px solid #DCE7F6;background:#fff;color:#13294B;display:flex;
+  align-items:center;justify-content:center;font-family:inherit}
+.tg-rsv-gente button:hover:not(:disabled){border-color:#0052CC;color:#0052CC}
+.tg-rsv-gente button:disabled{opacity:.35;cursor:default}
+.tg-rsv-gente b{min-width:18px;text-align:center;font-size:15px;font-weight:800;color:#13294B}
+.tg-rsv-fila{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tg-rsv-fila+.tg-rsv-fila{margin-top:10px;padding-top:10px;border-top:1px solid #EAF0F8}
+.tg-rsv-fila span{font-size:14px;font-weight:700;color:#13294B}
+.tg-rsv-fila em{display:block;font-style:normal;font-size:11.5px;font-weight:600;color:#8198B5}
+.tg-rsv-gente-caja{padding:14px;border:1.5px solid #DCE7F6;border-radius:13px;background:#fff}
+.tg-rsv-total{display:flex;align-items:baseline;justify-content:space-between;
+  margin-top:18px;padding-top:15px;border-top:1px solid #EAF0F8}
+.tg-rsv-total span{font-size:14px;font-weight:700;color:#46608A}
+.tg-rsv-total b{font-size:24px;font-weight:800;letter-spacing:-.03em;color:#13294B}
 </style>  
 </head>  
 <body>  
@@ -2951,6 +2988,46 @@ function useCerrarConAtras(cerrar) {
 
 /* Reúne en una sola forma lo que el negocio publicó, venga de la lista de
    proveedores verificados o del propio hotel. */
+/* ==========================================================================
+   FOTOS DE MUESTRA — SOLO PARA LA VERSIÓN DE PRUEBA
+   Ningún negocio ha subido todavía fotos a sus publicaciones, así que la
+   ficha salía siempre con una sola imagen y no se podía ver cómo queda.
+   Estas son fotos de archivo elegidas por tema para cada experiencia: no
+   son del sitio, y en cuanto el operador suba las suyas a `listing_images`
+   estas desaparecen solas, porque solo se usan cuando no hay ninguna.
+
+   Se apagan todas de golpe poniendo FOTOS_DE_MUESTRA en false, y viven
+   aquí, juntas, para que se sepa de un vistazo qué es de verdad y qué no. */
+const FOTOS_DE_MUESTRA = true;
+const U = id => "https://images.unsplash.com/photo-" + id;
+const MUESTRA_POR_TEMA = {
+  /* Caminata a un salto de agua: sendero de bosque, el salto, caminantes. */
+  cascadas: [U("1447752875215-b2761acb3c5d"), U("1441974231531-c6227db76b6e"),
+             U("1551632811-561732d1e306"),    U("1464207687429-7505649dae38")],
+  /* Ruta del café: el grano, la tostada, la taza, la finca. */
+  cafe:     [U("1447933601403-0c6688de566e"), U("1497935586351-b67a49e012bf"),
+             U("1533777857889-4be7c70b33f7"), U("1518495973542-4542c06a5843")],
+  /* Ciudad a pie: tejados, calle colonial, la ciudad al atardecer, la mesa. */
+  ciudad:   [U("1531572753322-ad063cecc140"), U("1555881400-74d7acaacd8b"),
+             U("1516550893923-42d28e5677af"), U("1414235077428-338989a2e8c0")],
+  /* Páramo: las cadenas azules, la niebla, el valle, el mar de nubes. */
+  paramo:   [U("1437422061949-f6efbde0a471"), U("1533240332313-0db49b459ad6"),
+             U("1469474968028-56623f02e42e"), U("1458668383970-8ddd3927deed")]
+};
+/* Qué tema le toca a cada publicación, por lo que dice su título. */
+function temaDeMuestra(titulo) {
+  const t = (titulo || "").toLowerCase();
+  if (/cascada|salto|agua|r[ií]o/.test(t)) return "cascadas";
+  if (/caf[eé]|finca|grano/.test(t)) return "cafe";
+  if (/p[aá]ramo|monta[ñn]a|pico|zumbador|nube/.test(t)) return "paramo";
+  if (/colonial|ciudad|centro|a pie|casco/.test(t)) return "ciudad";
+  return "paramo";
+}
+function fotosDeMuestra(titulo) {
+  if (!FOTOS_DE_MUESTRA) return [];
+  return MUESTRA_POR_TEMA[temaDeMuestra(titulo)] || [];
+}
+
 /* Las fotos se guardan con una dirección que lleva dentro el ancho y la
    calidad con que se sirven. Venían todas a 1200 px y calidad 70: en una
    tarjeta sobra, y en la portada de una ficha —1180 px de ancho, y el doble
@@ -2962,18 +3039,24 @@ function useCerrarConAtras(cerrar) {
 function fotoDe(url, ancho) {
   if (!url || typeof url !== "string") return url;
   if (url.indexOf("images.unsplash.com") < 0) return url;
-  return url.split("?")[0] + "?auto=format&fit=crop&w=" + ancho + "&q=82";
+  return url.split("?")[0] + "?auto=format&fit=crop&w=" + ancho + "&q=85";
 }
 /* Y el juego de tamaños. Va con descriptores de ancho —no 1x/2x— para que
    el navegador cruce el hueco que de verdad ocupa la foto con la densidad
    de la pantalla y pida el archivo justo: en un teléfono fino, el grande;
    en un portátil normal, el mediano. */
-const FOTO_ANCHOS = [400, 600, 900, 1200, 1600, 2000, 2400];
 function fotoSrcSet(url, ancho) {
   if (!url || typeof url !== "string") return undefined;
   if (url.indexOf("images.unsplash.com") < 0) return undefined;
-  return FOTO_ANCHOS.filter(w => w >= Math.min(400, ancho) && w <= Math.min(2400, ancho * 2))
-    .map(w => fotoDe(url, w) + " " + w + "w").join(", ");
+  /* Tres tamaños alrededor del hueco: el justo, el de en medio y el doble.
+     Con una lista fija de anchos el doble se quedaba fuera por poco y una
+     pantalla fina acababa estirando un archivo pequeño. */
+  const v = [];
+  [1, 1.5, 2].forEach(k => {
+    const w = Math.min(2400, Math.round(ancho * k / 50) * 50);
+    if (v.indexOf(w) < 0) v.push(w);
+  });
+  return v.map(w => fotoDe(url, w) + " " + w + "w").join(", ");
 }
 
 /* Compartir entrega el enlace de esta ficha: primero el menú del aparato,
@@ -7664,7 +7747,8 @@ function GaleriaFicha({ portada, galeria }) {
          solo cuando hay más de una que ver. */
       i === vistas.length - 1 && fotos.length > 1 && /*#__PURE__*/React.createElement("span", {
         className: "tg-mosaico-todo"
-      }, "Ver todo (" + fotos.length + ")")))),
+      }, /*#__PURE__*/React.createElement(MapIcon, { size: 15 }),
+         "Ver todo (" + fotos.length + ")")))),
     /*#__PURE__*/React.createElement(GalleryLightbox, {
       photos: fotos, index: visor, onClose: () => setVisor(null),
       onPrev: () => setVisor(i => (i - 1 + fotos.length) % fotos.length),
@@ -8271,7 +8355,10 @@ function DetailScreenTour({
         className: "tg-ficha-acc", onClick: () => compartirFicha(tour.title)
       }, /*#__PURE__*/React.createElement(Download, { size: 16 }), "Compartir"))),
   /*#__PURE__*/React.createElement(GaleriaFicha, {
-    portada: tour.img, galeria: tour.fotos
+    portada: tour.img,
+    /* Las suyas mandan. Las de muestra solo entran si no subió ninguna. */
+    galeria: (tour.fotos && tour.fotos.length > 1)
+      ? tour.fotos : fotosDeMuestra(tour.title)
   }),
   /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6"
@@ -8302,57 +8389,50 @@ function DetailScreenTour({
     /*#__PURE__*/React.createElement("b", null, "$", precioAdulto.toFixed(2)),
     /*#__PURE__*/React.createElement("em", null, "USD por persona")),
   /*#__PURE__*/React.createElement("div", { className: "tg-reserva-cuerpo" },
-  /*#__PURE__*/React.createElement("div", {
-    className: "divide-y divide-slate-100"
-  }, /*#__PURE__*/React.createElement(Counter, {  
-    label: "Adultos",  
-    sub: "Edad 18+",  
-    value: adults,  
-    min: 1,  
-    onDec: () => setAdults(a => Math.max(1, a - 1)),  
-    onInc: () => setAdults(a => a + 1)  
-  }), /*#__PURE__*/React.createElement(Counter, {  
-    label: "Niños",  
-    sub: "Edad 5-17",  
-    value: children,  
-    min: 0,  
-    onDec: () => setChildren(c => Math.max(0, c - 1)),  
-    onInc: () => setChildren(c => c + 1)  
-  })), /*#__PURE__*/React.createElement("div", {  
-    className: "mt-4 space-y-3"  
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {  
-    className: "text-xs font-semibold text-slate-500 block mb-1"  
-  }, "Fecha"), /*#__PURE__*/React.createElement("div", {  
-    className: "relative"  
-  }, /*#__PURE__*/React.createElement(Calendar, {  
-    size: 16,  
-    className: "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"  
-  }), /*#__PURE__*/React.createElement("input", {  
-    type: "date",  
-    value: date,  
-    onChange: e => setDate(e.target.value),  
-    className: "w-full border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]"  
-  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {  
-    className: "text-xs font-semibold text-slate-500 block mb-1"  
-  }, "Idioma"), /*#__PURE__*/React.createElement("div", {  
-    className: "relative"  
-  }, /*#__PURE__*/React.createElement(Globe, {  
-    size: 16,  
-    className: "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"  
-  }), /*#__PURE__*/React.createElement("select", {  
-    value: language,  
-    onChange: e => setLanguage(e.target.value),  
-    className: "w-full appearance-none border border-slate-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0052CC]"  
-  }, /*#__PURE__*/React.createElement("option", null, "Español"), /*#__PURE__*/React.createElement("option", null, "Inglés")), /*#__PURE__*/React.createElement(ChevronDown, {  
-    size: 14,  
-    className: "absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"  
-  })))), /*#__PURE__*/React.createElement("div", {  
-    className: "flex items-center justify-between mt-4 pt-4 border-t border-slate-200"  
-  }, /*#__PURE__*/React.createElement("span", {  
-    className: "text-sm font-semibold text-slate-700"  
-  }, "Total"), /*#__PURE__*/React.createElement("span", {  
-    className: "text-lg font-bold text-slate-900"  
-  }, money(total, currency))),
+  /*#__PURE__*/React.createElement("div", { className: "tg-rsv-campos" },
+    /* Cuánta gente, en una sola caja: los dos contadores dentro del mismo
+       recuadro en vez de dos filas sueltas con rayas por medio. */
+    /*#__PURE__*/React.createElement("div", { className: "tg-rsv-gente-caja" },
+      [{ lab: "Adultos", sub: "Desde 18 años", v: adults, min: 1,
+         dec: () => setAdults(a => Math.max(1, a - 1)), inc: () => setAdults(a => a + 1) },
+       { lab: "Niños", sub: "De 5 a 17 años", v: children, min: 0,
+         dec: () => setChildren(c => Math.max(0, c - 1)), inc: () => setChildren(c => c + 1) }
+      ].map(f => /*#__PURE__*/React.createElement("div", { key: f.lab, className: "tg-rsv-fila" },
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("span", null, f.lab),
+          /*#__PURE__*/React.createElement("em", null, f.sub)),
+        /*#__PURE__*/React.createElement("div", { className: "tg-rsv-gente" },
+          /*#__PURE__*/React.createElement("button", {
+            onClick: f.dec, disabled: f.v <= f.min,
+            "aria-label": "Quitar un " + f.lab.toLowerCase()
+          }, /*#__PURE__*/React.createElement(Minus, { size: 15 })),
+          /*#__PURE__*/React.createElement("b", null, f.v),
+          /*#__PURE__*/React.createElement("button", {
+            onClick: f.inc, "aria-label": "Añadir un " + f.lab.toLowerCase()
+          }, /*#__PURE__*/React.createElement(Plus, { size: 15 })))))),
+
+    /*#__PURE__*/React.createElement("div", { className: "tg-rsv-campo" },
+      /*#__PURE__*/React.createElement(Calendar, { size: 19 }),
+      /*#__PURE__*/React.createElement("div", { className: "val" },
+        /*#__PURE__*/React.createElement("label", { htmlFor: "rsv-fecha" }, "Fecha"),
+        /*#__PURE__*/React.createElement("input", {
+          id: "rsv-fecha", type: "date", value: date,
+          onChange: e => setDate(e.target.value) }))),
+
+    /*#__PURE__*/React.createElement("div", { className: "tg-rsv-campo" },
+      /*#__PURE__*/React.createElement(Globe, { size: 19 }),
+      /*#__PURE__*/React.createElement("div", { className: "val" },
+        /*#__PURE__*/React.createElement("label", { htmlFor: "rsv-idioma" }, "Idioma"),
+        /*#__PURE__*/React.createElement("select", {
+          id: "rsv-idioma", value: language,
+          onChange: e => setLanguage(e.target.value)
+        }, /*#__PURE__*/React.createElement("option", null, "Español"),
+           /*#__PURE__*/React.createElement("option", null, "Inglés"))),
+      /*#__PURE__*/React.createElement(ChevronDown, { size: 17, className: "fl" }))),
+
+  /*#__PURE__*/React.createElement("div", { className: "tg-rsv-total" },
+    /*#__PURE__*/React.createElement("span", null, "Total"),
+    /*#__PURE__*/React.createElement("b", null, money(total, currency))),
   servicio > 0 ? /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] text-slate-500 mt-1.5"
   }, "Incluye $", servicio.toFixed(2), " de servicio Andes GOO.") : null,
@@ -8362,8 +8442,11 @@ function DetailScreenTour({
   /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] text-slate-400 text-center mt-2"
   }, "Se añade a tu carrito; confirmas al pagar."),
-  /* La excursión es de un día: el traslado se propone para esa misma fecha. */
-  /*#__PURE__*/React.createElement(AgregarMovilidad, {
+  /* La excursión es de un día: el traslado se propone para esa misma fecha.
+     En la versión de solo experiencias no: ofrecer un carro en una web que
+     dice que solo va de experiencias es volver a abrir la puerta que se
+     cerró a propósito. */
+  !SOLO_EXPERIENCIAS && /*#__PURE__*/React.createElement(AgregarMovilidad, {
     desde: date, hasta: date, municipio: tour.municipio, onAgregar: onAddToCart
   }), (() => {
     /* Lo que de verdad pasa si se cancela, con la política que puso el
