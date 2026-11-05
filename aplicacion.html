@@ -1308,20 +1308,40 @@ html.tg-esperando #tg-espera{display:flex}
    negocio solo subió una foto, es una sola y ancha —rellenar con fotos de
    otro sitio sería enseñar algo que no es suyo. */
 .tg-mosaico{display:grid;gap:8px;margin-top:20px;border-radius:16px;overflow:hidden;
-  grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;height:clamp(260px,38vw,440px)}
-.tg-mosaico.una{grid-template-columns:1fr}
+  grid-auto-rows:1fr;height:clamp(280px,40vw,470px)}
 .tg-mosaico>button{position:relative;padding:0;border:0;background:#E9EFF7;
   cursor:pointer;overflow:hidden;display:block}
-.tg-mosaico>button:first-child{grid-column:span 2;grid-row:span 2}
-.tg-mosaico.una>button:first-child{grid-column:span 1;grid-row:span 1}
+/* Una sola: ancha, y nada más. */
+.tg-mosaico.n1{grid-template-columns:1fr}
+/* Dos: a partes iguales. */
+.tg-mosaico.n2{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* Tres: la grande manda y las otras dos se apilan a su lado. */
+.tg-mosaico.n3{grid-template-columns:2fr 1fr;grid-template-rows:repeat(2,minmax(0,1fr))}
+.tg-mosaico.n3>button:first-child{grid-row:span 2}
+/* Cuatro: la grande a la izquierda y la última cruzando el hueco, que es
+   lo que evita que quede una casilla vacía. */
+.tg-mosaico.n4{grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr))}
+.tg-mosaico.n4>button:first-child{grid-column:span 2;grid-row:span 2}
+.tg-mosaico.n4>button:last-child{grid-column:span 2}
+/* Cinco: la de catálogo de toda la vida. */
+.tg-mosaico.n5{grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr))}
+.tg-mosaico.n5>button:first-child{grid-column:span 2;grid-row:span 2}
 .tg-mosaico img{width:100%;height:100%;object-fit:cover;display:block;
   transition:transform .4s ease}
 .tg-mosaico>button:hover img{transform:scale(1.04)}
 .tg-mosaico>button:focus-visible{outline:none;box-shadow:inset 0 0 0 3px #0052CC}
 @media(max-width:760px){
-  .tg-mosaico{grid-template-columns:repeat(2,minmax(0,1fr));height:auto;
-    grid-auto-rows:minmax(0,1fr)}
-  .tg-mosaico>button:first-child{grid-column:span 2;aspect-ratio:16/10}
+  .tg-mosaico,.tg-mosaico.n3,.tg-mosaico.n4,.tg-mosaico.n5{
+    grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;
+    height:auto;grid-auto-rows:minmax(0,1fr)}
+  .tg-mosaico>button:first-child,
+  .tg-mosaico.n3>button:first-child,
+  .tg-mosaico.n4>button:first-child,
+  .tg-mosaico.n4>button:last-child,
+  .tg-mosaico.n5>button:first-child{grid-column:span 2;grid-row:auto}
+  .tg-mosaico>button:first-child{aspect-ratio:16/10}
   .tg-mosaico>button:not(:first-child){aspect-ratio:4/3}
 }
 .tg-mosaico-todo{position:absolute;right:12px;bottom:12px;z-index:2;
@@ -2931,6 +2951,31 @@ function useCerrarConAtras(cerrar) {
 
 /* Reúne en una sola forma lo que el negocio publicó, venga de la lista de
    proveedores verificados o del propio hotel. */
+/* Las fotos se guardan con una dirección que lleva dentro el ancho y la
+   calidad con que se sirven. Venían todas a 1200 px y calidad 70: en una
+   tarjeta sobra, y en la portada de una ficha —1180 px de ancho, y el doble
+   en una pantalla fina— se ve blanda. Aquí se pide cada foto del tamaño en
+   que se va a ver.
+
+   Solo se reescribe lo que sabemos reescribir: si la foto está en otro
+   servidor, se deja tal cual en vez de inventarle parámetros. */
+function fotoDe(url, ancho) {
+  if (!url || typeof url !== "string") return url;
+  if (url.indexOf("images.unsplash.com") < 0) return url;
+  return url.split("?")[0] + "?auto=format&fit=crop&w=" + ancho + "&q=82";
+}
+/* Y el juego de tamaños. Va con descriptores de ancho —no 1x/2x— para que
+   el navegador cruce el hueco que de verdad ocupa la foto con la densidad
+   de la pantalla y pida el archivo justo: en un teléfono fino, el grande;
+   en un portátil normal, el mediano. */
+const FOTO_ANCHOS = [400, 600, 900, 1200, 1600, 2000, 2400];
+function fotoSrcSet(url, ancho) {
+  if (!url || typeof url !== "string") return undefined;
+  if (url.indexOf("images.unsplash.com") < 0) return undefined;
+  return FOTO_ANCHOS.filter(w => w >= Math.min(400, ancho) && w <= Math.min(2400, ancho * 2))
+    .map(w => fotoDe(url, w) + " " + w + "w").join(", ");
+}
+
 /* Compartir entrega el enlace de esta ficha: primero el menú del aparato,
    que es lo que la gente espera en el teléfono, y si no lo hay, al
    portapapeles. Nada de un botón que no hace nada. */
@@ -7469,7 +7514,10 @@ function TarjetaExp({ x, onAbrir, currency }) {
       x.proveedor && /*#__PURE__*/React.createElement("span", { className: "tg-tar-sello" },
         x.proveedor),
       /*#__PURE__*/React.createElement("img", {
-        src: x.img || IMAGES.respaldo, alt: "", loading: "lazy", decoding: "async" })),
+        src: fotoDe(x.img || IMAGES.respaldo, 600),
+        srcSet: fotoSrcSet(x.img || IMAGES.respaldo, 600),
+        sizes: "(max-width:430px) 100vw, (max-width:760px) 50vw, (max-width:1024px) 33vw, 280px",
+        alt: "", loading: "lazy", decoding: "async" })),
     /*#__PURE__*/React.createElement("div", { className: "tg-tar-cuerpo" },
       x.municipio && /*#__PURE__*/React.createElement("p", { className: "tg-tar-mun" }, x.municipio),
       /*#__PURE__*/React.createElement("h3", null, x.title),
@@ -7583,16 +7631,35 @@ function GaleriaFicha({ portada, galeria }) {
     return v.slice(0, 5);
   }, [portada, galeria]);
   if (!fotos.length) return null;
-  const vistas = fotos.slice(0, 5);
+  /* Cada número de fotos pide su rejilla: con una, una sola y ancha; con
+     cinco, la grande y las cuatro al lado. Una rejilla de cinco huecos con
+     dos fotos dentro deja agujeros, y un agujero se lee como un error. */
+  const vistas = fotos;
+  /* Cuánto ocupa de verdad cada hueco en la ficha ancha (1180 px). Sin esto
+     el navegador se cree que la portada mide media ficha también cuando es
+     la única, y pide un archivo demasiado chico para el sitio donde va. */
+  const anchoDelHueco = (n, i) => {
+    if (n === 1) return 1180;
+    if (n === 2) return 586;
+    if (n === 3) return i === 0 ? 779 : 385;
+    if (n === 4) return (i === 0 || i === n - 1) ? 586 : 290;
+    return i === 0 ? 586 : 290;
+  };
   return /*#__PURE__*/React.createElement(React.Fragment, null,
     /*#__PURE__*/React.createElement("div", {
-      className: "tg-mosaico" + (vistas.length === 1 ? " una" : "")
+      className: "tg-mosaico n" + vistas.length
     }, vistas.map((f, i) => /*#__PURE__*/React.createElement("button", {
       key: f + i, onClick: () => setVisor(i),
       "aria-label": "Ver la foto " + (i + 1) + " de " + fotos.length
     },
-      /*#__PURE__*/React.createElement("img", {
-        src: f, alt: "", loading: i ? "lazy" : "eager", decoding: "async" }),
+      (() => {
+        const w = anchoDelHueco(vistas.length, i);
+        return /*#__PURE__*/React.createElement("img", {
+          src: fotoDe(f, w),
+          srcSet: fotoSrcSet(f, w),
+          sizes: "(max-width:760px) " + (i === 0 ? "100vw" : "50vw") + ", " + w + "px",
+          alt: "", loading: i ? "lazy" : "eager", decoding: "async" });
+      })(),
       /* El botón de ver todo va sobre la última, como en los catálogos, y
          solo cuando hay más de una que ver. */
       i === vistas.length - 1 && fotos.length > 1 && /*#__PURE__*/React.createElement("span", {
@@ -8204,7 +8271,7 @@ function DetailScreenTour({
         className: "tg-ficha-acc", onClick: () => compartirFicha(tour.title)
       }, /*#__PURE__*/React.createElement(Download, { size: 16 }), "Compartir"))),
   /*#__PURE__*/React.createElement(GaleriaFicha, {
-    portada: tour.img, galeria: perfil && perfil.galeria
+    portada: tour.img, galeria: tour.fotos
   }),
   /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6"
@@ -11533,6 +11600,32 @@ async function cargarCatalogoReal(){
                     : { rating: null, reviews: 0 };
   };
 
+  /* Las fotos que el negocio subió a cada publicación. El portal del
+     proveedor las guarda desde hace tiempo en `listing_images`, pero aquí
+     no se leían nunca: por eso una ficha enseñaba siempre una sola foto,
+     por muchas que hubiera cargado su dueño. */
+  const fotosPorListado = {};
+  if (validos.length) {
+    const { data: imagenes } = await sb
+      .from('listing_images')
+      .select('listing_id, url, position')
+      .in('listing_id', validos.map(l => l.id))
+      .order('position', { ascending: true });
+    (imagenes || []).forEach(im => {
+      if (!im || !im.url) return;
+      (fotosPorListado[im.listing_id] || (fotosPorListado[im.listing_id] = [])).push(im.url);
+    });
+  }
+  /* La portada primero y después las suyas, sin repetir: es el orden en que
+     las ordenó el negocio en su portal. */
+  const fotosDe = l => {
+    const v = [];
+    [l.cover_image_url].concat(fotosPorListado[l.id] || []).forEach(u => {
+      if (u && v.indexOf(u) < 0) v.push(u);
+    });
+    return v;
+  };
+
   const experiencias = [];
   validos.forEach(l => {
     const { rating, reviews } = puntuacion(l.id);
@@ -11543,7 +11636,7 @@ async function cargarCatalogoReal(){
         municipio: municipioCanonico(l.municipio),
         estado: estadoDeListado(l),
         tipo: 'alojamiento',
-        imgs: [l.cover_image_url],
+        imgs: fotosDe(l),
         proveedor: (l.providers && l.providers.business_name) || null,
         precioNocheUSD: Number(l.base_price),
         rating, reviews,
@@ -11566,6 +11659,7 @@ async function cargarCatalogoReal(){
         precioUSD: Number(l.base_price),
         categoria: l.category,
         img: l.cover_image_url,
+        fotos: fotosDe(l),
         proveedor: (l.providers && l.providers.business_name) || null,
         municipio: municipioCanonico(l.municipio),
         estado: estadoDeListado(l),
